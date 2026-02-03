@@ -24,6 +24,7 @@ import {
   Download,
   Loader2,
   Share2,
+  FileDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -60,6 +61,7 @@ import EmergencyContactDialog from "@/components/life-file/EmergencyContactDialo
 import DocumentDialog from "@/components/life-file/DocumentDialog";
 import ShareLifeFileDialog from "@/components/life-file/ShareLifeFileDialog";
 import ShareList from "@/components/life-file/ShareList";
+import { generateLifeFilePDF } from "@/utils/lifeFilePdfExport";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -341,10 +343,27 @@ const LifeFilePage = () => {
         </div>
       </div>
 
-      {/* Encrypted Notice */}
-      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
-        <Lock className="w-4 h-4" />
-        <span>All Life File data is encrypted and only accessible by you</span>
+      {/* Actions Row */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Lock className="w-4 h-4" />
+          <span>All Life File data is encrypted and only accessible by you</span>
+        </div>
+        <Button
+          variant="outline"
+          onClick={() => {
+            generateLifeFilePDF({
+              beneficiaries,
+              emergencyContacts: contacts,
+              documents,
+              userName: "John Doe", // TODO: Replace with actual user name from auth
+            });
+            toast({ title: "PDF downloaded successfully" });
+          }}
+        >
+          <FileDown className="w-4 h-4" />
+          Export PDF
+        </Button>
       </div>
 
       {/* Tabs */}
