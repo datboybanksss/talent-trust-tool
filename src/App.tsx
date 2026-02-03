@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
+import LifeFile from "./pages/LifeFile";
 import Journey from "./pages/Journey";
 import Documents from "./pages/Documents";
 import Compliance from "./pages/Compliance";
@@ -29,6 +30,7 @@ const App = () => (
           <Route path="/" element={<Landing />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/dashboard/profile" element={<Profile />} />
+          <Route path="/dashboard/life-file" element={<LifeFile />} />
           <Route path="/dashboard/journey" element={<Journey />} />
           <Route path="/dashboard/documents" element={<Documents />} />
           <Route path="/dashboard/compliance" element={<Compliance />} />

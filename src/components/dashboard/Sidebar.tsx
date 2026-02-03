@@ -11,7 +11,8 @@ import {
   Settings,
   LogOut,
   Share2,
-  AtSign
+  AtSign,
+  Heart
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -91,6 +92,7 @@ const NavItem = ({ icon: Icon, label, href, active, badge }: NavItemProps) => (
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
   { icon: User, label: "My Profile", href: "/dashboard/profile" },
+  { icon: Heart, label: "Life File", href: "/dashboard/life-file" },
   { icon: Building2, label: "Company Journey", href: "/dashboard/journey" },
   { icon: FileCheck, label: "Compliance", href: "/dashboard/compliance", badge: 3 },
   { icon: FolderLock, label: "Documents", href: "/dashboard/documents" },

@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 interface LifeFileItem {
   name: string;
@@ -138,9 +139,11 @@ const LifeFile = ({ items, beneficiaries, emergencyContacts }: LifeFileProps) =>
         ))}
       </div>
 
-      <Button variant="outline" className="w-full mt-4" size="sm">
-        <FileText className="w-4 h-4" />
-        Manage Life File
+      <Button variant="outline" className="w-full mt-4" size="sm" asChild>
+        <Link to="/dashboard/life-file">
+          <FileText className="w-4 h-4" />
+          Manage Life File
+        </Link>
       </Button>
     </div>
   );
