@@ -12,6 +12,7 @@ import Compliance from "./pages/Compliance";
 import Advisors from "./pages/Advisors";
 import Emails from "./pages/Emails";
 import Reminders from "./pages/Reminders";
+import ClientType from "./pages/ClientType";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
           <Route path="/dashboard/advisors" element={<Advisors />} />
           <Route path="/dashboard/emails" element={<Emails />} />
           <Route path="/dashboard/reminders" element={<Reminders />} />
+          <Route path="/client-type" element={<ClientType />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
