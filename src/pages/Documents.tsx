@@ -14,7 +14,7 @@ import {
   Eye,
   X
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import {
   Dialog,
@@ -37,11 +37,45 @@ import { toast } from "@/hooks/use-toast";
 const Documents = () => {
   const [selectedFolder, setSelectedFolder] = useState("all");
   const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const [uploadForm, setUploadForm] = useState({
     title: "",
     category: "",
     file: null as File | null,
   });
+
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      const validTypes = ['.pdf', '.doc', '.docx', '.jpg', '.jpeg', '.png'];
+      const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
+      
+      if (validTypes.includes(fileExtension)) {
+        setUploadForm(prev => ({ ...prev, file }));
+        setIsUploadOpen(true);
+        toast({ title: "File selected", description: `"${file.name}" ready to upload. Please fill in the details.` });
+      } else {
+        toast({ title: "Invalid file type", description: "Please upload PDF, DOC, DOCX, JPG, or PNG files only.", variant: "destructive" });
+      }
+    }
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
@@ -253,12 +287,33 @@ const Documents = () => {
           </div>
 
           {/* Upload Zone */}
-          <div className="mt-6 border-2 border-dashed border-border rounded-2xl p-8 text-center hover:border-gold transition-colors cursor-pointer">
-            <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
-              <Upload className="w-8 h-8 text-muted-foreground" />
+          <div 
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            onClick={() => setIsUploadOpen(true)}
+            className={cn(
+              "mt-6 border-2 border-dashed rounded-2xl p-8 text-center transition-all cursor-pointer",
+              isDragging 
+                ? "border-gold bg-gold/10 scale-[1.02]" 
+                : "border-border hover:border-gold"
+            )}
+          >
+            <div className={cn(
+              "w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 transition-colors",
+              isDragging ? "bg-gold/20" : "bg-secondary"
+            )}>
+              <Upload className={cn(
+                "w-8 h-8 transition-colors",
+                isDragging ? "text-gold" : "text-muted-foreground"
+              )} />
             </div>
-            <p className="font-medium text-foreground mb-1">Drop files here to upload</p>
-            <p className="text-sm text-muted-foreground">or click to browse from your computer</p>
+            <p className="font-medium text-foreground mb-1">
+              {isDragging ? "Drop your file here" : "Drop files here to upload"}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {isDragging ? "PDF, DOC, DOCX, JPG, PNG" : "or click to browse from your computer"}
+            </p>
           </div>
         </div>
       </div>
