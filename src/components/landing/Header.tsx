@@ -24,10 +24,10 @@ const Header = () => {
             <NavLinks />
             <div className="flex items-center gap-3">
               <Button variant="ghost" className="text-primary-foreground hover:bg-primary-foreground/10" asChild>
-                <Link to="/dashboard">Sign In</Link>
+                <Link to="/auth">Sign In</Link>
               </Button>
               <Button variant="hero" asChild>
-                <Link to="/dashboard">Get Started</Link>
+                <Link to="/auth">Get Started</Link>
               </Button>
             </div>
           </div>
@@ -48,10 +48,10 @@ const Header = () => {
               <NavLinks mobile />
               <div className="flex flex-col gap-2 pt-4 border-t border-primary-foreground/10">
                 <Button variant="ghost" className="text-primary-foreground justify-start" asChild>
-                  <Link to="/dashboard">Sign In</Link>
+                  <Link to="/auth">Sign In</Link>
                 </Button>
                 <Button variant="hero" asChild>
-                  <Link to="/dashboard">Get Started</Link>
+                  <Link to="/auth">Get Started</Link>
                 </Button>
               </div>
             </div>
