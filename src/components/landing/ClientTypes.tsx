@@ -39,14 +39,14 @@ const ClientTypes = () => {
             ]}
             color="gold"
             dropdownItems={[
-              "Rugby Players",
-              "Soccer Players",
-              "Cricket Players",
-              "Tennis Players",
-              "Golf Players",
-              "Olympic Athletes",
-              "Boxing & MMA",
-              "Athletics & Track",
+              { label: "Rugby Players", slug: "rugby-players" },
+              { label: "Soccer Players", slug: "soccer-players" },
+              { label: "Cricket Players", slug: "cricket-players" },
+              { label: "Tennis Players", slug: "tennis-players" },
+              { label: "Golf Players", slug: "golf-players" },
+              { label: "Olympic Athletes", slug: "olympic-athletes" },
+              { label: "Boxing & MMA", slug: "boxing-mma" },
+              { label: "Athletics & Track", slug: "athletics-track" },
             ]}
           />
           <ClientTypeCard
@@ -63,14 +63,14 @@ const ClientTypes = () => {
             color="primary"
             highlighted
             dropdownItems={[
-              "Musicians & Producers",
-              "Visual Artists & Painters",
-              "Actors & Performers",
-              "Fashion Designers",
-              "Photographers & Filmmakers",
-              "Writers & Authors",
-              "Digital Artists & NFT Creators",
-              "Comedians & Entertainers",
+              { label: "Musicians & Producers", slug: "musicians-producers" },
+              { label: "Visual Artists & Painters", slug: "visual-artists-painters" },
+              { label: "Actors & Performers", slug: "actors-performers" },
+              { label: "Fashion Designers", slug: "fashion-designers" },
+              { label: "Photographers & Filmmakers", slug: "photographers-filmmakers" },
+              { label: "Writers & Authors", slug: "writers-authors" },
+              { label: "Digital Artists & NFT Creators", slug: "digital-artists-nft" },
+              { label: "Comedians & Entertainers", slug: "comedians-entertainers" },
             ]}
           />
           <ClientTypeCard
@@ -99,7 +99,7 @@ interface ClientTypeCardProps {
   features: string[];
   color: "gold" | "primary";
   highlighted?: boolean;
-  dropdownItems?: string[];
+  dropdownItems?: { label: string; slug: string }[];
 }
 
 const ClientTypeCard = ({
@@ -163,12 +163,15 @@ const ClientTypeCard = ({
             align="start" 
             className="w-56 bg-popover border border-border shadow-lg z-50"
           >
-            {dropdownItems.map((item, index) => (
+            {dropdownItems.map((item) => (
               <DropdownMenuItem
-                key={index}
+                key={item.slug}
                 className="cursor-pointer hover:bg-accent focus:bg-accent"
+                asChild
               >
-                {item}
+                <Link to={`/client-type?type=${item.slug}`}>
+                  {item.label}
+                </Link>
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
