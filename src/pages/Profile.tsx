@@ -3,17 +3,21 @@ import AssetSummaryCard from "@/components/dashboard/profile/AssetSummaryCard";
 import ComplianceOverview from "@/components/dashboard/profile/ComplianceOverview";
 import ContractExpiryTimeline from "@/components/dashboard/profile/ContractExpiryTimeline";
 import QuickStats from "@/components/dashboard/profile/QuickStats";
+import LifeFile from "@/components/dashboard/profile/LifeFile";
 import { 
   Building2, 
   Landmark, 
-  Car, 
   Home,
   Wallet,
   TrendingUp,
   FileCheck,
   Users,
   Calendar,
-  Shield
+  Shield,
+  FileText,
+  Heart,
+  Key,
+  Briefcase
 } from "lucide-react";
 
 const Profile = () => {
@@ -85,7 +89,7 @@ const Profile = () => {
       </div>
 
       {/* Main Grid */}
-      <div className="grid lg:grid-cols-3 gap-8">
+      <div className="grid lg:grid-cols-2 xl:grid-cols-4 gap-8">
         {/* Compliance Overview */}
         <ComplianceOverview
           score={85}
@@ -94,6 +98,13 @@ const Profile = () => {
 
         {/* Contract Expiry Timeline */}
         <ContractExpiryTimeline contracts={contracts} />
+
+        {/* Life File */}
+        <LifeFile 
+          items={lifeFileItems}
+          beneficiaries={4}
+          emergencyContacts={3}
+        />
 
         {/* Quick Stats */}
         <QuickStats stats={quickStats} />
@@ -195,6 +206,14 @@ const quickStats = [
   { label: "Pending Tasks", value: 5, icon: FileCheck, color: "warning" as const },
   { label: "This Month Revenue", value: "R 85K", color: "success" as const },
   { label: "Expiring Soon", value: 2, color: "destructive" as const },
+];
+
+const lifeFileItems = [
+  { name: "Last Will & Testament", status: "complete" as const, lastUpdated: "Jan 2026", icon: FileText },
+  { name: "Power of Attorney", status: "complete" as const, lastUpdated: "Dec 2025", icon: Key },
+  { name: "Living Will", status: "incomplete" as const, icon: Heart },
+  { name: "Trust Documents", status: "complete" as const, lastUpdated: "Nov 2025", icon: Briefcase },
+  { name: "Insurance Policies", status: "needs-update" as const, lastUpdated: "Jun 2024", icon: Shield },
 ];
 
 export default Profile;
