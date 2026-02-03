@@ -9,7 +9,8 @@ import {
   Mail, 
   Bell,
   Settings,
-  LogOut
+  LogOut,
+  Share2
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -92,6 +93,7 @@ const navItems = [
   { icon: Building2, label: "Company Journey", href: "/dashboard/journey" },
   { icon: FileCheck, label: "Compliance", href: "/dashboard/compliance", badge: 3 },
   { icon: FolderLock, label: "Documents", href: "/dashboard/documents" },
+  { icon: Share2, label: "Sharing", href: "/dashboard/sharing" },
   { icon: Users, label: "Advisors", href: "/dashboard/advisors" },
   { icon: Mail, label: "Email Log", href: "/dashboard/emails" },
   { icon: Bell, label: "Reminders", href: "/dashboard/reminders", badge: 5 },

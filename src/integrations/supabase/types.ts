@@ -112,6 +112,42 @@ export type Database = {
           },
         ]
       }
+      shared_access: {
+        Row: {
+          access_type: string
+          created_at: string
+          id: string
+          owner_id: string
+          relationship: string
+          shared_with_email: string
+          shared_with_user_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          access_type?: string
+          created_at?: string
+          id?: string
+          owner_id: string
+          relationship?: string
+          shared_with_email: string
+          shared_with_user_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          access_type?: string
+          created_at?: string
+          id?: string
+          owner_id?: string
+          relationship?: string
+          shared_with_email?: string
+          shared_with_user_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
