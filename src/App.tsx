@@ -13,6 +13,7 @@ import Advisors from "./pages/Advisors";
 import Emails from "./pages/Emails";
 import Reminders from "./pages/Reminders";
 import Sharing from "./pages/Sharing";
+import SocialMedia from "./pages/SocialMedia";
 import ClientType from "./pages/ClientType";
 import NotFound from "./pages/NotFound";
 
@@ -35,6 +36,7 @@ const App = () => (
           <Route path="/dashboard/emails" element={<Emails />} />
           <Route path="/dashboard/reminders" element={<Reminders />} />
           <Route path="/dashboard/sharing" element={<Sharing />} />
+          <Route path="/dashboard/social-media" element={<SocialMedia />} />
           <Route path="/client-type" element={<ClientType />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

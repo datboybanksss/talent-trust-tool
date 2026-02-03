@@ -148,6 +148,63 @@ export type Database = {
         }
         Relationships: []
       }
+      social_media_accounts: {
+        Row: {
+          account_status: string | null
+          created_at: string
+          email: string | null
+          follower_count: number | null
+          handle: string
+          id: string
+          notes: string | null
+          password: string | null
+          platform: string
+          recovery_email: string | null
+          recovery_phone: string | null
+          two_factor_backup_codes: string | null
+          two_factor_enabled: boolean | null
+          updated_at: string
+          user_id: string
+          verified: boolean | null
+        }
+        Insert: {
+          account_status?: string | null
+          created_at?: string
+          email?: string | null
+          follower_count?: number | null
+          handle: string
+          id?: string
+          notes?: string | null
+          password?: string | null
+          platform: string
+          recovery_email?: string | null
+          recovery_phone?: string | null
+          two_factor_backup_codes?: string | null
+          two_factor_enabled?: boolean | null
+          updated_at?: string
+          user_id: string
+          verified?: boolean | null
+        }
+        Update: {
+          account_status?: string | null
+          created_at?: string
+          email?: string | null
+          follower_count?: number | null
+          handle?: string
+          id?: string
+          notes?: string | null
+          password?: string | null
+          platform?: string
+          recovery_email?: string | null
+          recovery_phone?: string | null
+          two_factor_backup_codes?: string | null
+          two_factor_enabled?: boolean | null
+          updated_at?: string
+          user_id?: string
+          verified?: boolean | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
