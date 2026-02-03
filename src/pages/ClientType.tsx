@@ -1,6 +1,94 @@
 import { useSearchParams, Link } from "react-router-dom";
-import { ArrowLeft, CheckCircle, Trophy, Palette } from "lucide-react";
+import { ArrowLeft, CheckCircle, Trophy, Palette, Shield, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
+
+const ClientTypeHeader = () => {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const links = [
+    { label: "Home", href: "/" },
+    { label: "Services", href: "/#services" },
+    { label: "Athletes", href: "/#athletes" },
+    { label: "Artists", href: "/#artists" },
+  ];
+
+  return (
+    <header className="sticky top-0 z-50 bg-primary/95 backdrop-blur-sm border-b border-primary-foreground/10">
+      <div className="container py-4">
+        <nav className="flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-2">
+            <div className="w-10 h-10 bg-gold rounded-xl flex items-center justify-center">
+              <Shield className="w-5 h-5 text-forest-dark" />
+            </div>
+            <span className="text-xl font-display font-bold text-primary-foreground">
+              LegacyBuilder
+            </span>
+          </Link>
+
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center gap-8">
+            <div className="flex items-center gap-6">
+              {links.map((link) => (
+                <Link
+                  key={link.href}
+                  to={link.href}
+                  className="text-primary-foreground/80 hover:text-gold transition-colors"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" className="text-primary-foreground hover:bg-primary-foreground/10" asChild>
+                <Link to="/dashboard">Sign In</Link>
+              </Button>
+              <Button variant="hero" asChild>
+                <Link to="/dashboard">Get Started</Link>
+              </Button>
+            </div>
+          </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            className="md:hidden text-primary-foreground p-2"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </nav>
+
+        {/* Mobile Navigation */}
+        {mobileMenuOpen && (
+          <div className="md:hidden mt-4 p-4 bg-forest-light/50 backdrop-blur-lg rounded-2xl animate-scale-in">
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
+                {links.map((link) => (
+                  <Link
+                    key={link.href}
+                    to={link.href}
+                    className="text-primary-foreground/80 hover:text-gold transition-colors py-2"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+              <div className="flex flex-col gap-2 pt-4 border-t border-primary-foreground/10">
+                <Button variant="ghost" className="text-primary-foreground justify-start" asChild>
+                  <Link to="/dashboard">Sign In</Link>
+                </Button>
+                <Button variant="hero" asChild>
+                  <Link to="/dashboard">Get Started</Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </header>
+  );
+};
 
 const clientTypeData: Record<string, {
   category: "athletes" | "artists";
@@ -312,8 +400,10 @@ const ClientType = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-primary text-primary-foreground py-16">
+      <ClientTypeHeader />
+      
+      {/* Hero Section */}
+      <section className="bg-primary text-primary-foreground py-16">
         <div className="container">
           <Link
             to="/"
@@ -339,7 +429,7 @@ const ClientType = () => {
             {data.description}
           </p>
         </div>
-      </header>
+      </section>
 
       {/* Content */}
       <main className="container py-16">
