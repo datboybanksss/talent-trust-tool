@@ -12,7 +12,9 @@ import {
   File,
   FileImage,
   Eye,
-  X
+  X,
+  ChevronRight,
+  ChevronDown
 } from "lucide-react";
 import { useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
@@ -33,11 +35,16 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+type ProfileType = "athlete" | "artist";
 
 const Documents = () => {
   const [selectedFolder, setSelectedFolder] = useState("all");
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [profileType, setProfileType] = useState<ProfileType>("athlete");
+  const [expandedContractsFolder, setExpandedContractsFolder] = useState(false);
   const [uploadForm, setUploadForm] = useState({
     title: "",
     category: "",
@@ -124,30 +131,83 @@ const Documents = () => {
               <FolderPlus className="w-4 h-4 text-muted-foreground" />
             </button>
           </div>
+
+          {/* Profile Type Toggle */}
+          <div className="mb-4">
+            <Tabs value={profileType} onValueChange={(v) => setProfileType(v as ProfileType)}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="athlete" className="text-xs">Athlete</TabsTrigger>
+                <TabsTrigger value="artist" className="text-xs">Artist</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
           
           <div className="space-y-1">
-            {folders.map((folder) => (
-              <button
-                key={folder.id}
-                onClick={() => setSelectedFolder(folder.id)}
-                className={cn(
-                  "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors",
-                  selectedFolder === folder.id
-                    ? "bg-primary text-primary-foreground"
-                    : "hover:bg-secondary text-foreground"
+            {baseFolders.map((folder) => (
+              <div key={folder.id}>
+                <button
+                  onClick={() => {
+                    if (folder.hasSubfolders) {
+                      setExpandedContractsFolder(!expandedContractsFolder);
+                    }
+                    setSelectedFolder(folder.id);
+                  }}
+                  className={cn(
+                    "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors",
+                    selectedFolder === folder.id
+                      ? "bg-primary text-primary-foreground"
+                      : "hover:bg-secondary text-foreground"
+                  )}
+                >
+                  {folder.hasSubfolders ? (
+                    expandedContractsFolder ? (
+                      <ChevronDown className="w-4 h-4" />
+                    ) : (
+                      <ChevronRight className="w-4 h-4" />
+                    )
+                  ) : (
+                    <FolderLock className="w-4 h-4" />
+                  )}
+                  <span className="flex-1 text-sm">{folder.name}</span>
+                  <span className={cn(
+                    "text-xs px-2 py-0.5 rounded-full",
+                    selectedFolder === folder.id
+                      ? "bg-primary-foreground/20"
+                      : "bg-secondary"
+                  )}>
+                    {folder.count}
+                  </span>
+                </button>
+
+                {/* Contract Subfolders */}
+                {folder.hasSubfolders && expandedContractsFolder && (
+                  <div className="ml-4 mt-1 space-y-1 border-l-2 border-border pl-2">
+                    {(profileType === "athlete" ? athleteContractFolders : artistContractFolders).map((subfolder) => (
+                      <button
+                        key={subfolder.id}
+                        onClick={() => setSelectedFolder(subfolder.id)}
+                        className={cn(
+                          "w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left transition-colors text-xs",
+                          selectedFolder === subfolder.id
+                            ? "bg-gold/20 text-gold"
+                            : "hover:bg-secondary text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        <FolderLock className="w-3 h-3" />
+                        <span className="flex-1 truncate">{subfolder.name}</span>
+                        <span className={cn(
+                          "text-xs px-1.5 py-0.5 rounded-full",
+                          selectedFolder === subfolder.id
+                            ? "bg-gold/30"
+                            : "bg-secondary"
+                        )}>
+                          {subfolder.count}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
                 )}
-              >
-                <FolderLock className="w-4 h-4" />
-                <span className="flex-1 text-sm">{folder.name}</span>
-                <span className={cn(
-                  "text-xs px-2 py-0.5 rounded-full",
-                  selectedFolder === folder.id
-                    ? "bg-primary-foreground/20"
-                    : "bg-secondary"
-                )}>
-                  {folder.count}
-                </span>
-              </button>
+              </div>
             ))}
           </div>
 
@@ -376,13 +436,36 @@ const DocumentRow = ({ document }: DocumentRowProps) => {
   );
 };
 
-const folders = [
+const baseFolders = [
   { id: "all", name: "All Documents", count: 24 },
   { id: "company", name: "Company Documents", count: 8 },
   { id: "compliance", name: "Compliance", count: 6 },
-  { id: "contracts", name: "Contracts", count: 5 },
+  { id: "contracts", name: "Contracts", count: 5, hasSubfolders: true },
   { id: "tax", name: "Tax Documents", count: 3 },
   { id: "personal", name: "Personal ID", count: 2 },
+];
+
+const athleteContractFolders = [
+  { id: "endorsement", name: "Endorsement Contracts", count: 0, parent: "contracts" },
+  { id: "sponsorship", name: "Sponsorship Agreements", count: 2 },
+  { id: "team-contracts", name: "Team Contracts", count: 1 },
+  { id: "agent-agreements", name: "Agent/Manager Agreements", count: 1 },
+  { id: "appearance-fees", name: "Appearance Fees", count: 0 },
+  { id: "image-rights", name: "Image Rights", count: 1 },
+  { id: "merchandise", name: "Merchandise Licensing", count: 0 },
+  { id: "broadcasting", name: "Broadcasting Rights", count: 0 },
+];
+
+const artistContractFolders = [
+  { id: "recording", name: "Recording Contracts", count: 1 },
+  { id: "publishing", name: "Publishing Deals", count: 0 },
+  { id: "licensing", name: "Licensing Agreements", count: 1 },
+  { id: "gallery", name: "Gallery Representation", count: 0 },
+  { id: "royalty", name: "Royalty Agreements", count: 1 },
+  { id: "collaboration", name: "Collaboration Agreements", count: 0 },
+  { id: "sync-licensing", name: "Sync Licensing", count: 2 },
+  { id: "distribution", name: "Distribution Deals", count: 0 },
+  { id: "performance", name: "Performance Contracts", count: 0 },
 ];
 
 const documents: Document[] = [
