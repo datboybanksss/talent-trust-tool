@@ -1,6 +1,12 @@
-import { Trophy, Palette, Briefcase, ArrowRight } from "lucide-react";
+import { Trophy, Palette, Briefcase, ArrowRight, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const ClientTypes = () => {
   return (
@@ -32,6 +38,16 @@ const ClientTypes = () => {
               "Brand protection strategies",
             ]}
             color="gold"
+            dropdownItems={[
+              "Rugby Players",
+              "Soccer Players",
+              "Cricket Players",
+              "Tennis Players",
+              "Golf Players",
+              "Olympic Athletes",
+              "Boxing & MMA",
+              "Athletics & Track",
+            ]}
           />
           <ClientTypeCard
             icon={Palette}
@@ -46,6 +62,16 @@ const ClientTypes = () => {
             ]}
             color="primary"
             highlighted
+            dropdownItems={[
+              "Musicians & Producers",
+              "Visual Artists & Painters",
+              "Actors & Performers",
+              "Fashion Designers",
+              "Photographers & Filmmakers",
+              "Writers & Authors",
+              "Digital Artists & NFT Creators",
+              "Comedians & Entertainers",
+            ]}
           />
           <ClientTypeCard
             icon={Briefcase}
@@ -73,6 +99,7 @@ interface ClientTypeCardProps {
   features: string[];
   color: "gold" | "primary";
   highlighted?: boolean;
+  dropdownItems?: string[];
 }
 
 const ClientTypeCard = ({
@@ -82,6 +109,7 @@ const ClientTypeCard = ({
   features,
   color,
   highlighted,
+  dropdownItems,
 }: ClientTypeCardProps) => (
   <div
     className={`relative p-8 rounded-3xl transition-all duration-300 hover:-translate-y-2 ${
@@ -108,13 +136,45 @@ const ClientTypeCard = ({
       <Icon className="w-8 h-8" />
     </div>
 
-    <h3
-      className={`text-2xl font-display font-bold mb-2 ${
-        highlighted ? "text-primary-foreground" : "text-foreground"
-      }`}
-    >
-      {title}
-    </h3>
+    <div className="flex items-center gap-2 mb-2">
+      <h3
+        className={`text-2xl font-display font-bold ${
+          highlighted ? "text-primary-foreground" : "text-foreground"
+        }`}
+      >
+        {title}
+      </h3>
+      {dropdownItems && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`h-7 px-2 ${
+                highlighted
+                  ? "text-primary-foreground/80 hover:text-primary-foreground hover:bg-white/10"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <ChevronDown className="w-4 h-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent 
+            align="start" 
+            className="w-56 bg-popover border border-border shadow-lg z-50"
+          >
+            {dropdownItems.map((item, index) => (
+              <DropdownMenuItem
+                key={index}
+                className="cursor-pointer hover:bg-accent focus:bg-accent"
+              >
+                {item}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
+    </div>
     <p
       className={`mb-6 ${
         highlighted ? "text-primary-foreground/80" : "text-muted-foreground"
