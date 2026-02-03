@@ -12,13 +12,69 @@ import {
   File,
   FileImage,
   Eye,
-  MoreVertical
+  X
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "@/hooks/use-toast";
 
 const Documents = () => {
   const [selectedFolder, setSelectedFolder] = useState("all");
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [uploadForm, setUploadForm] = useState({
+    title: "",
+    category: "",
+    file: null as File | null,
+  });
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setUploadForm(prev => ({ ...prev, file }));
+  };
+
+  const handleUpload = () => {
+    if (!uploadForm.title.trim()) {
+      toast({ title: "Error", description: "Please enter a document title", variant: "destructive" });
+      return;
+    }
+    if (!uploadForm.category) {
+      toast({ title: "Error", description: "Please select a category", variant: "destructive" });
+      return;
+    }
+    if (!uploadForm.file) {
+      toast({ title: "Error", description: "Please select a file to upload", variant: "destructive" });
+      return;
+    }
+
+    // TODO: Integrate with Supabase storage when auth is implemented
+    toast({ title: "Success", description: `"${uploadForm.title}" uploaded to ${uploadForm.category}` });
+    setUploadForm({ title: "", category: "", file: null });
+    setIsUploadOpen(false);
+  };
+
+  const categories = [
+    { value: "Company", label: "Company Documents" },
+    { value: "Compliance", label: "Compliance" },
+    { value: "Contracts", label: "Contracts" },
+    { value: "Tax", label: "Tax Documents" },
+    { value: "Personal", label: "Personal ID" },
+  ];
 
   return (
     <DashboardLayout 
@@ -90,10 +146,92 @@ const Documents = () => {
                 <Filter className="w-4 h-4" />
                 Filter
               </Button>
-              <Button variant="gold" size="sm">
-                <Upload className="w-4 h-4" />
-                Upload
-              </Button>
+              <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="gold" size="sm">
+                    <Upload className="w-4 h-4" />
+                    Upload
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Upload Document</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="title">Document Title</Label>
+                      <Input
+                        id="title"
+                        placeholder="Enter document title..."
+                        value={uploadForm.title}
+                        onChange={(e) => setUploadForm(prev => ({ ...prev, title: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="category">Category</Label>
+                      <Select
+                        value={uploadForm.category}
+                        onValueChange={(value) => setUploadForm(prev => ({ ...prev, category: value }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categories.map((cat) => (
+                            <SelectItem key={cat.value} value={cat.value}>
+                              {cat.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="file">File</Label>
+                      <div className="border-2 border-dashed border-border rounded-lg p-4 text-center hover:border-gold transition-colors cursor-pointer">
+                        <input
+                          id="file"
+                          type="file"
+                          className="hidden"
+                          onChange={handleFileChange}
+                          accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                        />
+                        <label htmlFor="file" className="cursor-pointer">
+                          {uploadForm.file ? (
+                            <div className="flex items-center justify-center gap-2">
+                              <FileText className="w-5 h-5 text-gold" />
+                              <span className="text-sm font-medium">{uploadForm.file.name}</span>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  setUploadForm(prev => ({ ...prev, file: null }));
+                                }}
+                                className="p-1 hover:bg-secondary rounded"
+                              >
+                                <X className="w-4 h-4 text-muted-foreground" />
+                              </button>
+                            </div>
+                          ) : (
+                            <div>
+                              <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                              <p className="text-sm text-muted-foreground">
+                                Click to select a file
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                PDF, DOC, DOCX, JPG, PNG
+                              </p>
+                            </div>
+                          )}
+                        </label>
+                      </div>
+                    </div>
+                    <Button onClick={handleUpload} variant="gold" className="w-full">
+                      <Upload className="w-4 h-4" />
+                      Upload Document
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
 
