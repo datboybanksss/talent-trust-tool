@@ -241,6 +241,54 @@ export type Database = {
         }
         Relationships: []
       }
+      life_file_shares: {
+        Row: {
+          accepted_at: string | null
+          access_level: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          message: string | null
+          owner_id: string
+          relationship: string
+          sections: string[] | null
+          shared_with_email: string
+          shared_with_user_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          access_level?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          message?: string | null
+          owner_id: string
+          relationship: string
+          sections?: string[] | null
+          shared_with_email: string
+          shared_with_user_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          access_level?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          message?: string | null
+          owner_id?: string
+          relationship?: string
+          sections?: string[] | null
+          shared_with_email?: string
+          shared_with_user_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       shared_access: {
         Row: {
           access_type: string

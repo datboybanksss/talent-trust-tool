@@ -23,6 +23,7 @@ import {
   Calendar,
   Download,
   Loader2,
+  Share2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -46,9 +47,19 @@ import {
   deleteLifeFileDocument,
   uploadLifeFileDocument,
 } from "@/services/lifeFileService";
+import {
+  fetchLifeFileShares,
+  createLifeFileShare,
+  updateLifeFileShare,
+  deleteLifeFileShare,
+  revokeLifeFileShare,
+  LifeFileShare,
+} from "@/services/lifeFileShareService";
 import BeneficiaryDialog from "@/components/life-file/BeneficiaryDialog";
 import EmergencyContactDialog from "@/components/life-file/EmergencyContactDialog";
 import DocumentDialog from "@/components/life-file/DocumentDialog";
+import ShareLifeFileDialog from "@/components/life-file/ShareLifeFileDialog";
+import ShareList from "@/components/life-file/ShareList";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -70,19 +81,22 @@ const LifeFilePage = () => {
   const [beneficiaries, setBeneficiaries] = useState<Beneficiary[]>([]);
   const [contacts, setContacts] = useState<EmergencyContact[]>([]);
   const [documents, setDocuments] = useState<LifeFileDocument[]>([]);
+  const [shares, setShares] = useState<LifeFileShare[]>([]);
 
   // Dialog states
   const [beneficiaryDialogOpen, setBeneficiaryDialogOpen] = useState(false);
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
   const [documentDialogOpen, setDocumentDialogOpen] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [editingBeneficiary, setEditingBeneficiary] = useState<Beneficiary | null>(null);
   const [editingContact, setEditingContact] = useState<EmergencyContact | null>(null);
   const [editingDocument, setEditingDocument] = useState<LifeFileDocument | null>(null);
+  const [editingShare, setEditingShare] = useState<LifeFileShare | null>(null);
 
   // Delete confirmation
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{
-    type: "beneficiary" | "contact" | "document";
+    type: "beneficiary" | "contact" | "document" | "share";
     id: string;
     name: string;
   } | null>(null);
@@ -109,14 +123,16 @@ const LifeFilePage = () => {
   const loadData = async (uid: string) => {
     setLoading(true);
     try {
-      const [benefs, conts, docs] = await Promise.all([
+      const [benefs, conts, docs, shrs] = await Promise.all([
         fetchBeneficiaries(uid),
         fetchEmergencyContacts(uid),
         fetchLifeFileDocuments(uid),
+        fetchLifeFileShares(uid),
       ]);
       setBeneficiaries(benefs || []);
       setContacts(conts || []);
       setDocuments(docs || []);
+      setShares(shrs || []);
     } catch (error) {
       console.error("Error loading Life File data:", error);
       toast({
@@ -198,6 +214,44 @@ const LifeFilePage = () => {
     toast({ title: "Document updated" });
   };
 
+  // Share handlers
+  const handleAddShare = async (data: any) => {
+    if (!userId) return;
+    try {
+      await createLifeFileShare({
+        ...data,
+        owner_id: userId,
+        status: "pending",
+        expires_at: data.expires_at ? new Date(data.expires_at).toISOString() : null,
+      });
+      await loadData(userId);
+      toast({ title: "Invitation sent" });
+    } catch (error: any) {
+      if (error.code === "23505") {
+        toast({ title: "This person already has access", variant: "destructive" });
+      } else {
+        toast({ title: "Error sending invitation", variant: "destructive" });
+      }
+    }
+  };
+
+  const handleUpdateShare = async (data: any) => {
+    if (!editingShare || !userId) return;
+    await updateLifeFileShare(editingShare.id, {
+      ...data,
+      expires_at: data.expires_at ? new Date(data.expires_at).toISOString() : null,
+    });
+    await loadData(userId);
+    toast({ title: "Share updated" });
+  };
+
+  const handleRevokeShare = async (share: LifeFileShare) => {
+    if (!userId) return;
+    await revokeLifeFileShare(share.id);
+    await loadData(userId);
+    toast({ title: "Access revoked" });
+  };
+
   // Delete handler
   const handleDelete = async () => {
     if (!deleteTarget || !userId) return;
@@ -212,6 +266,9 @@ const LifeFilePage = () => {
           break;
         case "document":
           await deleteLifeFileDocument(deleteTarget.id);
+          break;
+        case "share":
+          await deleteLifeFileShare(deleteTarget.id);
           break;
       }
       await loadData(userId);
@@ -275,6 +332,11 @@ const LifeFilePage = () => {
               </p>
               <p className="text-xs opacity-80">Docs Complete</p>
             </div>
+            <div className="h-12 w-px bg-primary-foreground/20" />
+            <div className="text-center">
+              <p className="text-2xl font-bold">{shares.filter(s => s.status === "accepted").length}</p>
+              <p className="text-xs opacity-80">Shared With</p>
+            </div>
           </div>
         </div>
       </div>
@@ -287,7 +349,7 @@ const LifeFilePage = () => {
 
       {/* Tabs */}
       <Tabs defaultValue="beneficiaries" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="beneficiaries" className="flex items-center gap-2">
             <Users className="w-4 h-4" />
             Beneficiaries
@@ -299,6 +361,10 @@ const LifeFilePage = () => {
           <TabsTrigger value="documents" className="flex items-center gap-2">
             <FileText className="w-4 h-4" />
             Documents
+          </TabsTrigger>
+          <TabsTrigger value="sharing" className="flex items-center gap-2">
+            <Share2 className="w-4 h-4" />
+            Sharing
           </TabsTrigger>
         </TabsList>
 
@@ -635,6 +701,40 @@ const LifeFilePage = () => {
             )}
           </div>
         </TabsContent>
+
+        {/* Sharing Tab */}
+        <TabsContent value="sharing" className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-foreground">Shared Access</h3>
+              <p className="text-sm text-muted-foreground">
+                Manage who can view your Life File information
+              </p>
+            </div>
+            <Button
+              onClick={() => {
+                setEditingShare(null);
+                setShareDialogOpen(true);
+              }}
+            >
+              <Plus className="w-4 h-4" />
+              Share Life File
+            </Button>
+          </div>
+
+          <ShareList
+            shares={shares}
+            onEdit={(share) => {
+              setEditingShare(share);
+              setShareDialogOpen(true);
+            }}
+            onRevoke={handleRevokeShare}
+            onDelete={(share) => {
+              setDeleteTarget({ type: "share", id: share.id, name: share.shared_with_email });
+              setDeleteDialogOpen(true);
+            }}
+          />
+        </TabsContent>
       </Tabs>
 
       {/* Dialogs */}
@@ -657,6 +757,13 @@ const LifeFilePage = () => {
         onOpenChange={setDocumentDialogOpen}
         onSubmit={editingDocument ? handleUpdateDocument : handleAddDocument}
         document={editingDocument}
+      />
+
+      <ShareLifeFileDialog
+        open={shareDialogOpen}
+        onOpenChange={setShareDialogOpen}
+        onSubmit={editingShare ? handleUpdateShare : handleAddShare}
+        existingShare={editingShare}
       />
 
       {/* Delete Confirmation */}
