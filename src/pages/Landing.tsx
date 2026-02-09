@@ -1,16 +1,97 @@
 import { Button } from "@/components/ui/button";
-import { Shield, Lock, FileText, Users, Briefcase, ArrowRight } from "lucide-react";
+import { Shield, Lock, FileText, Users, Briefcase, ArrowRight, ChevronDown, Trophy, Palette } from "lucide-react";
 import { Link } from "react-router-dom";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from "@/components/ui/navigation-menu";
+import { cn } from "@/lib/utils";
+
+const athleteCategories = [
+  { title: "Rugby Players", href: "/client-type?type=rugby-players", description: "Contract and wealth management for rugby professionals" },
+  { title: "Soccer Players", href: "/client-type?type=soccer-players", description: "Career protection for footballers at all levels" },
+  { title: "Cricket Players", href: "/client-type?type=cricket-players", description: "Financial planning for Proteas and franchise players" },
+  { title: "Tennis Players", href: "/client-type?type=tennis-players", description: "Individual athlete wealth structuring" },
+  { title: "Golf Players", href: "/client-type?type=golf-players", description: "Long-term career and sponsorship management" },
+  { title: "Olympic Athletes", href: "/client-type?type=olympic-athletes", description: "Support for SA's Olympic hopefuls and champions" },
+  { title: "Boxing & MMA", href: "/client-type?type=boxing-mma", description: "Combat sports contract and purse management" },
+  { title: "Athletics & Track", href: "/client-type?type=athletics-track", description: "Track and field career planning" },
+];
+
+const artistCategories = [
+  { title: "Musicians & Producers", href: "/client-type?type=musicians-producers", description: "Royalty management and label negotiations" },
+  { title: "Visual Artists & Painters", href: "/client-type?type=visual-artists-painters", description: "Gallery representation and art sales structuring" },
+  { title: "Actors & Performers", href: "/client-type?type=actors-performers", description: "Film and stage contract oversight" },
+  { title: "Fashion Designers", href: "/client-type?type=fashion-designers", description: "Brand protection and licensing agreements" },
+  { title: "Photographers & Filmmakers", href: "/client-type?type=photographers-filmmakers", description: "Intellectual property and licensing" },
+  { title: "Writers & Authors", href: "/client-type?type=writers-authors", description: "Publishing rights and royalty management" },
+  { title: "Digital Artists & NFT Creators", href: "/client-type?type=digital-artists-nft", description: "Web3 and digital asset protection" },
+  { title: "Comedians & Entertainers", href: "/client-type?type=comedians-entertainers", description: "Tour and content monetization" },
+];
 
 const Landing = () => {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/50">
-        <div className="container py-5 flex items-center justify-between">
-          <span className="text-xl font-display font-bold tracking-tight text-foreground">
-            LegacyBuilder
-          </span>
+        <div className="container py-4 flex items-center justify-between">
+          <div className="flex items-center gap-8">
+            <Link to="/" className="text-xl font-display font-bold tracking-tight text-foreground">
+              LegacyBuilder
+            </Link>
+            
+            {/* Navigation Menu */}
+            <NavigationMenu className="hidden md:flex">
+              <NavigationMenuList>
+                {/* Athletes Dropdown */}
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger className="bg-transparent hover:bg-secondary/50 text-foreground data-[state=open]:bg-secondary/50">
+                    <Trophy className="w-4 h-4 mr-2 text-gold" />
+                    Athletes
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <ul className="grid w-[400px] gap-1 p-3 md:w-[500px] md:grid-cols-2 lg:w-[600px] bg-card border border-border rounded-lg shadow-lg">
+                      {athleteCategories.map((category) => (
+                        <ListItem
+                          key={category.title}
+                          title={category.title}
+                          href={category.href}
+                        >
+                          {category.description}
+                        </ListItem>
+                      ))}
+                    </ul>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+
+                {/* Artists Dropdown */}
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger className="bg-transparent hover:bg-secondary/50 text-foreground data-[state=open]:bg-secondary/50">
+                    <Palette className="w-4 h-4 mr-2 text-gold" />
+                    Artists
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <ul className="grid w-[400px] gap-1 p-3 md:w-[500px] md:grid-cols-2 lg:w-[600px] bg-card border border-border rounded-lg shadow-lg">
+                      {artistCategories.map((category) => (
+                        <ListItem
+                          key={category.title}
+                          title={category.title}
+                          href={category.href}
+                        >
+                          {category.description}
+                        </ListItem>
+                      ))}
+                    </ul>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+              </NavigationMenuList>
+            </NavigationMenu>
+          </div>
+
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-foreground">
               <Link to="/auth">Sign In</Link>
@@ -127,6 +208,31 @@ const ServiceCard = ({ icon: Icon, title, description }: ServiceCardProps) => (
     <h3 className="text-lg font-display font-semibold text-foreground mb-2">{title}</h3>
     <p className="text-muted-foreground text-sm leading-relaxed">{description}</p>
   </div>
+);
+
+interface ListItemProps {
+  title: string;
+  href: string;
+  children: React.ReactNode;
+}
+
+const ListItem = ({ title, href, children }: ListItemProps) => (
+  <li>
+    <NavigationMenuLink asChild>
+      <Link
+        to={href}
+        className={cn(
+          "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors",
+          "hover:bg-secondary hover:text-foreground focus:bg-secondary focus:text-foreground"
+        )}
+      >
+        <div className="text-sm font-medium leading-none text-foreground">{title}</div>
+        <p className="line-clamp-2 text-xs leading-snug text-muted-foreground mt-1">
+          {children}
+        </p>
+      </Link>
+    </NavigationMenuLink>
+  </li>
 );
 
 export default Landing;
