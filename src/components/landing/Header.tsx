@@ -46,8 +46,10 @@ const ListItem = ({ title, href, children }: ListItemProps) => (
       <Link
         to={href}
         className={cn(
-          "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors",
-          "hover:bg-secondary hover:text-foreground focus:bg-secondary focus:text-foreground"
+          "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none",
+          "transition-all duration-200 ease-out",
+          "hover:bg-secondary hover:text-foreground hover:translate-x-1 hover:shadow-sm",
+          "focus:bg-secondary focus:text-foreground"
         )}
       >
         <div className="text-sm font-medium leading-none text-foreground">{title}</div>
@@ -84,13 +86,13 @@ const Header = () => {
               <NavigationMenuList>
                 {/* Athletes Dropdown */}
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="bg-transparent hover:bg-secondary/50 text-foreground data-[state=open]:bg-secondary/50">
-                    <Trophy className="w-4 h-4 mr-2 text-gold" />
+                  <NavigationMenuTrigger className="bg-transparent hover:bg-secondary/50 text-foreground data-[state=open]:bg-secondary/50 transition-all duration-200">
+                    <Trophy className="w-4 h-4 mr-2 text-gold transition-transform duration-200 group-hover:scale-110" />
                     Athletes
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
-                    <ul className="grid w-[400px] gap-1 p-3 md:w-[500px] md:grid-cols-2 lg:w-[600px] bg-card border border-border rounded-lg shadow-lg">
-                      {athleteCategories.map((category) => (
+                    <ul className="grid w-[400px] gap-1 p-3 md:w-[500px] md:grid-cols-2 lg:w-[600px] bg-card border border-border rounded-lg shadow-gold animate-fade-in">
+                      {athleteCategories.map((category, i) => (
                         <ListItem
                           key={category.title}
                           title={category.title}
@@ -105,13 +107,13 @@ const Header = () => {
 
                 {/* Artists Dropdown */}
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="bg-transparent hover:bg-secondary/50 text-foreground data-[state=open]:bg-secondary/50">
-                    <Palette className="w-4 h-4 mr-2 text-gold" />
+                  <NavigationMenuTrigger className="bg-transparent hover:bg-secondary/50 text-foreground data-[state=open]:bg-secondary/50 transition-all duration-200">
+                    <Palette className="w-4 h-4 mr-2 text-gold transition-transform duration-200 group-hover:scale-110" />
                     Artists
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
-                    <ul className="grid w-[400px] gap-1 p-3 md:w-[500px] md:grid-cols-2 lg:w-[600px] bg-card border border-border rounded-lg shadow-lg">
-                      {artistCategories.map((category) => (
+                    <ul className="grid w-[400px] gap-1 p-3 md:w-[500px] md:grid-cols-2 lg:w-[600px] bg-card border border-border rounded-lg shadow-gold animate-fade-in">
+                      {artistCategories.map((category, i) => (
                         <ListItem
                           key={category.title}
                           title={category.title}
