@@ -4,6 +4,8 @@ import ComplianceOverview from "@/components/dashboard/profile/ComplianceOvervie
 import ContractExpiryTimeline from "@/components/dashboard/profile/ContractExpiryTimeline";
 import QuickStats from "@/components/dashboard/profile/QuickStats";
 import LifeFile from "@/components/dashboard/profile/LifeFile";
+import { Button } from "@/components/ui/button";
+import { generateExecutiveReportPDF } from "@/utils/executiveReportPdf";
 import { 
   Building2, 
   Landmark, 
@@ -17,15 +19,53 @@ import {
   FileText,
   Heart,
   Key,
-  Briefcase
+  Briefcase,
+  Download
 } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 const Profile = () => {
+  const handleGenerateReport = () => {
+    generateExecutiveReportPDF({
+      userName: "Client",
+      totalPortfolioValue: "R 4,250,000",
+      quarterlyChange: "+12.5%",
+      companiesCount: 3,
+      contractsCount: 8,
+      complianceScore: 85,
+      assets: [
+        { title: "Business Assets", value: "R 2,500,000", count: 3, trend: { value: 8.2, positive: true } },
+        { title: "Investments", value: "R 850,000", count: 5, trend: { value: 15.3, positive: true } },
+        { title: "Property", value: "R 650,000", count: 1, trend: { value: 3.1, positive: true } },
+        { title: "Liquid Assets", value: "R 250,000", trend: { value: 2.4, positive: false } },
+      ],
+      complianceItems,
+      contracts,
+      quickStats: quickStats.map(s => ({ label: s.label, value: s.value })),
+      lifeFileItems: lifeFileItems.map(i => ({ name: i.name, status: i.status, lastUpdated: i.lastUpdated })),
+      beneficiariesCount: 4,
+      emergencyContactsCount: 3,
+      advisors: { count: 4, types: "Lawyer, Accountant, Agent, Financial Advisor" },
+      documentsStored: 24,
+      nextDeadline: { date: "Feb 15", description: "Annual Return Due" },
+      insurancePolicies: 3,
+    });
+    toast({ title: "Executive Report Generated", description: "Your PDF report has been downloaded." });
+  };
+
   return (
     <DashboardLayout 
       title="My Profile" 
       subtitle="Overview of your assets, compliance, and business health"
     >
+      {/* Generate Report Button */}
+      <div className="flex justify-end mb-6">
+        <Button onClick={handleGenerateReport} variant="outline" className="gap-2 border-primary/30 hover:bg-primary/10 text-foreground">
+          <Download className="w-4 h-4 text-primary" />
+          Generate Executive Report
+        </Button>
+      </div>
+
       {/* Total Net Worth Banner */}
       <div className="bg-gradient-to-r from-primary to-primary/80 rounded-2xl p-6 mb-8 text-primary-foreground">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
