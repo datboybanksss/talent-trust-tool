@@ -1,3 +1,5 @@
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import { 
   Shield, 
   LayoutDashboard, 
@@ -20,6 +22,13 @@ import { cn } from "@/lib/utils";
 
 const Sidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
 
   return (
     <aside className="fixed left-0 top-0 bottom-0 w-64 bg-card border-r border-border p-6 flex flex-col">
@@ -44,7 +53,13 @@ const Sidebar = () => {
 
       <div className="border-t border-border pt-4 space-y-1">
         <NavItem icon={Settings} label="Settings" href="/dashboard/settings" />
-        <NavItem icon={LogOut} label="Sign Out" href="/" />
+        <button
+          onClick={handleSignOut}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-muted-foreground hover:bg-secondary hover:text-foreground w-full"
+        >
+          <LogOut className="w-5 h-5" />
+          <span className="flex-1 text-left">Sign Out</span>
+        </button>
       </div>
 
       <div className="mt-4 p-4 bg-secondary rounded-xl">
