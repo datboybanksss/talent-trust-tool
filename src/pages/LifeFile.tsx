@@ -61,6 +61,7 @@ import EmergencyContactDialog from "@/components/life-file/EmergencyContactDialo
 import DocumentDialog from "@/components/life-file/DocumentDialog";
 import ShareLifeFileDialog from "@/components/life-file/ShareLifeFileDialog";
 import ShareList from "@/components/life-file/ShareList";
+import TrustsWillsFolder from "@/components/life-file/TrustsWillsFolder";
 import { generateLifeFilePDF } from "@/utils/lifeFilePdfExport";
 import {
   AlertDialog,
