@@ -36,6 +36,7 @@ const folderIcons: Record<string, React.ElementType> = {
   trusts: Shield,
   poa: Scale,
   letters: BookOpen,
+  insurance: HeartPulse,
 };
 
 const TrustsWillsFolder = ({
