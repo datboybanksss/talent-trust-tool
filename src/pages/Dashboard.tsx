@@ -1,7 +1,9 @@
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import JourneyTracker from "@/components/dashboard/JourneyTracker";
 import StatsCard from "@/components/dashboard/StatsCard";
+import PropertyInvestments from "@/components/dashboard/PropertyInvestments";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Building2, 
   FileCheck, 
@@ -9,7 +11,8 @@ import {
   Bell, 
   ArrowRight,
   Calendar,
-  Clock
+  Clock,
+  Home
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -19,6 +22,19 @@ const Dashboard = () => {
       title="Welcome back, John" 
       subtitle="Here's an overview of your business journey"
     >
+      <Tabs defaultValue="overview" className="mb-8">
+        <TabsList className="mb-6">
+          <TabsTrigger value="overview">
+            <Building2 className="w-4 h-4 mr-2" />
+            Overview
+          </TabsTrigger>
+          <TabsTrigger value="property">
+            <Home className="w-4 h-4 mr-2" />
+            Property Investment Opportunities
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview">
       {/* Stats Grid */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatsCard
