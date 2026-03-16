@@ -178,9 +178,9 @@ const ChatBot = () => {
   );
 
   const quickActions = [
+    "What's overdue or due soon?",
+    "Any expiring documents?",
     "Sponsorship contract tips",
-    "My image rights as an athlete",
-    "Recording contract red flags",
     "SARS compliance for tours",
   ];
 
