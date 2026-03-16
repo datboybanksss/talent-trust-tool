@@ -91,6 +91,21 @@ export const ESTATE_FOLDERS = [
       { value: "executor_info", label: "Executor Information" },
     ],
   },
+  {
+    key: "insurance",
+    label: "Insurance",
+    description: "Life, medical aid, key man, funeral, and other insurance policies",
+    documentTypes: ["life_insurance", "medical_aid", "keyman_insurance", "funeral_policy", "disability_insurance", "short_term_insurance", "insurance"],
+    subfolders: [
+      { value: "life_insurance", label: "Life Insurance" },
+      { value: "medical_aid", label: "Medical Aid / Health Insurance" },
+      { value: "keyman_insurance", label: "Key Man Insurance" },
+      { value: "funeral_policy", label: "Funeral Policy" },
+      { value: "disability_insurance", label: "Disability / Income Protection" },
+      { value: "short_term_insurance", label: "Short-Term Insurance" },
+      { value: "insurance", label: "Other Insurance" },
+    ],
+  },
 ] as const;
 
 export const RELATIONSHIPS = [
