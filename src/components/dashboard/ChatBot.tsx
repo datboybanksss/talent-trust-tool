@@ -3,6 +3,7 @@ import { MessageCircle, X, Send, Shield, ChevronDown, AlertTriangle } from "luci
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Message {
   id: string;
