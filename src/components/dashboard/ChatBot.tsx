@@ -84,7 +84,7 @@ const ChatBot = () => {
       id: "welcome",
       role: "assistant",
       content:
-        "Hello! 👋 I'm your platform assistant. I can help you navigate features, answer questions, and research topics online.\n\n🌍 I speak **English**, **Afrikaans**, **Sesotho**, **isiZulu**, and **French** — just write in your preferred language!\n\n⚠️ **Please note:** I'm not a legal or tax advisor. For professional advice, please consult a qualified expert.",
+        "Hello! 👋 I'm your platform assistant. I can help you navigate features, answer questions about **contracts & rights for athletes and artists**, and research topics online.\n\n🌍 I speak **English**, **Afrikaans**, **Sesotho**, **isiZulu**, and **French** — just write in your preferred language!\n\n⚠️ **Please note:** I provide general legal information, not legal advice. For specific advice, please consult a qualified attorney.",
       timestamp: new Date(),
     },
   ]);
@@ -173,10 +173,10 @@ const ChatBot = () => {
   );
 
   const quickActions = [
-    "How is my data protected?",
-    "What is the Life File?",
-    "How do I share access?",
-    "Help",
+    "Sponsorship contract tips",
+    "My image rights as an athlete",
+    "Recording contract red flags",
+    "SARS compliance for tours",
   ];
 
   return (
@@ -204,7 +204,7 @@ const ChatBot = () => {
           </div>
           <div className="flex-1">
             <p className="text-sm font-semibold text-foreground">Platform Assistant</p>
-            <p className="text-xs text-muted-foreground">AI-Powered • Not a legal/tax advisor</p>
+            <p className="text-xs text-muted-foreground">AI-Powered • General info, not legal advice</p>
           </div>
           <button onClick={() => setIsOpen(false)} className="p-1.5 rounded-lg hover:bg-secondary transition-colors">
             <X className="w-4 h-4 text-muted-foreground" />
@@ -261,7 +261,7 @@ const ChatBot = () => {
         {/* Disclaimer banner */}
         <div className="flex items-center gap-2 px-4 py-2 bg-accent/10 border-t border-border text-[11px] text-muted-foreground">
           <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-accent-foreground/60" />
-          <span>Not a legal or tax advisor. Consult a qualified professional for specific advice.</span>
+          <span>General legal information only — not legal advice. Consult a qualified attorney for your situation.</span>
         </div>
 
         {/* Input */}
