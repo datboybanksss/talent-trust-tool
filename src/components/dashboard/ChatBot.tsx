@@ -84,7 +84,7 @@ const ChatBot = () => {
       id: "welcome",
       role: "assistant",
       content:
-        "Hello! 👋 I'm your platform assistant. I can help you navigate features, answer questions, and research topics online.\n\n⚠️ **Please note:** I'm not a legal or tax advisor. For professional advice, please consult a qualified expert.",
+        "Hello! 👋 I'm your platform assistant. I can help you navigate features, answer questions, and research topics online.\n\n🌍 I speak **English**, **Afrikaans**, **Sesotho**, **isiZulu**, and **French** — just write in your preferred language!\n\n⚠️ **Please note:** I'm not a legal or tax advisor. For professional advice, please consult a qualified expert.",
       timestamp: new Date(),
     },
   ]);
