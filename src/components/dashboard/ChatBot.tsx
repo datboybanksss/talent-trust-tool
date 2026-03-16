@@ -261,7 +261,7 @@ const ChatBot = () => {
         {/* Disclaimer banner */}
         <div className="flex items-center gap-2 px-4 py-2 bg-accent/10 border-t border-border text-[11px] text-muted-foreground">
           <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-accent-foreground/60" />
-          <span>Not a legal or tax advisor. Consult a qualified professional for specific advice.</span>
+          <span>General legal information only — not legal advice. Consult a qualified attorney for your situation.</span>
         </div>
 
         {/* Input */}
