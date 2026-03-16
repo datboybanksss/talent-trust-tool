@@ -368,25 +368,52 @@ const LifeFilePage = () => {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="beneficiaries" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+      <Tabs defaultValue="trusts-wills" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="trusts-wills" className="flex items-center gap-2">
+            <Scale className="w-4 h-4" />
+            Trusts & Wills
+          </TabsTrigger>
           <TabsTrigger value="beneficiaries" className="flex items-center gap-2">
             <Users className="w-4 h-4" />
             Beneficiaries
           </TabsTrigger>
           <TabsTrigger value="contacts" className="flex items-center gap-2">
             <Phone className="w-4 h-4" />
-            Emergency Contacts
+            Contacts
           </TabsTrigger>
           <TabsTrigger value="documents" className="flex items-center gap-2">
             <FileText className="w-4 h-4" />
-            Documents
+            Other Docs
           </TabsTrigger>
           <TabsTrigger value="sharing" className="flex items-center gap-2">
             <Share2 className="w-4 h-4" />
             Sharing
           </TabsTrigger>
         </TabsList>
+
+        {/* Trusts & Wills Tab */}
+        <TabsContent value="trusts-wills">
+          <TrustsWillsFolder
+            documents={documents}
+            onAddDocument={(preselectedType) => {
+              setEditingDocument(null);
+              setDocumentDialogOpen(true);
+            }}
+            onEditDocument={(doc) => {
+              setEditingDocument(doc);
+              setDocumentDialogOpen(true);
+            }}
+            onDeleteDocument={(doc) => {
+              setDeleteTarget({ type: "document", id: doc.id, name: doc.title });
+              setDeleteDialogOpen(true);
+            }}
+            onShareSection={() => {
+              setEditingShare(null);
+              setShareDialogOpen(true);
+            }}
+          />
+        </TabsContent>
 
         {/* Beneficiaries Tab */}
         <TabsContent value="beneficiaries" className="space-y-4">

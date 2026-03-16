@@ -50,7 +50,7 @@ const TrustsWillsFolder = ({
     const folder = ESTATE_FOLDERS.find((f) => f.key === folderKey);
     if (!folder) return [];
     return documents.filter((d) =>
-      folder.documentTypes.includes(d.document_type)
+      (folder.documentTypes as readonly string[]).includes(d.document_type)
     );
   };
 
