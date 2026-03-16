@@ -115,6 +115,12 @@ const Dashboard = () => {
           ))}
         </div>
       </div>
+        </TabsContent>
+
+        <TabsContent value="property">
+          <PropertyInvestments />
+        </TabsContent>
+      </Tabs>
     </DashboardLayout>
   );
 };
