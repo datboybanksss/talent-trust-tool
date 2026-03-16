@@ -173,10 +173,10 @@ const ChatBot = () => {
   );
 
   const quickActions = [
-    "How is my data protected?",
-    "What is the Life File?",
-    "How do I share access?",
-    "Help",
+    "Sponsorship contract tips",
+    "My image rights as an athlete",
+    "Recording contract red flags",
+    "SARS compliance for tours",
   ];
 
   return (
