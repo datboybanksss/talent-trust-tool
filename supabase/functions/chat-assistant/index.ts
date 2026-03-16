@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,6 +10,15 @@ const corsHeaders = {
 const SYSTEM_PROMPT = `You are a helpful platform assistant for a secure business management platform designed for high-net-worth athletes and creative artists in South Africa. You help users navigate features like the Life File (document vault), compliance tracking, beneficiary management, sharing controls, executive reports, and more.
 
 You have access to real-time information and can research topics on the internet to provide helpful, accurate answers.
+
+PROACTIVE COMPLIANCE & EXPIRY AWARENESS:
+You have access to the user's compliance reminders and document expiry dates. When the user opens a conversation or asks general questions:
+- Proactively mention any OVERDUE compliance reminders or documents that have already expired.
+- Warn about items due within the next 14 days.
+- Provide actionable advice on how to address each item.
+- Prioritise by urgency: overdue items first, then upcoming deadlines.
+- If there are no urgent items, briefly reassure the user that their compliance status looks good.
+- When discussing specific reminders or documents, reference them by name and date.
 
 SPORTS & ENTERTAINMENT LAW EXPERTISE:
 You are knowledgeable about general legal concepts relevant to athletes and creative artists, including but not limited to:
@@ -50,6 +60,62 @@ Platform features you know about:
 
 Keep responses concise, helpful, and formatted with markdown when useful. Use emojis sparingly for friendliness.`;
 
+function buildUserContext(reminders: any[], documents: any[]): string {
+  const now = new Date();
+  const lines: string[] = [];
+
+  // Process compliance reminders
+  const overdueReminders = reminders.filter(r => new Date(r.due_date) < now && r.status !== 'completed');
+  const upcomingReminders = reminders.filter(r => {
+    const due = new Date(r.due_date);
+    const daysUntil = (due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+    return daysUntil >= 0 && daysUntil <= 14 && r.status !== 'completed';
+  });
+
+  // Process documents with expiry dates
+  const expiredDocs = documents.filter(d => d.expiry_date && new Date(d.expiry_date) < now);
+  const expiringDocs = documents.filter(d => {
+    if (!d.expiry_date) return false;
+    const exp = new Date(d.expiry_date);
+    const daysUntil = (exp.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+    return daysUntil >= 0 && daysUntil <= 30;
+  });
+
+  if (overdueReminders.length > 0) {
+    lines.push("🚨 OVERDUE COMPLIANCE REMINDERS:");
+    overdueReminders.forEach(r => {
+      lines.push(`- "${r.title}" (${r.category}) — was due ${r.due_date} [Priority: ${r.priority}]${r.description ? ` — ${r.description}` : ''}`);
+    });
+  }
+
+  if (upcomingReminders.length > 0) {
+    lines.push("⏰ UPCOMING COMPLIANCE DEADLINES (next 14 days):");
+    upcomingReminders.forEach(r => {
+      lines.push(`- "${r.title}" (${r.category}) — due ${r.due_date} [Priority: ${r.priority}]${r.description ? ` — ${r.description}` : ''}`);
+    });
+  }
+
+  if (expiredDocs.length > 0) {
+    lines.push("🚨 EXPIRED DOCUMENTS:");
+    expiredDocs.forEach(d => {
+      lines.push(`- "${d.title}" (${d.document_type}) — expired ${d.expiry_date}`);
+    });
+  }
+
+  if (expiringDocs.length > 0) {
+    lines.push("⚠️ DOCUMENTS EXPIRING SOON (next 30 days):");
+    expiringDocs.forEach(d => {
+      lines.push(`- "${d.title}" (${d.document_type}) — expires ${d.expiry_date}`);
+    });
+  }
+
+  if (lines.length === 0) {
+    lines.push("✅ No overdue or upcoming compliance items. The user's compliance status looks good.");
+  }
+
+  return "\n\n--- USER'S CURRENT COMPLIANCE & DOCUMENT STATUS ---\n" + lines.join("\n") + "\n--- END STATUS ---";
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -60,6 +126,33 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
+    }
+
+    // Try to get user context from their auth token
+    let userContext = "";
+    const authHeader = req.headers.get("authorization") || "";
+    const token = authHeader.replace("Bearer ", "");
+
+    if (token && token !== Deno.env.get("SUPABASE_ANON_KEY")) {
+      try {
+        const supabase = createClient(
+          Deno.env.get("SUPABASE_URL")!,
+          Deno.env.get("SUPABASE_ANON_KEY")!,
+          { global: { headers: { Authorization: `Bearer ${token}` } } }
+        );
+
+        const [remindersRes, documentsRes] = await Promise.all([
+          supabase.from("compliance_reminders").select("title, category, due_date, priority, status, description").order("due_date", { ascending: true }),
+          supabase.from("life_file_documents").select("title, document_type, expiry_date, status").not("expiry_date", "is", null).order("expiry_date", { ascending: true }),
+        ]);
+
+        userContext = buildUserContext(
+          remindersRes.data || [],
+          documentsRes.data || []
+        );
+      } catch (e) {
+        console.error("Failed to fetch user context:", e);
+      }
     }
 
     const response = await fetch(
@@ -73,7 +166,7 @@ serve(async (req) => {
         body: JSON.stringify({
           model: "google/gemini-3-flash-preview",
           messages: [
-            { role: "system", content: SYSTEM_PROMPT },
+            { role: "system", content: SYSTEM_PROMPT + userContext },
             ...messages,
           ],
           stream: true,

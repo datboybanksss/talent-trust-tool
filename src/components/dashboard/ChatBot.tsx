@@ -3,6 +3,7 @@ import { MessageCircle, X, Send, Shield, ChevronDown, AlertTriangle } from "luci
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Message {
   id: string;
@@ -24,11 +25,15 @@ async function streamChat({
   onDone: () => void;
   onError: (msg: string) => void;
 }) {
+  // Get the user's session token for personalized context
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
   const resp = await fetch(CHAT_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ messages }),
   });
@@ -84,7 +89,7 @@ const ChatBot = () => {
       id: "welcome",
       role: "assistant",
       content:
-        "Hello! 👋 I'm your platform assistant. I can help you navigate features, answer questions about **contracts & rights for athletes and artists**, and research topics online.\n\n🌍 I speak **English**, **Afrikaans**, **Sesotho**, **isiZulu**, and **French** — just write in your preferred language!\n\n⚠️ **Please note:** I provide general legal information, not legal advice. For specific advice, please consult a qualified attorney.",
+        "Hello! 👋 I'm your platform assistant. I can help you navigate features, answer questions about **contracts & rights for athletes and artists**, and research topics online.\n\n📋 I'm aware of your **compliance deadlines and document expiry dates** — ask me what's coming up!\n\n🌍 I speak **English**, **Afrikaans**, **Sesotho**, **isiZulu**, and **French**.\n\n⚠️ **Please note:** I provide general legal information, not legal advice.",
       timestamp: new Date(),
     },
   ]);
@@ -173,9 +178,9 @@ const ChatBot = () => {
   );
 
   const quickActions = [
+    "What's overdue or due soon?",
+    "Any expiring documents?",
     "Sponsorship contract tips",
-    "My image rights as an athlete",
-    "Recording contract red flags",
     "SARS compliance for tours",
   ];
 
