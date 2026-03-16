@@ -19,6 +19,7 @@ import Reminders from "./pages/Reminders";
 import Sharing from "./pages/Sharing";
 import SocialMedia from "./pages/SocialMedia";
 import ClientType from "./pages/ClientType";
+import PropertyInvestments from "./pages/PropertyInvestments";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -44,6 +45,7 @@ const App = () => (
             <Route path="/dashboard/reminders" element={<ProtectedRoute><Reminders /></ProtectedRoute>} />
             <Route path="/dashboard/sharing" element={<ProtectedRoute><Sharing /></ProtectedRoute>} />
             <Route path="/dashboard/social-media" element={<ProtectedRoute><SocialMedia /></ProtectedRoute>} />
+            <Route path="/dashboard/property-investments" element={<ProtectedRoute><PropertyInvestments /></ProtectedRoute>} />
             <Route path="/client-type" element={<ClientType />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
