@@ -204,7 +204,7 @@ const ChatBot = () => {
           </div>
           <div className="flex-1">
             <p className="text-sm font-semibold text-foreground">Platform Assistant</p>
-            <p className="text-xs text-muted-foreground">AI-Powered • Not a legal/tax advisor</p>
+            <p className="text-xs text-muted-foreground">AI-Powered • General info, not legal advice</p>
           </div>
           <button onClick={() => setIsOpen(false)} className="p-1.5 rounded-lg hover:bg-secondary transition-colors">
             <X className="w-4 h-4 text-muted-foreground" />
