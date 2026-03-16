@@ -89,7 +89,7 @@ const ChatBot = () => {
       id: "welcome",
       role: "assistant",
       content:
-        "Hello! 👋 I'm your platform assistant. I can help you navigate features, answer questions about **contracts & rights for athletes and artists**, and research topics online.\n\n🌍 I speak **English**, **Afrikaans**, **Sesotho**, **isiZulu**, and **French** — just write in your preferred language!\n\n⚠️ **Please note:** I provide general legal information, not legal advice. For specific advice, please consult a qualified attorney.",
+        "Hello! 👋 I'm your platform assistant. I can help you navigate features, answer questions about **contracts & rights for athletes and artists**, and research topics online.\n\n📋 I'm aware of your **compliance deadlines and document expiry dates** — ask me what's coming up!\n\n🌍 I speak **English**, **Afrikaans**, **Sesotho**, **isiZulu**, and **French**.\n\n⚠️ **Please note:** I provide general legal information, not legal advice.",
       timestamp: new Date(),
     },
   ]);
