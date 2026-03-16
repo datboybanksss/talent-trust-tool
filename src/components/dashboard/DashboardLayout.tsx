@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import Sidebar from "./Sidebar";
+import ChatBot from "./ChatBot";
 import { Bell, Search } from "lucide-react";
 
 interface DashboardLayoutProps {
