@@ -25,6 +25,7 @@ import {
   Loader2,
   Share2,
   FileDown,
+  Scale,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
