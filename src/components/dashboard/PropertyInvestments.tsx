@@ -1,6 +1,9 @@
-import { MapPin, BedDouble, Bath, Square, TrendingUp, Star, ExternalLink } from "lucide-react";
+import { useState } from "react";
+import { MapPin, BedDouble, Bath, Square, TrendingUp, Star, ExternalLink, Calendar, Shield, Ruler, Car, Trees, Wifi, Phone, Mail } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
 interface Property {
