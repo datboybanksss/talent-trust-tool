@@ -28,8 +28,15 @@ export const DOCUMENT_TYPES = [
   { value: "funeral_instructions", label: "Funeral Instructions" },
   { value: "digital_asset_instructions", label: "Digital Asset Instructions" },
   { value: "executor_info", label: "Executor Information" },
+  // Insurance
+  { value: "life_insurance", label: "Life Insurance" },
+  { value: "medical_aid", label: "Medical Aid / Health Insurance" },
+  { value: "keyman_insurance", label: "Key Man Insurance" },
+  { value: "funeral_policy", label: "Funeral Policy" },
+  { value: "disability_insurance", label: "Disability / Income Protection" },
+  { value: "short_term_insurance", label: "Short-Term Insurance" },
+  { value: "insurance", label: "Other Insurance" },
   // Other estate docs
-  { value: "insurance", label: "Insurance Policies" },
   { value: "property", label: "Property Deeds" },
   { value: "investment", label: "Investment Documents" },
   { value: "pension", label: "Pension / Retirement" },
@@ -82,6 +89,21 @@ export const ESTATE_FOLDERS = [
       { value: "funeral_instructions", label: "Funeral Instructions" },
       { value: "digital_asset_instructions", label: "Digital Asset Instructions" },
       { value: "executor_info", label: "Executor Information" },
+    ],
+  },
+  {
+    key: "insurance",
+    label: "Insurance",
+    description: "Life, medical aid, key man, funeral, and other insurance policies",
+    documentTypes: ["life_insurance", "medical_aid", "keyman_insurance", "funeral_policy", "disability_insurance", "short_term_insurance", "insurance"],
+    subfolders: [
+      { value: "life_insurance", label: "Life Insurance" },
+      { value: "medical_aid", label: "Medical Aid / Health Insurance" },
+      { value: "keyman_insurance", label: "Key Man Insurance" },
+      { value: "funeral_policy", label: "Funeral Policy" },
+      { value: "disability_insurance", label: "Disability / Income Protection" },
+      { value: "short_term_insurance", label: "Short-Term Insurance" },
+      { value: "insurance", label: "Other Insurance" },
     ],
   },
 ] as const;

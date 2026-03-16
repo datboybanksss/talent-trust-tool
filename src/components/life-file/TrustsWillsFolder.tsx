@@ -16,6 +16,7 @@ import {
   ScrollText,
   Shield,
   BookOpen,
+  HeartPulse,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -35,6 +36,7 @@ const folderIcons: Record<string, React.ElementType> = {
   trusts: Shield,
   poa: Scale,
   letters: BookOpen,
+  insurance: HeartPulse,
 };
 
 const TrustsWillsFolder = ({
