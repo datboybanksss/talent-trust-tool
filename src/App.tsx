@@ -19,6 +19,7 @@ import Reminders from "./pages/Reminders";
 import Sharing from "./pages/Sharing";
 import SocialMedia from "./pages/SocialMedia";
 import ClientType from "./pages/ClientType";
+import PropertyInvestments from "./pages/PropertyInvestments";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
