@@ -46,6 +46,7 @@ const DashboardLayout = ({ children, title, subtitle }: DashboardLayoutProps) =>
           {children}
         </div>
       </main>
+      <ChatBot />
     </div>
   );
 };
