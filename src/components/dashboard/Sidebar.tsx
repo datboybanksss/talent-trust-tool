@@ -4,7 +4,6 @@ import {
   Shield, 
   LayoutDashboard, 
   User, 
-  Building2, 
   FileCheck, 
   FolderLock, 
   Users, 
