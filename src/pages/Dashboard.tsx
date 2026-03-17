@@ -77,24 +77,6 @@ const Dashboard = () => {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-8">
-        {/* Journey Progress */}
-        <div className="lg:col-span-2 bg-card rounded-2xl border border-border p-6 shadow-soft">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-xl font-display font-bold text-foreground">Company Formation Journey</h2>
-              <p className="text-sm text-muted-foreground">Track your progress to a fully compliant company</p>
-            </div>
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/dashboard/journey">
-                View Details
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-            </Button>
-          </div>
-          
-          <JourneyTracker steps={journeySteps} currentStep={2} />
-        </div>
-
         {/* Upcoming Reminders */}
         <div className="bg-card rounded-2xl border border-border p-6 shadow-soft">
           <div className="flex items-center justify-between mb-6">
