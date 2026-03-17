@@ -24,7 +24,7 @@ const Dashboard = () => {
   return (
     <DashboardLayout 
       title="Welcome back, John" 
-      subtitle="Here's an overview of your business journey"
+      subtitle="Here's an overview of your portfolio"
     >
       <Tabs defaultValue="overview" className="mb-8">
         <TabsList className="mb-6">
