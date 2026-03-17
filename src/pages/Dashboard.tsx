@@ -34,6 +34,10 @@ const Dashboard = () => {
             <Home className="w-4 h-4 mr-2" />
             Property Investment Opportunities
           </TabsTrigger>
+          <TabsTrigger value="franchise">
+            <Store className="w-4 h-4 mr-2" />
+            Franchise Investment Opportunities
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
