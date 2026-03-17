@@ -68,6 +68,11 @@ const Dashboard = () => {
         />
       </div>
 
+      {/* Financial Overview */}
+      <div className="mb-8">
+        <FinancialOverview />
+      </div>
+
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Upcoming Reminders */}
         <div className="bg-card rounded-2xl border border-border p-6 shadow-soft">
