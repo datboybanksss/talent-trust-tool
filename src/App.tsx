@@ -23,6 +23,7 @@ import PropertyInvestments from "./pages/PropertyInvestments";
 import FranchiseInvestments from "./pages/FranchiseInvestments";
 
 import MonthlyBudgetPage from "./pages/MonthlyBudget";
+import ApplyForFunding from "./pages/ApplyForFunding";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -52,6 +53,7 @@ const App = () => (
             <Route path="/dashboard/franchise-investments" element={<ProtectedRoute><FranchiseInvestments /></ProtectedRoute>} />
             
             <Route path="/dashboard/budget" element={<ProtectedRoute><MonthlyBudgetPage /></ProtectedRoute>} />
+            <Route path="/dashboard/apply-for-funding" element={<ProtectedRoute><ApplyForFunding /></ProtectedRoute>} />
             <Route path="/client-type" element={<ClientType />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
