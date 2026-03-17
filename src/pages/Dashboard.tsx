@@ -14,8 +14,7 @@ import {
   Calendar,
   Clock,
   Home,
-  Store,
-  Landmark
+  Store
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
