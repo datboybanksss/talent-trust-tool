@@ -14,8 +14,7 @@ import {
   Calendar,
   Clock,
   Home,
-  Store,
-  Landmark
+  Store
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -38,10 +37,6 @@ const Dashboard = () => {
           <TabsTrigger value="franchise">
             <Store className="w-4 h-4 mr-2" />
             Franchise Investment Opportunities
-          </TabsTrigger>
-          <TabsTrigger value="financial">
-            <Landmark className="w-4 h-4 mr-2" />
-            Financial Overview
           </TabsTrigger>
         </TabsList>
 
@@ -116,9 +111,6 @@ const Dashboard = () => {
           <FranchiseInvestments />
         </TabsContent>
 
-        <TabsContent value="financial">
-          <FinancialOverview />
-        </TabsContent>
       </Tabs>
     </DashboardLayout>
   );
