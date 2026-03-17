@@ -119,6 +119,7 @@ const navItems = [
   { icon: Store, label: "Franchise Investment", href: "/dashboard/franchise-investments" },
   
   { icon: CircleDollarSign, label: "My Monthly Budget", href: "/dashboard/budget" },
+  { icon: FileSpreadsheet, label: "Apply for Funding", href: "/dashboard/apply-for-funding" },
   { icon: AtSign, label: "Social Media", href: "/dashboard/social-media" },
   { icon: Share2, label: "Sharing", href: "/dashboard/sharing" },
   { icon: Users, label: "Advisors", href: "/dashboard/advisors" },
