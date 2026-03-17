@@ -2,6 +2,7 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import JourneyTracker from "@/components/dashboard/JourneyTracker";
 import StatsCard from "@/components/dashboard/StatsCard";
 import PropertyInvestments from "@/components/dashboard/PropertyInvestments";
+import FranchiseInvestments from "@/components/dashboard/FranchiseInvestments";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
@@ -12,7 +13,8 @@ import {
   ArrowRight,
   Calendar,
   Clock,
-  Home
+  Home,
+  Store
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -31,6 +33,10 @@ const Dashboard = () => {
           <TabsTrigger value="property">
             <Home className="w-4 h-4 mr-2" />
             Property Investment Opportunities
+          </TabsTrigger>
+          <TabsTrigger value="franchise">
+            <Store className="w-4 h-4 mr-2" />
+            Franchise Investment Opportunities
           </TabsTrigger>
         </TabsList>
 
@@ -119,6 +125,10 @@ const Dashboard = () => {
 
         <TabsContent value="property">
           <PropertyInvestments />
+        </TabsContent>
+
+        <TabsContent value="franchise">
+          <FranchiseInvestments />
         </TabsContent>
       </Tabs>
     </DashboardLayout>
