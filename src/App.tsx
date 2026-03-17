@@ -10,7 +10,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import LifeFile from "./pages/LifeFile";
-import Journey from "./pages/Journey";
+
 import Documents from "./pages/Documents";
 import Compliance from "./pages/Compliance";
 import Advisors from "./pages/Advisors";
