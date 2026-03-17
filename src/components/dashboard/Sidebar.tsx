@@ -116,7 +116,7 @@ const navItems = [
   { icon: FolderLock, label: "Documents", href: "/dashboard/documents" },
   { icon: Home, label: "Property Investment", href: "/dashboard/property-investments" },
   { icon: Store, label: "Franchise Investment", href: "/dashboard/franchise-investments" },
-  { icon: Landmark, label: "Financial Overview", href: "/dashboard/financial" },
+  
   { icon: CircleDollarSign, label: "My Monthly Budget", href: "/dashboard/budget" },
   { icon: AtSign, label: "Social Media", href: "/dashboard/social-media" },
   { icon: Share2, label: "Sharing", href: "/dashboard/sharing" },
