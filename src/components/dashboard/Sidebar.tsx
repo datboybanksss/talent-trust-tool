@@ -17,7 +17,8 @@ import {
   Home,
   Store,
   
-  CircleDollarSign
+  CircleDollarSign,
+  FileSpreadsheet
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
