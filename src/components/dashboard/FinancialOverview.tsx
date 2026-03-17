@@ -130,6 +130,9 @@ const FinancialOverview = () => {
           <TabsTrigger value="charts">
             <LineChart className="w-4 h-4 mr-2" /> Charts & Graphs
           </TabsTrigger>
+          <TabsTrigger value="budget">
+            <CircleDollarSign className="w-4 h-4 mr-2" /> My Monthly Budget
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="accounts">
