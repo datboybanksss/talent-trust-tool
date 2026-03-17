@@ -28,7 +28,7 @@ const Dashboard = () => {
       <Tabs defaultValue="overview" className="mb-8">
         <TabsList className="mb-6">
           <TabsTrigger value="overview">
-            <Building2 className="w-4 h-4 mr-2" />
+            <LayoutDashboard className="w-4 h-4 mr-2" />
             Overview
           </TabsTrigger>
           <TabsTrigger value="property">
