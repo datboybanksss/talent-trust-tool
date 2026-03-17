@@ -145,6 +145,10 @@ const FinancialOverview = () => {
         <TabsContent value="heatmap">
           <HeatMap />
         </TabsContent>
+
+        <TabsContent value="charts">
+          <FinancialCharts />
+        </TabsContent>
       </Tabs>
     </div>
   );
