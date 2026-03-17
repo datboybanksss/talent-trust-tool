@@ -18,8 +18,10 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Info,
+  LineChart,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import FinancialCharts from "./FinancialCharts";
 
 // Mock SA financial data
 const bankAccounts = [
