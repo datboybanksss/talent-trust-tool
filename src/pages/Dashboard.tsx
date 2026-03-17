@@ -112,9 +112,6 @@ const Dashboard = () => {
           <FranchiseInvestments />
         </TabsContent>
 
-        <TabsContent value="financial">
-          <FinancialOverview />
-        </TabsContent>
       </Tabs>
     </DashboardLayout>
   );
