@@ -467,7 +467,18 @@ const generateExcel = (config: FundingTypeConfig, extraData: Record<string, stri
   }
 
   const fileName = `${config.label.replace(/[\s\/]+/g, "_")}_Application_${personalInfo.fullName.replace(/\s+/g, "_")}_${format(new Date(), "yyyy-MM-dd")}.xlsx`;
-  XLSX.writeFile(wb, fileName);
+  
+  // Use manual blob download for better compatibility in sandboxed/iframe environments
+  const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+  const blob = new Blob([wbout], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 
   toast({
     title: "Funding pack downloaded",
