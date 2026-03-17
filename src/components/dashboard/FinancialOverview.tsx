@@ -19,9 +19,11 @@ import {
   ArrowDownRight,
   Info,
   LineChart,
+  CircleDollarSign,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import FinancialCharts from "./FinancialCharts";
+import MonthlyBudget from "./MonthlyBudget";
 
 // Mock SA financial data
 const bankAccounts = [
