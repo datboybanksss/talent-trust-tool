@@ -18,8 +18,10 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Info,
+  LineChart,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import FinancialCharts from "./FinancialCharts";
 
 // Mock SA financial data
 const bankAccounts = [
@@ -123,6 +125,9 @@ const FinancialOverview = () => {
           <TabsTrigger value="heatmap">
             <BarChart3 className="w-4 h-4 mr-2" /> Goals Heat Map
           </TabsTrigger>
+          <TabsTrigger value="charts">
+            <LineChart className="w-4 h-4 mr-2" /> Charts & Graphs
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="accounts">
@@ -139,6 +144,10 @@ const FinancialOverview = () => {
 
         <TabsContent value="heatmap">
           <HeatMap />
+        </TabsContent>
+
+        <TabsContent value="charts">
+          <FinancialCharts />
         </TabsContent>
       </Tabs>
     </div>
