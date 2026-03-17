@@ -154,6 +154,10 @@ const FinancialOverview = () => {
         <TabsContent value="charts">
           <FinancialCharts />
         </TabsContent>
+
+        <TabsContent value="budget">
+          <MonthlyBudget />
+        </TabsContent>
       </Tabs>
     </div>
   );
