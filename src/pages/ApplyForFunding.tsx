@@ -17,6 +17,7 @@ import {
 import {
   Download,
   FileSpreadsheet,
+  FileText,
   Home,
   Car,
   Shield,
