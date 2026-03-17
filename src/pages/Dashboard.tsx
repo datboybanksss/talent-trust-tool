@@ -50,13 +50,6 @@ const Dashboard = () => {
       {/* Stats Grid */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatsCard
-          icon={Building2}
-          title="Company Status"
-          value="In Progress"
-          subtitle="Step 3 of 8"
-          variant="gold"
-        />
-        <StatsCard
           icon={FileCheck}
           title="Compliance Tasks"
           value={3}
