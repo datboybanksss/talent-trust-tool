@@ -23,6 +23,7 @@ import PropertyInvestments from "./pages/PropertyInvestments";
 import FranchiseInvestments from "./pages/FranchiseInvestments";
 
 import MonthlyBudgetPage from "./pages/MonthlyBudget";
+import ApplyForFunding from "./pages/ApplyForFunding";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
