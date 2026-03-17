@@ -1,5 +1,5 @@
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
-import JourneyTracker from "@/components/dashboard/JourneyTracker";
+
 import StatsCard from "@/components/dashboard/StatsCard";
 import PropertyInvestments from "@/components/dashboard/PropertyInvestments";
 import FranchiseInvestments from "@/components/dashboard/FranchiseInvestments";
