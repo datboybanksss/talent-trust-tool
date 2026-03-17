@@ -7,6 +7,7 @@ import FinancialOverview from "@/components/dashboard/FinancialOverview";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
+  LayoutDashboard,
   FileCheck, 
   FolderLock, 
   Bell, 
