@@ -12,7 +12,8 @@ import {
   ArrowRight,
   Calendar,
   Clock,
-  Home
+  Home,
+  Store
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
