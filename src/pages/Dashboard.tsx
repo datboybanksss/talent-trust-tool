@@ -1,5 +1,5 @@
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
-import JourneyTracker from "@/components/dashboard/JourneyTracker";
+
 import StatsCard from "@/components/dashboard/StatsCard";
 import PropertyInvestments from "@/components/dashboard/PropertyInvestments";
 import FranchiseInvestments from "@/components/dashboard/FranchiseInvestments";
@@ -7,11 +7,10 @@ import FinancialOverview from "@/components/dashboard/FinancialOverview";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  Building2, 
+  LayoutDashboard,
   FileCheck, 
   FolderLock, 
   Bell, 
-  ArrowRight,
   Calendar,
   Clock,
   Home,
@@ -24,12 +23,12 @@ const Dashboard = () => {
   return (
     <DashboardLayout 
       title="Welcome back, John" 
-      subtitle="Here's an overview of your business journey"
+      subtitle="Here's an overview of your portfolio"
     >
       <Tabs defaultValue="overview" className="mb-8">
         <TabsList className="mb-6">
           <TabsTrigger value="overview">
-            <Building2 className="w-4 h-4 mr-2" />
+            <LayoutDashboard className="w-4 h-4 mr-2" />
             Overview
           </TabsTrigger>
           <TabsTrigger value="property">
@@ -48,14 +47,7 @@ const Dashboard = () => {
 
         <TabsContent value="overview">
       {/* Stats Grid */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatsCard
-          icon={Building2}
-          title="Company Status"
-          value="In Progress"
-          subtitle="Step 3 of 8"
-          variant="gold"
-        />
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <StatsCard
           icon={FileCheck}
           title="Compliance Tasks"
@@ -77,24 +69,6 @@ const Dashboard = () => {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-8">
-        {/* Journey Progress */}
-        <div className="lg:col-span-2 bg-card rounded-2xl border border-border p-6 shadow-soft">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-xl font-display font-bold text-foreground">Company Formation Journey</h2>
-              <p className="text-sm text-muted-foreground">Track your progress to a fully compliant company</p>
-            </div>
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/dashboard/journey">
-                View Details
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-            </Button>
-          </div>
-          
-          <JourneyTracker steps={journeySteps} currentStep={2} />
-        </div>
-
         {/* Upcoming Reminders */}
         <div className="bg-card rounded-2xl border border-border p-6 shadow-soft">
           <div className="flex items-center justify-between mb-6">
@@ -145,38 +119,6 @@ const Dashboard = () => {
   );
 };
 
-const journeySteps = [
-  {
-    id: "1",
-    title: "Profile Setup",
-    description: "Complete your personal information and documentation",
-    status: "completed" as const,
-  },
-  {
-    id: "2",
-    title: "Company Name Reservation",
-    description: "Reserve your company name with CIPC",
-    status: "completed" as const,
-  },
-  {
-    id: "3",
-    title: "Company Registration",
-    description: "Submit registration documents and pay fees",
-    status: "current" as const,
-  },
-  {
-    id: "4",
-    title: "Director Resolutions",
-    description: "Pass initial director resolutions",
-    status: "upcoming" as const,
-  },
-  {
-    id: "5",
-    title: "Bank Account Setup",
-    description: "Open a business bank account",
-    status: "locked" as const,
-  },
-];
 
 const upcomingReminders = [
   {

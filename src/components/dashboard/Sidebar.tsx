@@ -4,7 +4,6 @@ import {
   Shield, 
   LayoutDashboard, 
   User, 
-  Building2, 
   FileCheck, 
   FolderLock, 
   Users, 
@@ -112,7 +111,7 @@ const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
   { icon: User, label: "My Profile", href: "/dashboard/profile" },
   { icon: Heart, label: "Life File", href: "/dashboard/life-file" },
-  { icon: Building2, label: "Company Journey", href: "/dashboard/journey" },
+  
   { icon: FileCheck, label: "Compliance", href: "/dashboard/compliance", badge: 3 },
   { icon: FolderLock, label: "Documents", href: "/dashboard/documents" },
   { icon: Home, label: "Property Investment", href: "/dashboard/property-investments" },
