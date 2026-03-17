@@ -948,21 +948,28 @@ const ApplyForFunding = () => {
 
           {/* Download */}
           <Card className="shadow-soft border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-            <CardContent className="p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
-                  <FileSpreadsheet className="w-7 h-7" />
+            <CardContent className="p-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+                    <FileSpreadsheet className="w-7 h-7" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-display font-bold text-foreground">Download {config.label} Pack</h2>
+                    <p className="text-sm text-muted-foreground mt-0.5">
+                      {config.sheets.length} tailored sheets ready for your funder
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-lg font-display font-bold text-foreground">Download {config.label} Pack</h2>
-                  <p className="text-sm text-muted-foreground mt-0.5">
-                    {config.sheets.length} tailored sheets ready for your funder
-                  </p>
+                <div className="flex gap-3">
+                  <Button onClick={handleDownload} size="lg" className="gap-2 shrink-0">
+                    <FileSpreadsheet className="w-5 h-5" /> Excel
+                  </Button>
+                  <Button onClick={handleDownloadPDF} size="lg" variant="outline" className="gap-2 shrink-0 border-primary/30 hover:bg-primary/10">
+                    <FileText className="w-5 h-5 text-primary" /> PDF
+                  </Button>
                 </div>
               </div>
-              <Button onClick={handleDownload} size="lg" className="gap-2 shrink-0">
-                <Download className="w-5 h-5" /> Download Excel
-              </Button>
             </CardContent>
           </Card>
 
