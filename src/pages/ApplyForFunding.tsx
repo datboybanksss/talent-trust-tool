@@ -777,6 +777,11 @@ const ApplyForFunding = () => {
     generateExcel(config, extraData);
   };
 
+  const handleDownloadPDF = () => {
+    if (!config) return;
+    generatePDF(config, extraData);
+  };
+
   const handleBack = () => {
     setSelectedType(null);
     setExtraData({});
