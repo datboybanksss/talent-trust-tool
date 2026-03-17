@@ -127,38 +127,6 @@ const Dashboard = () => {
   );
 };
 
-const journeySteps = [
-  {
-    id: "1",
-    title: "Profile Setup",
-    description: "Complete your personal information and documentation",
-    status: "completed" as const,
-  },
-  {
-    id: "2",
-    title: "Company Name Reservation",
-    description: "Reserve your company name with CIPC",
-    status: "completed" as const,
-  },
-  {
-    id: "3",
-    title: "Company Registration",
-    description: "Submit registration documents and pay fees",
-    status: "current" as const,
-  },
-  {
-    id: "4",
-    title: "Director Resolutions",
-    description: "Pass initial director resolutions",
-    status: "upcoming" as const,
-  },
-  {
-    id: "5",
-    title: "Bank Account Setup",
-    description: "Open a business bank account",
-    status: "locked" as const,
-  },
-];
 
 const upcomingReminders = [
   {
