@@ -40,6 +40,10 @@ const Dashboard = () => {
             <Store className="w-4 h-4 mr-2" />
             Franchise Investment Opportunities
           </TabsTrigger>
+          <TabsTrigger value="financial">
+            <Landmark className="w-4 h-4 mr-2" />
+            Financial Overview
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
