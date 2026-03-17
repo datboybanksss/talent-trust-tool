@@ -21,6 +21,7 @@ import SocialMedia from "./pages/SocialMedia";
 import ClientType from "./pages/ClientType";
 import PropertyInvestments from "./pages/PropertyInvestments";
 import FranchiseInvestments from "./pages/FranchiseInvestments";
+import FinancialOverviewPage from "./pages/FinancialOverview";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
