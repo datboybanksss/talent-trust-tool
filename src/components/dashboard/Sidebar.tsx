@@ -18,7 +18,8 @@ import {
   Store,
   
   CircleDollarSign,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Receipt
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -118,6 +119,7 @@ const navItems = [
   { icon: Home, label: "Property Investment Opportunities", href: "/dashboard/property-investments" },
   { icon: Store, label: "Franchise Investment Opportunities", href: "/dashboard/franchise-investments" },
   
+  { icon: Receipt, label: "My Payslip & Tax Documents", href: "/dashboard/payslip-tax" },
   { icon: CircleDollarSign, label: "My Monthly Budget", href: "/dashboard/budget" },
   { icon: FileSpreadsheet, label: "Apply for Funding", href: "/dashboard/apply-for-funding" },
   { icon: AtSign, label: "My Social Media Links", href: "/dashboard/social-media" },

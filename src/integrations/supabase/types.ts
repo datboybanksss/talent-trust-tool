@@ -289,6 +289,54 @@ export type Database = {
         }
         Relationships: []
       }
+      payslip_tax_documents: {
+        Row: {
+          category: string
+          created_at: string
+          document_type: string
+          expiry_date: string | null
+          file_name: string | null
+          file_url: string | null
+          id: string
+          notes: string | null
+          status: string
+          tax_year: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          document_type?: string
+          expiry_date?: string | null
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          notes?: string | null
+          status?: string
+          tax_year?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          document_type?: string
+          expiry_date?: string | null
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          notes?: string | null
+          status?: string
+          tax_year?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
