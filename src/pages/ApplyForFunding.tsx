@@ -30,7 +30,16 @@ import {
   ChevronRight,
   ArrowLeft,
   Info,
+  Mail,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import * as XLSX from "xlsx";
 import { format } from "date-fns";
@@ -760,6 +769,10 @@ const generatePDF = async (config: FundingTypeConfig, extraData: Record<string, 
 const ApplyForFunding = () => {
   const [selectedType, setSelectedType] = useState<FundingTypeKey | null>(null);
   const [extraData, setExtraData] = useState<Record<string, string>>({});
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [advisorEmail, setAdvisorEmail] = useState("");
+  const [advisorName, setAdvisorName] = useState("");
+  const [emailMessage, setEmailMessage] = useState("");
 
   const config = selectedType ? fundingTypeConfigs.find((c) => c.key === selectedType)! : null;
 
@@ -780,6 +793,24 @@ const ApplyForFunding = () => {
   const handleDownloadPDF = () => {
     if (!config) return;
     generatePDF(config, extraData);
+  };
+
+  const handleSendEmail = () => {
+    if (!advisorEmail.trim() || !config) return;
+    const subject = encodeURIComponent(`${config.label} Application Pack – ${personalInfo.fullName}`);
+    const greeting = advisorName ? `Dear ${advisorName},` : "Dear Advisor,";
+    const totalIncome = employmentInfo.monthlyNetIncome + employmentInfo.otherIncome;
+    const dti = ((totalMonthlyDebt / totalIncome) * 100).toFixed(1);
+    const body = encodeURIComponent(
+      `${greeting}\n\nPlease find attached my ${config.label} application pack for your review.\n\n` +
+      `Applicant: ${personalInfo.fullName}\nID: ${personalInfo.idNumber}\n` +
+      `Net Income: ${formatZAR(totalIncome)}\nDebt-to-Income: ${dti}%\n\n` +
+      (emailMessage ? `${emailMessage}\n\n` : "") +
+      `Kind regards,\n${personalInfo.fullName}\n${personalInfo.phone}\n${personalInfo.email}`
+    );
+    window.open(`mailto:${advisorEmail}?subject=${subject}&body=${body}`, "_self");
+    toast({ title: "Email client opened", description: "Remember to attach your downloaded PDF or Excel file." });
+    setEmailDialogOpen(false);
   };
 
   const handleBack = () => {
@@ -946,7 +977,7 @@ const ApplyForFunding = () => {
             </Card>
           )}
 
-          {/* Download */}
+          {/* Download & Email */}
           <Card className="shadow-soft border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
             <CardContent className="p-6">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -961,17 +992,69 @@ const ApplyForFunding = () => {
                     </p>
                   </div>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-3">
                   <Button onClick={handleDownload} size="lg" className="gap-2 shrink-0">
                     <FileSpreadsheet className="w-5 h-5" /> Excel
                   </Button>
                   <Button onClick={handleDownloadPDF} size="lg" variant="outline" className="gap-2 shrink-0 border-primary/30 hover:bg-primary/10">
                     <FileText className="w-5 h-5 text-primary" /> PDF
                   </Button>
+                  <Button onClick={() => setEmailDialogOpen(true)} size="lg" variant="outline" className="gap-2 shrink-0 border-primary/30 hover:bg-primary/10">
+                    <Mail className="w-5 h-5 text-primary" /> Email to Advisor
+                  </Button>
                 </div>
               </div>
             </CardContent>
           </Card>
+
+          {/* Email to Advisor Dialog */}
+          <Dialog open={emailDialogOpen} onOpenChange={setEmailDialogOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Email Funding Pack to Advisor</DialogTitle>
+                <DialogDescription>
+                  Enter your advisor's details below. This will open your email client with a pre-filled message — remember to attach the downloaded PDF or Excel file.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-2">
+                <div className="space-y-2">
+                  <Label htmlFor="advisor-email">Advisor Email</Label>
+                  <Input
+                    id="advisor-email"
+                    type="email"
+                    placeholder="advisor@institution.co.za"
+                    value={advisorEmail}
+                    onChange={(e) => setAdvisorEmail(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="advisor-name">Advisor Name (optional)</Label>
+                  <Input
+                    id="advisor-name"
+                    placeholder="e.g. Jane Smith"
+                    value={advisorName}
+                    onChange={(e) => setAdvisorName(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email-message">Additional Message (optional)</Label>
+                  <Textarea
+                    id="email-message"
+                    placeholder="Any additional notes for your advisor..."
+                    value={emailMessage}
+                    onChange={(e) => setEmailMessage(e.target.value)}
+                    rows={3}
+                  />
+                </div>
+              </div>
+              <DialogFooter className="flex-col sm:flex-row gap-2">
+                <Button variant="outline" onClick={() => setEmailDialogOpen(false)}>Cancel</Button>
+                <Button onClick={handleSendEmail} className="gap-2" disabled={!advisorEmail.trim()}>
+                  <Mail className="w-4 h-4" /> Open Email Client
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
           {/* Debt Summary */}
           <Card className="shadow-soft">
