@@ -799,11 +799,12 @@ const ApplyForFunding = () => {
     if (!advisorEmail.trim() || !config) return;
     const subject = encodeURIComponent(`${config.label} Application Pack – ${personalInfo.fullName}`);
     const greeting = advisorName ? `Dear ${advisorName},` : "Dear Advisor,";
-    const dti = ((totalMonthlyDebt / employment.netIncome) * 100).toFixed(1);
+    const totalIncome = employmentInfo.monthlyNetIncome + employmentInfo.otherIncome;
+    const dti = ((totalMonthlyDebt / totalIncome) * 100).toFixed(1);
     const body = encodeURIComponent(
       `${greeting}\n\nPlease find attached my ${config.label} application pack for your review.\n\n` +
       `Applicant: ${personalInfo.fullName}\nID: ${personalInfo.idNumber}\n` +
-      `Net Income: ${formatZAR(employment.netIncome)}\nDebt-to-Income: ${dti}%\n\n` +
+      `Net Income: ${formatZAR(totalIncome)}\nDebt-to-Income: ${dti}%\n\n` +
       (emailMessage ? `${emailMessage}\n\n` : "") +
       `Kind regards,\n${personalInfo.fullName}\n${personalInfo.phone}\n${personalInfo.email}`
     );
