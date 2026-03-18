@@ -769,6 +769,27 @@ const generatePDF = async (config: FundingTypeConfig, extraData: Record<string, 
 const ApplyForFunding = () => {
   const [selectedType, setSelectedType] = useState<FundingTypeKey | null>(null);
   const [extraData, setExtraData] = useState<Record<string, string>>({});
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [advisorEmail, setAdvisorEmail] = useState("");
+  const [advisorName, setAdvisorName] = useState("");
+  const [emailMessage, setEmailMessage] = useState("");
+
+  const handleSendEmail = () => {
+    if (!advisorEmail.trim() || !selectedType) return;
+    const config = fundingTypes[selectedType];
+    const subject = encodeURIComponent(`${config.label} Application Pack – ${personalInfo.fullName}`);
+    const greeting = advisorName ? `Dear ${advisorName},` : "Dear Advisor,";
+    const body = encodeURIComponent(
+      `${greeting}\n\nPlease find attached my ${config.label} application pack for your review.\n\n` +
+      `Applicant: ${personalInfo.fullName}\nID: ${personalInfo.idNumber}\n` +
+      `Net Income: ${formatZAR(employment.netIncome)}\nDebt-to-Income: ${((totalMonthlyDebt / employment.netIncome) * 100).toFixed(1)}%\n\n` +
+      (emailMessage ? `${emailMessage}\n\n` : "") +
+      `Kind regards,\n${personalInfo.fullName}\n${personalInfo.phone}\n${personalInfo.email}`
+    );
+    window.open(`mailto:${advisorEmail}?subject=${subject}&body=${body}`, "_self");
+    toast({ title: "Email client opened", description: "Remember to attach your downloaded PDF or Excel file." });
+    setEmailDialogOpen(false);
+  };
 
   const config = selectedType ? fundingTypeConfigs.find((c) => c.key === selectedType)! : null;
 
