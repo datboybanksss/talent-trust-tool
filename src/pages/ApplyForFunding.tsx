@@ -795,6 +795,23 @@ const ApplyForFunding = () => {
     generatePDF(config, extraData);
   };
 
+  const handleSendEmail = () => {
+    if (!advisorEmail.trim() || !config) return;
+    const subject = encodeURIComponent(`${config.label} Application Pack – ${personalInfo.fullName}`);
+    const greeting = advisorName ? `Dear ${advisorName},` : "Dear Advisor,";
+    const dti = ((totalMonthlyDebt / employment.netIncome) * 100).toFixed(1);
+    const body = encodeURIComponent(
+      `${greeting}\n\nPlease find attached my ${config.label} application pack for your review.\n\n` +
+      `Applicant: ${personalInfo.fullName}\nID: ${personalInfo.idNumber}\n` +
+      `Net Income: ${formatZAR(employment.netIncome)}\nDebt-to-Income: ${dti}%\n\n` +
+      (emailMessage ? `${emailMessage}\n\n` : "") +
+      `Kind regards,\n${personalInfo.fullName}\n${personalInfo.phone}\n${personalInfo.email}`
+    );
+    window.open(`mailto:${advisorEmail}?subject=${subject}&body=${body}`, "_self");
+    toast({ title: "Email client opened", description: "Remember to attach your downloaded PDF or Excel file." });
+    setEmailDialogOpen(false);
+  };
+
   const handleBack = () => {
     setSelectedType(null);
     setExtraData({});
