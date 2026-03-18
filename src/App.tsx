@@ -23,6 +23,7 @@ import PropertyInvestments from "./pages/PropertyInvestments";
 import FranchiseInvestments from "./pages/FranchiseInvestments";
 
 import MonthlyBudgetPage from "./pages/MonthlyBudget";
+import PayslipTaxDocuments from "./pages/PayslipTaxDocuments";
 import ApplyForFunding from "./pages/ApplyForFunding";
 import NotFound from "./pages/NotFound";
 
