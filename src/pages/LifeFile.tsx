@@ -294,7 +294,7 @@ const LifeFilePage = () => {
 
   if (loading) {
     return (
-      <DashboardLayout title="Life File" subtitle="Estate planning essentials">
+      <DashboardLayout title="My Life File" subtitle="Estate planning essentials">
         <div className="flex items-center justify-center h-64">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
@@ -304,7 +304,7 @@ const LifeFilePage = () => {
 
   return (
     <DashboardLayout
-      title="Life File"
+      title="My Life File"
       subtitle="Manage your estate planning essentials"
     >
       {/* Summary Banner */}

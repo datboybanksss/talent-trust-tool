@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 const Compliance = () => {
   return (
     <DashboardLayout 
-      title="Compliance Management" 
+      title="My Compliance Reminders" 
       subtitle="Track and manage all statutory compliance requirements"
     >
       {/* Stats */}

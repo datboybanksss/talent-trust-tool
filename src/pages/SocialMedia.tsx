@@ -494,7 +494,7 @@ const SocialMedia = () => {
 
   return (
     <DashboardLayout 
-      title="Social Media Assets" 
+      title="My Social Media Links" 
       subtitle="Securely manage your social media accounts and login credentials"
     >
       <div className="space-y-8">

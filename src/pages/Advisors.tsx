@@ -17,7 +17,7 @@ import {
 const Advisors = () => {
   return (
     <DashboardLayout 
-      title="Strategic Advisors" 
+      title="My Advisors" 
       subtitle="Connect with our network of trusted professionals"
     >
       {/* Categories */}
