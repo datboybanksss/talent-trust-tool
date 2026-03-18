@@ -955,7 +955,7 @@ const ApplyForFunding = () => {
             </Card>
           )}
 
-          {/* Download */}
+          {/* Download & Email */}
           <Card className="shadow-soft border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
             <CardContent className="p-6">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -970,17 +970,69 @@ const ApplyForFunding = () => {
                     </p>
                   </div>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-3">
                   <Button onClick={handleDownload} size="lg" className="gap-2 shrink-0">
                     <FileSpreadsheet className="w-5 h-5" /> Excel
                   </Button>
                   <Button onClick={handleDownloadPDF} size="lg" variant="outline" className="gap-2 shrink-0 border-primary/30 hover:bg-primary/10">
                     <FileText className="w-5 h-5 text-primary" /> PDF
                   </Button>
+                  <Button onClick={() => setEmailDialogOpen(true)} size="lg" variant="outline" className="gap-2 shrink-0 border-primary/30 hover:bg-primary/10">
+                    <Mail className="w-5 h-5 text-primary" /> Email to Advisor
+                  </Button>
                 </div>
               </div>
             </CardContent>
           </Card>
+
+          {/* Email to Advisor Dialog */}
+          <Dialog open={emailDialogOpen} onOpenChange={setEmailDialogOpen}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Email Funding Pack to Advisor</DialogTitle>
+                <DialogDescription>
+                  Enter your advisor's details below. This will open your email client with a pre-filled message — remember to attach the downloaded PDF or Excel file.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-2">
+                <div className="space-y-2">
+                  <Label htmlFor="advisor-email">Advisor Email</Label>
+                  <Input
+                    id="advisor-email"
+                    type="email"
+                    placeholder="advisor@institution.co.za"
+                    value={advisorEmail}
+                    onChange={(e) => setAdvisorEmail(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="advisor-name">Advisor Name (optional)</Label>
+                  <Input
+                    id="advisor-name"
+                    placeholder="e.g. Jane Smith"
+                    value={advisorName}
+                    onChange={(e) => setAdvisorName(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email-message">Additional Message (optional)</Label>
+                  <Textarea
+                    id="email-message"
+                    placeholder="Any additional notes for your advisor..."
+                    value={emailMessage}
+                    onChange={(e) => setEmailMessage(e.target.value)}
+                    rows={3}
+                  />
+                </div>
+              </div>
+              <DialogFooter className="flex-col sm:flex-row gap-2">
+                <Button variant="outline" onClick={() => setEmailDialogOpen(false)}>Cancel</Button>
+                <Button onClick={handleSendEmail} className="gap-2" disabled={!advisorEmail.trim()}>
+                  <Mail className="w-4 h-4" /> Open Email Client
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
           {/* Debt Summary */}
           <Card className="shadow-soft">
