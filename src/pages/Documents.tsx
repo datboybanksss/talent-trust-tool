@@ -119,8 +119,8 @@ const Documents = () => {
 
   return (
     <DashboardLayout 
-      title="Document Vault" 
-      subtitle="Securely store and manage all your company documents"
+      title="My Important Documents" 
+      subtitle="Securely store and manage all your important documents"
     >
       <div className="grid lg:grid-cols-4 gap-8">
         {/* Sidebar - Folders */}

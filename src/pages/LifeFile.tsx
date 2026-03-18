@@ -304,7 +304,7 @@ const LifeFilePage = () => {
 
   return (
     <DashboardLayout
-      title="Life File"
+      title="My Life File"
       subtitle="Manage your estate planning essentials"
     >
       {/* Summary Banner */}

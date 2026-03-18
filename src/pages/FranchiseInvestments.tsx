@@ -4,7 +4,7 @@ import FranchiseInvestments from "@/components/dashboard/FranchiseInvestments";
 const FranchiseInvestmentsPage = () => {
   return (
     <DashboardLayout 
-      title="Business Franchise Investment Opportunities" 
+      title="Franchise Investment Opportunities" 
       subtitle="Explore established South African franchise brands"
     >
       <FranchiseInvestments />
