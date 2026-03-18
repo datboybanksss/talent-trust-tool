@@ -111,18 +111,18 @@ const NavItem = ({ icon: Icon, label, href, active, badge }: NavItemProps) => (
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
   { icon: User, label: "My Profile", href: "/dashboard/profile" },
-  { icon: Heart, label: "Life File", href: "/dashboard/life-file" },
+  { icon: Heart, label: "My Life File", href: "/dashboard/life-file" },
   
-  { icon: FileCheck, label: "Compliance", href: "/dashboard/compliance", badge: 3 },
-  { icon: FolderLock, label: "Documents", href: "/dashboard/documents" },
-  { icon: Home, label: "Property Investment", href: "/dashboard/property-investments" },
-  { icon: Store, label: "Franchise Investment", href: "/dashboard/franchise-investments" },
+  { icon: FileCheck, label: "My Compliance Reminders", href: "/dashboard/compliance", badge: 3 },
+  { icon: FolderLock, label: "My Important Documents", href: "/dashboard/documents" },
+  { icon: Home, label: "Property Investment Opportunities", href: "/dashboard/property-investments" },
+  { icon: Store, label: "Franchise Investment Opportunities", href: "/dashboard/franchise-investments" },
   
   { icon: CircleDollarSign, label: "My Monthly Budget", href: "/dashboard/budget" },
   { icon: FileSpreadsheet, label: "Apply for Funding", href: "/dashboard/apply-for-funding" },
-  { icon: AtSign, label: "Social Media", href: "/dashboard/social-media" },
+  { icon: AtSign, label: "My Social Media Links", href: "/dashboard/social-media" },
   { icon: Share2, label: "Sharing", href: "/dashboard/sharing" },
-  { icon: Users, label: "Advisors", href: "/dashboard/advisors" },
+  { icon: Users, label: "My Advisors", href: "/dashboard/advisors" },
   { icon: Mail, label: "Email Log", href: "/dashboard/emails" },
   { icon: Bell, label: "Reminders", href: "/dashboard/reminders", badge: 5 },
 ];
