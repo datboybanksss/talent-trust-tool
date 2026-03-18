@@ -45,7 +45,7 @@ const Sidebar = () => {
         </span>
       </Link>
 
-      <nav className="flex-1 space-y-1">
+      <nav className="flex-1 space-y-1 overflow-y-auto">
         {navItems.map((item) => (
           <NavItem
             key={item.href}
