@@ -25,6 +25,8 @@ import FranchiseInvestments from "./pages/FranchiseInvestments";
 import MonthlyBudgetPage from "./pages/MonthlyBudget";
 import PayslipTaxDocuments from "./pages/PayslipTaxDocuments";
 import ApplyForFunding from "./pages/ApplyForFunding";
+import ContractManager from "./pages/ContractManager";
+import EndorsementTracker from "./pages/EndorsementTracker";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -56,6 +58,8 @@ const App = () => (
             <Route path="/dashboard/payslip-tax" element={<ProtectedRoute><PayslipTaxDocuments /></ProtectedRoute>} />
             <Route path="/dashboard/budget" element={<ProtectedRoute><MonthlyBudgetPage /></ProtectedRoute>} />
             <Route path="/dashboard/apply-for-funding" element={<ProtectedRoute><ApplyForFunding /></ProtectedRoute>} />
+            <Route path="/dashboard/contracts" element={<ProtectedRoute><ContractManager /></ProtectedRoute>} />
+            <Route path="/dashboard/endorsements" element={<ProtectedRoute><EndorsementTracker /></ProtectedRoute>} />
             <Route path="/client-type" element={<ClientType />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

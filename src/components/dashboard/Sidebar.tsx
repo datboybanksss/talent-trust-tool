@@ -21,7 +21,9 @@ import {
   FileSpreadsheet,
   Receipt,
   Trophy,
-  Palette
+  Palette,
+  FileText,
+  Handshake
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -54,6 +56,13 @@ const Sidebar = () => {
 
       <nav className="flex-1 space-y-1 overflow-y-auto">
         {navItems.map((item) => (
+          <NavItem
+            key={item.href}
+            {...item}
+            active={location.pathname === item.href}
+          />
+        ))}
+        {isAthlete && athleteNavItems.map((item) => (
           <NavItem
             key={item.href}
             {...item}
@@ -136,6 +145,11 @@ const navItems = [
   { icon: Mail, label: "Email Log", href: "/dashboard/emails" },
   { icon: Share2, label: "Sharing", href: "/dashboard/sharing" },
   { icon: Bell, label: "Reminders", href: "/dashboard/reminders", badge: 5 },
+];
+
+const athleteNavItems = [
+  { icon: FileText, label: "Contract Manager", href: "/dashboard/contracts" },
+  { icon: Handshake, label: "Endorsement Tracker", href: "/dashboard/endorsements" },
 ];
 
 export default Sidebar;

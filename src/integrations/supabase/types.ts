@@ -14,6 +14,114 @@ export type Database = {
   }
   public: {
     Tables: {
+      athlete_contracts: {
+        Row: {
+          contract_type: string
+          counterparty: string
+          created_at: string
+          currency: string
+          end_date: string | null
+          file_name: string | null
+          file_url: string | null
+          id: string
+          notes: string | null
+          start_date: string
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+          value: number | null
+        }
+        Insert: {
+          contract_type?: string
+          counterparty: string
+          created_at?: string
+          currency?: string
+          end_date?: string | null
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          notes?: string | null
+          start_date: string
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+          value?: number | null
+        }
+        Update: {
+          contract_type?: string
+          counterparty?: string
+          created_at?: string
+          currency?: string
+          end_date?: string | null
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          notes?: string | null
+          start_date?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+          value?: number | null
+        }
+        Relationships: []
+      }
+      athlete_endorsements: {
+        Row: {
+          annual_value: number | null
+          brand_name: string
+          contact_email: string | null
+          contact_name: string | null
+          created_at: string
+          currency: string
+          deal_type: string
+          deliverables: string | null
+          end_date: string | null
+          id: string
+          notes: string | null
+          start_date: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          annual_value?: number | null
+          brand_name: string
+          contact_email?: string | null
+          contact_name?: string | null
+          created_at?: string
+          currency?: string
+          deal_type?: string
+          deliverables?: string | null
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          start_date: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          annual_value?: number | null
+          brand_name?: string
+          contact_email?: string | null
+          contact_name?: string | null
+          created_at?: string
+          currency?: string
+          deal_type?: string
+          deliverables?: string | null
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          start_date?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       beneficiaries: {
         Row: {
           allocation_percentage: number | null
