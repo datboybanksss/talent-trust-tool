@@ -25,6 +25,8 @@ import FranchiseInvestments from "./pages/FranchiseInvestments";
 import MonthlyBudgetPage from "./pages/MonthlyBudget";
 import PayslipTaxDocuments from "./pages/PayslipTaxDocuments";
 import ApplyForFunding from "./pages/ApplyForFunding";
+import ContractManager from "./pages/ContractManager";
+import EndorsementTracker from "./pages/EndorsementTracker";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
