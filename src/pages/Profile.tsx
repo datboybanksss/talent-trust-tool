@@ -38,7 +38,7 @@ const Profile = () => {
         { title: "Property", value: "R 650,000", count: 1, trend: { value: 3.1, positive: true } },
         { title: "Liquid Assets", value: "R 250,000", trend: { value: 2.4, positive: false } },
       ],
-      complianceItems,
+      complianceItems: [],
       contracts,
       quickStats: quickStats.map(s => ({ label: s.label, value: s.value })),
       lifeFileItems: lifeFileItems.map(i => ({ name: i.name, status: i.status, lastUpdated: i.lastUpdated })),
