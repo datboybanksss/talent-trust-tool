@@ -260,6 +260,48 @@ const Auth = () => {
                       </FormItem>
                     )}
                   />
+                  <FormField
+                    control={signUpForm.control}
+                    name="clientType"
+                    render={({ field }) => (
+                      <FormItem className="space-y-3">
+                        <FormLabel className="text-muted-foreground text-xs">Are you an "Athlete" or "Artist"? (Optional)</FormLabel>
+                        <FormControl>
+                          <RadioGroup
+                            onValueChange={field.onChange}
+                            value={field.value}
+                            className="grid grid-cols-2 gap-3"
+                          >
+                            <Label
+                              htmlFor="athlete"
+                              className={`flex flex-col items-center gap-2 rounded-xl border-2 p-4 cursor-pointer transition-all ${
+                                field.value === "athlete"
+                                  ? "border-gold bg-gold/10 text-foreground"
+                                  : "border-border hover:border-gold/50 text-muted-foreground"
+                              }`}
+                            >
+                              <RadioGroupItem value="athlete" id="athlete" className="sr-only" />
+                              <Trophy className={`w-6 h-6 ${field.value === "athlete" ? "text-gold" : ""}`} />
+                              <span className="font-medium text-sm">Athlete</span>
+                            </Label>
+                            <Label
+                              htmlFor="artist"
+                              className={`flex flex-col items-center gap-2 rounded-xl border-2 p-4 cursor-pointer transition-all ${
+                                field.value === "artist"
+                                  ? "border-gold bg-gold/10 text-foreground"
+                                  : "border-border hover:border-gold/50 text-muted-foreground"
+                              }`}
+                            >
+                              <RadioGroupItem value="artist" id="artist" className="sr-only" />
+                              <Palette className={`w-6 h-6 ${field.value === "artist" ? "text-gold" : ""}`} />
+                              <span className="font-medium text-sm">Artist</span>
+                            </Label>
+                          </RadioGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   <Button type="submit" variant="gold" className="w-full" disabled={isLoading}>
                     {isLoading ? "Creating account..." : "Create Account"}
                   </Button>
