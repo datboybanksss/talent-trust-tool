@@ -86,11 +86,6 @@ const Profile = () => {
               <p className="text-2xl font-bold">8</p>
               <p className="text-xs opacity-80">Contracts</p>
             </div>
-            <div className="h-12 w-px bg-primary-foreground/20" />
-            <div className="text-center">
-              <p className="text-2xl font-bold">85%</p>
-              <p className="text-xs opacity-80">Compliance</p>
-            </div>
           </div>
         </div>
       </div>
