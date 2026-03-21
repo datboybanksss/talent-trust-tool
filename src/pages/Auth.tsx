@@ -47,7 +47,7 @@ const Auth = () => {
 
   const signUpForm = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
-    defaultValues: { displayName: "", email: "", password: "", confirmPassword: "" },
+    defaultValues: { displayName: "", email: "", password: "", confirmPassword: "", clientType: undefined },
   });
 
   useEffect(() => {
