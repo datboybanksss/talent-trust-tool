@@ -203,13 +203,6 @@ const Profile = () => {
 };
 
 // Mock data
-const complianceItems = [
-  { name: "CIPC Annual Return", status: "warning" as const, dueDate: "Feb 15, 2026" },
-  { name: "SARS Tax Filing", status: "compliant" as const, dueDate: "Feb 28, 2026" },
-  { name: "B-BBEE Certificate", status: "compliant" as const },
-  { name: "UIF Registration", status: "compliant" as const },
-  { name: "COIDA Registration", status: "critical" as const, dueDate: "Overdue" },
-];
 
 const contracts = [
   {
