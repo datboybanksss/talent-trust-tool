@@ -78,7 +78,7 @@ const Auth = () => {
 
   const handleSignUp = async (data: SignUpFormData) => {
     setIsLoading(true);
-    const { error } = await signUp(data.email, data.password, data.displayName);
+    const { error } = await signUp(data.email, data.password, data.displayName, data.clientType);
     setIsLoading(false);
 
     if (error) {
