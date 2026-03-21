@@ -62,6 +62,8 @@ const App = () => (
             <Route path="/dashboard/apply-for-funding" element={<ProtectedRoute><ApplyForFunding /></ProtectedRoute>} />
             <Route path="/dashboard/contracts" element={<ProtectedRoute><ContractManager /></ProtectedRoute>} />
             <Route path="/dashboard/endorsements" element={<ProtectedRoute><EndorsementTracker /></ProtectedRoute>} />
+            <Route path="/dashboard/royalties" element={<ProtectedRoute><RoyaltyTracker /></ProtectedRoute>} />
+            <Route path="/dashboard/creative-portfolio" element={<ProtectedRoute><CreativePortfolio /></ProtectedRoute>} />
             <Route path="/client-type" element={<ClientType />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

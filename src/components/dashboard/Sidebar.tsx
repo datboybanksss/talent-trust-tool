@@ -23,7 +23,9 @@ import {
   Trophy,
   Palette,
   FileText,
-  Handshake
+  Handshake,
+  Music,
+  Brush
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
