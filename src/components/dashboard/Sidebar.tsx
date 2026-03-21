@@ -147,4 +147,9 @@ const navItems = [
   { icon: Bell, label: "Reminders", href: "/dashboard/reminders", badge: 5 },
 ];
 
+const athleteNavItems = [
+  { icon: FileText, label: "Contract Manager", href: "/dashboard/contracts" },
+  { icon: Handshake, label: "Endorsement Tracker", href: "/dashboard/endorsements" },
+];
+
 export default Sidebar;
