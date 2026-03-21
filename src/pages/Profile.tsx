@@ -1,4 +1,5 @@
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import { useProfile } from "@/hooks/useProfile";
 import AssetSummaryCard from "@/components/dashboard/profile/AssetSummaryCard";
 import ContractExpiryTimeline from "@/components/dashboard/profile/ContractExpiryTimeline";
 import QuickStats from "@/components/dashboard/profile/QuickStats";
@@ -19,11 +20,17 @@ import {
   Heart,
   Key,
   Briefcase,
-  Download
+  Download,
+  Trophy,
+  Palette,
+  Music,
+  Target
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 const Profile = () => {
+  const { isAthlete, isArtist } = useProfile();
+
   const handleGenerateReport = () => {
     generateExecutiveReportPDF({
       userName: "Client",
@@ -32,19 +39,14 @@ const Profile = () => {
       companiesCount: 3,
       contractsCount: 8,
       complianceScore: undefined,
-      assets: [
-        { title: "Business Assets", value: "R 2,500,000", count: 3, trend: { value: 8.2, positive: true } },
-        { title: "Investments", value: "R 850,000", count: 5, trend: { value: 15.3, positive: true } },
-        { title: "Property", value: "R 650,000", count: 1, trend: { value: 3.1, positive: true } },
-        { title: "Liquid Assets", value: "R 250,000", trend: { value: 2.4, positive: false } },
-      ],
+      assets: assetCards,
       complianceItems: [],
-      contracts,
-      quickStats: quickStats.map(s => ({ label: s.label, value: s.value })),
+      contracts: isAthlete ? athleteContracts : isArtist ? artistContracts : defaultContracts,
+      quickStats: (isAthlete ? athleteQuickStats : isArtist ? artistQuickStats : defaultQuickStats).map(s => ({ label: s.label, value: s.value })),
       lifeFileItems: lifeFileItems.map(i => ({ name: i.name, status: i.status, lastUpdated: i.lastUpdated })),
       beneficiariesCount: 4,
       emergencyContactsCount: 3,
-      advisors: { count: 4, types: "Lawyer, Accountant, Agent, Financial Advisor" },
+      advisors: { count: 4, types: isAthlete ? "Lawyer, Agent, Financial Advisor, Sports Doctor" : isArtist ? "Lawyer, Manager, Accountant, Publicist" : "Lawyer, Accountant, Agent, Financial Advisor" },
       documentsStored: 24,
       nextDeadline: { date: "Feb 15", description: "Annual Return Due" },
       insurancePolicies: 3,
@@ -52,10 +54,18 @@ const Profile = () => {
     toast({ title: "Executive Report Generated", description: "Your PDF report has been downloaded." });
   };
 
+  const contracts = isAthlete ? athleteContracts : isArtist ? artistContracts : defaultContracts;
+  const stats = isAthlete ? athleteQuickStats : isArtist ? artistQuickStats : defaultQuickStats;
+  const advisorLabel = isAthlete ? "Lawyer, Agent, Financial Advisor, Sports Doctor" : isArtist ? "Lawyer, Manager, Accountant, Publicist" : "Lawyer, Accountant, Agent, Financial Advisor";
+
   return (
     <DashboardLayout 
       title="My Profile" 
-      subtitle="Overview of your assets and business health"
+      subtitle={
+        isAthlete ? "Overview of your athletic career assets and business health" 
+        : isArtist ? "Overview of your creative career assets and business health" 
+        : "Overview of your assets and business health"
+      }
     >
       {/* Generate Report Button */}
       <div className="flex justify-end mb-6">
@@ -78,12 +88,12 @@ const Profile = () => {
           </div>
           <div className="flex gap-4">
             <div className="text-center">
-              <p className="text-2xl font-bold">3</p>
-              <p className="text-xs opacity-80">Companies</p>
+              <p className="text-2xl font-bold">{isAthlete ? "2" : isArtist ? "1" : "3"}</p>
+              <p className="text-xs opacity-80">{isAthlete ? "Teams" : isArtist ? "Labels" : "Companies"}</p>
             </div>
             <div className="h-12 w-px bg-primary-foreground/20" />
             <div className="text-center">
-              <p className="text-2xl font-bold">8</p>
+              <p className="text-2xl font-bold">{contracts.length}</p>
               <p className="text-xs opacity-80">Contracts</p>
             </div>
           </div>
@@ -92,50 +102,16 @@ const Profile = () => {
 
       {/* Asset Summary Cards */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <AssetSummaryCard
-          icon={Building2}
-          title="Business Assets"
-          value="R 2,500,000"
-          count={3}
-          trend={{ value: 8.2, positive: true }}
-          variant="gold"
-        />
-        <AssetSummaryCard
-          icon={Landmark}
-          title="Investments"
-          value="R 850,000"
-          count={5}
-          trend={{ value: 15.3, positive: true }}
-        />
-        <AssetSummaryCard
-          icon={Home}
-          title="Property"
-          value="R 650,000"
-          count={1}
-          trend={{ value: 3.1, positive: true }}
-        />
-        <AssetSummaryCard
-          icon={Wallet}
-          title="Liquid Assets"
-          value="R 250,000"
-          trend={{ value: 2.4, positive: false }}
-        />
+        {(isAthlete ? athleteAssets : isArtist ? artistAssets : defaultAssets).map((asset, i) => (
+          <AssetSummaryCard key={i} {...asset} />
+        ))}
       </div>
 
       {/* Main Grid */}
       <div className="grid lg:grid-cols-2 xl:grid-cols-3 gap-8">
-        {/* Contract Expiry Timeline */}
         <ContractExpiryTimeline contracts={contracts} />
-
-        {/* Life File */}
-        <LifeFile 
-          items={lifeFileItems}
-          beneficiaries={4}
-          emergencyContacts={3}
-        />
-
-        {/* Quick Stats */}
-        <QuickStats stats={quickStats} />
+        <LifeFile items={lifeFileItems} beneficiaries={4} emergencyContacts={3} />
+        <QuickStats stats={stats} />
       </div>
 
       {/* Additional Info Row */}
@@ -146,11 +122,11 @@ const Profile = () => {
               <Users className="w-5 h-5 text-info" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Advisors</p>
+              <p className="text-xs text-muted-foreground">{isAthlete ? "Team & Advisors" : isArtist ? "Management" : "Advisors"}</p>
               <p className="text-lg font-bold text-foreground">4 Active</p>
             </div>
           </div>
-          <p className="text-xs text-muted-foreground">Lawyer, Accountant, Agent, Financial Advisor</p>
+          <p className="text-xs text-muted-foreground">{advisorLabel}</p>
         </div>
 
         <div className="bg-card rounded-2xl border border-border p-5 shadow-soft">
@@ -176,7 +152,7 @@ const Profile = () => {
               <p className="text-lg font-bold text-foreground">Feb 15</p>
             </div>
           </div>
-          <p className="text-xs text-muted-foreground">Annual Return Due</p>
+          <p className="text-xs text-muted-foreground">{isAthlete ? "Contract Renewal Due" : isArtist ? "Royalty Filing Due" : "Annual Return Due"}</p>
         </div>
 
         <div className="bg-card rounded-2xl border border-border p-5 shadow-soft">
@@ -189,44 +165,90 @@ const Profile = () => {
               <p className="text-lg font-bold text-foreground">3 Policies</p>
             </div>
           </div>
-          <p className="text-xs text-muted-foreground">Life, Business, Vehicle covered</p>
+          <p className="text-xs text-muted-foreground">
+            {isAthlete ? "Career, Injury, Vehicle covered" : isArtist ? "Life, Equipment, Liability covered" : "Life, Business, Vehicle covered"}
+          </p>
         </div>
       </div>
     </DashboardLayout>
   );
 };
 
-// Mock data
-const contracts = [
-  {
-    name: "Nike Endorsement Deal",
-    type: "Endorsement Contract",
-    expiryDate: "Mar 15, 2026",
-    daysUntilExpiry: 40,
-    value: "R 500,000/yr"
-  },
-  {
-    name: "Bulls Rugby Contract",
-    type: "Team Contract",
-    expiryDate: "Dec 31, 2026",
-    daysUntilExpiry: 332,
-    value: "R 1,200,000/yr"
-  },
-  {
-    name: "Sports Agency Agreement",
-    type: "Agent Contract",
-    expiryDate: "Feb 20, 2026",
-    daysUntilExpiry: 17,
-    value: "15% commission"
-  },
+// ── Asset Cards ──
+
+const assetCards = [
+  { title: "Business Assets", value: "R 2,500,000", count: 3, trend: { value: 8.2, positive: true } },
+  { title: "Investments", value: "R 850,000", count: 5, trend: { value: 15.3, positive: true } },
+  { title: "Property", value: "R 650,000", count: 1, trend: { value: 3.1, positive: true } },
+  { title: "Liquid Assets", value: "R 250,000", trend: { value: 2.4, positive: false } },
 ];
 
-const quickStats = [
+const defaultAssets = [
+  { icon: Building2, title: "Business Assets", value: "R 2,500,000", count: 3, trend: { value: 8.2, positive: true }, variant: "gold" as const },
+  { icon: Landmark, title: "Investments", value: "R 850,000", count: 5, trend: { value: 15.3, positive: true } },
+  { icon: Home, title: "Property", value: "R 650,000", count: 1, trend: { value: 3.1, positive: true } },
+  { icon: Wallet, title: "Liquid Assets", value: "R 250,000", trend: { value: 2.4, positive: false } },
+];
+
+const athleteAssets = [
+  { icon: Trophy, title: "Contract Value", value: "R 1,700,000", count: 3, trend: { value: 12.0, positive: true }, variant: "gold" as const },
+  { icon: Target, title: "Endorsements", value: "R 800,000", count: 4, trend: { value: 18.5, positive: true } },
+  { icon: Home, title: "Property", value: "R 650,000", count: 1, trend: { value: 3.1, positive: true } },
+  { icon: Wallet, title: "Savings & Investments", value: "R 1,100,000", trend: { value: 8.7, positive: true } },
+];
+
+const artistAssets = [
+  { icon: Music, title: "Royalty Portfolio", value: "R 950,000", count: 12, trend: { value: 22.0, positive: true }, variant: "gold" as const },
+  { icon: Palette, title: "Creative Assets", value: "R 1,200,000", count: 3, trend: { value: 15.3, positive: true } },
+  { icon: Landmark, title: "Investments", value: "R 850,000", count: 5, trend: { value: 9.1, positive: true } },
+  { icon: Wallet, title: "Liquid Assets", value: "R 1,250,000", trend: { value: 4.2, positive: true } },
+];
+
+// ── Contracts ──
+
+const defaultContracts = [
+  { name: "Nike Endorsement Deal", type: "Endorsement Contract", expiryDate: "Mar 15, 2026", daysUntilExpiry: 40, value: "R 500,000/yr" },
+  { name: "Bulls Rugby Contract", type: "Team Contract", expiryDate: "Dec 31, 2026", daysUntilExpiry: 332, value: "R 1,200,000/yr" },
+  { name: "Sports Agency Agreement", type: "Agent Contract", expiryDate: "Feb 20, 2026", daysUntilExpiry: 17, value: "15% commission" },
+];
+
+const athleteContracts = [
+  { name: "Nike Endorsement Deal", type: "Endorsement", expiryDate: "Mar 15, 2026", daysUntilExpiry: 40, value: "R 500,000/yr" },
+  { name: "Bulls Rugby Contract", type: "Team Contract", expiryDate: "Dec 31, 2026", daysUntilExpiry: 332, value: "R 1,200,000/yr" },
+  { name: "Adidas Boot Deal", type: "Equipment Sponsor", expiryDate: "Jun 30, 2026", daysUntilExpiry: 101, value: "R 300,000/yr" },
+  { name: "Sports Agency Agreement", type: "Agent", expiryDate: "Feb 20, 2026", daysUntilExpiry: 17, value: "15% commission" },
+];
+
+const artistContracts = [
+  { name: "Sony Music Publishing", type: "Publishing Deal", expiryDate: "Sep 30, 2026", daysUntilExpiry: 193, value: "R 600,000/yr" },
+  { name: "Gallery X Representation", type: "Gallery Contract", expiryDate: "Mar 15, 2026", daysUntilExpiry: 40, value: "30% commission" },
+  { name: "Spotify Licensing Agreement", type: "Streaming", expiryDate: "Dec 31, 2026", daysUntilExpiry: 332, value: "R 120,000/yr" },
+];
+
+// ── Quick Stats ──
+
+const defaultQuickStats = [
   { label: "Active Companies", value: 3, icon: Building2, color: "success" as const },
   { label: "Pending Tasks", value: 5, icon: FileCheck, color: "warning" as const },
   { label: "This Month Revenue", value: "R 85K", color: "success" as const },
   { label: "Expiring Soon", value: 2, color: "destructive" as const },
 ];
+
+const athleteQuickStats = [
+  { label: "Active Contracts", value: 4, icon: Trophy, color: "success" as const },
+  { label: "Pending Actions", value: 5, icon: FileCheck, color: "warning" as const },
+  { label: "Season Earnings", value: "R 1.7M", color: "success" as const },
+  { label: "Contracts Expiring", value: 2, color: "destructive" as const },
+];
+
+const artistQuickStats = [
+  { label: "Active Projects", value: 4, icon: Music, color: "success" as const },
+  { label: "Pending Actions", value: 3, icon: FileCheck, color: "warning" as const },
+  { label: "Quarterly Royalties", value: "R 85K", color: "success" as const },
+  { label: "Deals Expiring", value: 1, color: "destructive" as const },
+];
+
+// ── Life File Items ──
 
 const lifeFileItems = [
   { name: "Last Will & Testament", status: "complete" as const, lastUpdated: "Jan 2026", icon: FileText },
