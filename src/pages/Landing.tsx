@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Shield, Lock, FileText, Users, Briefcase, ArrowRight, ChevronDown, Trophy, Palette } from "lucide-react";
+import { Shield, Lock, FileText, Users, Briefcase, ArrowRight, ChevronDown, Trophy, Palette, FolderHeart, Calculator } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   NavigationMenu,
