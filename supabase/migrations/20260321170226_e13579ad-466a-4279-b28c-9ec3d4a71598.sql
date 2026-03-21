@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN client_type TEXT DEFAULT NULL;
