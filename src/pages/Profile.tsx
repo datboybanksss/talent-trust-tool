@@ -55,7 +55,7 @@ const Profile = () => {
   return (
     <DashboardLayout 
       title="My Profile" 
-      subtitle="Overview of your assets, compliance, and business health"
+      subtitle="Overview of your assets and business health"
     >
       {/* Generate Report Button */}
       <div className="flex justify-end mb-6">
@@ -123,13 +123,7 @@ const Profile = () => {
       </div>
 
       {/* Main Grid */}
-      <div className="grid lg:grid-cols-2 xl:grid-cols-4 gap-8">
-        {/* Compliance Overview */}
-        <ComplianceOverview
-          score={85}
-          items={complianceItems}
-        />
-
+      <div className="grid lg:grid-cols-2 xl:grid-cols-3 gap-8">
         {/* Contract Expiry Timeline */}
         <ContractExpiryTimeline contracts={contracts} />
 
@@ -203,7 +197,6 @@ const Profile = () => {
 };
 
 // Mock data
-
 const contracts = [
   {
     name: "Nike Endorsement Deal",
