@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Shield, Lock, FileText, Users, Briefcase, ArrowRight, ChevronDown, Trophy, Palette } from "lucide-react";
+import { Shield, Lock, FileText, Users, Briefcase, ArrowRight, ChevronDown, Trophy, Palette, FolderHeart, Calculator } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   NavigationMenu,
@@ -232,6 +232,16 @@ const Landing = () => {
               icon={ArrowRight}
               title="Investment Opportunity"
               description="Explore vetted property and franchise investment opportunities to grow your wealth."
+            />
+            <ServiceCard
+              icon={FolderHeart}
+              title="Life File"
+              description="Organise your essential life documents, beneficiaries, and emergency contacts in one place."
+            />
+            <ServiceCard
+              icon={Calculator}
+              title="Budget Calculator"
+              description="Plan and track your monthly budget with smart allocation tools and spending insights."
             />
           </div>
         </div>
