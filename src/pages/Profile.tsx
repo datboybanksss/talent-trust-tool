@@ -1,6 +1,5 @@
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import AssetSummaryCard from "@/components/dashboard/profile/AssetSummaryCard";
-import ComplianceOverview from "@/components/dashboard/profile/ComplianceOverview";
 import ContractExpiryTimeline from "@/components/dashboard/profile/ContractExpiryTimeline";
 import QuickStats from "@/components/dashboard/profile/QuickStats";
 import LifeFile from "@/components/dashboard/profile/LifeFile";
@@ -32,14 +31,14 @@ const Profile = () => {
       quarterlyChange: "+12.5%",
       companiesCount: 3,
       contractsCount: 8,
-      complianceScore: 85,
+      complianceScore: undefined,
       assets: [
         { title: "Business Assets", value: "R 2,500,000", count: 3, trend: { value: 8.2, positive: true } },
         { title: "Investments", value: "R 850,000", count: 5, trend: { value: 15.3, positive: true } },
         { title: "Property", value: "R 650,000", count: 1, trend: { value: 3.1, positive: true } },
         { title: "Liquid Assets", value: "R 250,000", trend: { value: 2.4, positive: false } },
       ],
-      complianceItems,
+      complianceItems: [],
       contracts,
       quickStats: quickStats.map(s => ({ label: s.label, value: s.value })),
       lifeFileItems: lifeFileItems.map(i => ({ name: i.name, status: i.status, lastUpdated: i.lastUpdated })),
@@ -56,7 +55,7 @@ const Profile = () => {
   return (
     <DashboardLayout 
       title="My Profile" 
-      subtitle="Overview of your assets, compliance, and business health"
+      subtitle="Overview of your assets and business health"
     >
       {/* Generate Report Button */}
       <div className="flex justify-end mb-6">
@@ -86,11 +85,6 @@ const Profile = () => {
             <div className="text-center">
               <p className="text-2xl font-bold">8</p>
               <p className="text-xs opacity-80">Contracts</p>
-            </div>
-            <div className="h-12 w-px bg-primary-foreground/20" />
-            <div className="text-center">
-              <p className="text-2xl font-bold">85%</p>
-              <p className="text-xs opacity-80">Compliance</p>
             </div>
           </div>
         </div>
@@ -129,13 +123,7 @@ const Profile = () => {
       </div>
 
       {/* Main Grid */}
-      <div className="grid lg:grid-cols-2 xl:grid-cols-4 gap-8">
-        {/* Compliance Overview */}
-        <ComplianceOverview
-          score={85}
-          items={complianceItems}
-        />
-
+      <div className="grid lg:grid-cols-2 xl:grid-cols-3 gap-8">
         {/* Contract Expiry Timeline */}
         <ContractExpiryTimeline contracts={contracts} />
 
@@ -209,14 +197,6 @@ const Profile = () => {
 };
 
 // Mock data
-const complianceItems = [
-  { name: "CIPC Annual Return", status: "warning" as const, dueDate: "Feb 15, 2026" },
-  { name: "SARS Tax Filing", status: "compliant" as const, dueDate: "Feb 28, 2026" },
-  { name: "B-BBEE Certificate", status: "compliant" as const },
-  { name: "UIF Registration", status: "compliant" as const },
-  { name: "COIDA Registration", status: "critical" as const, dueDate: "Overdue" },
-];
-
 const contracts = [
   {
     name: "Nike Endorsement Deal",
