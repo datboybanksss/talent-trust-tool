@@ -233,6 +233,16 @@ const Landing = () => {
               title="Investment Opportunity"
               description="Explore vetted property and franchise investment opportunities to grow your wealth."
             />
+            <ServiceCard
+              icon={FolderHeart}
+              title="Life File"
+              description="Organise your essential life documents, beneficiaries, and emergency contacts in one place."
+            />
+            <ServiceCard
+              icon={Calculator}
+              title="Budget Calculator"
+              description="Plan and track your monthly budget with smart allocation tools and spending insights."
+            />
           </div>
         </div>
       </section>
