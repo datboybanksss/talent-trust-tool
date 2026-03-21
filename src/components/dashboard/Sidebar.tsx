@@ -71,6 +71,13 @@ const Sidebar = () => {
             active={location.pathname === item.href}
           />
         ))}
+        {isArtist && artistNavItems.map((item) => (
+          <NavItem
+            key={item.href}
+            {...item}
+            active={location.pathname === item.href}
+          />
+        ))}
       </nav>
 
       <div className="border-t border-border pt-4 space-y-1">
