@@ -140,6 +140,56 @@ const Landing = () => {
         </div>
       </section>
 
+      {/* Celebration Gallery */}
+      <section className="py-20 px-6">
+        <div className="container max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-4">
+              Celebrating African Excellence
+            </h2>
+            <p className="text-muted-foreground max-w-xl mx-auto">
+              We champion the success of South Africa's top athletes and artists — on and off the field.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            <div className="rounded-2xl overflow-hidden shadow-soft group">
+              <img
+                src={athletesCelebrating}
+                alt="African athletes celebrating victory together on the field"
+                className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-500"
+                loading="lazy"
+              />
+              <div className="p-4 bg-card">
+                <p className="text-sm font-medium text-foreground">Athletes United in Victory</p>
+              </div>
+            </div>
+            <div className="rounded-2xl overflow-hidden shadow-soft group">
+              <img
+                src={artistsCelebrating}
+                alt="African artists and musicians celebrating creative success"
+                className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-500"
+                loading="lazy"
+              />
+              <div className="p-4 bg-card">
+                <p className="text-sm font-medium text-foreground">Creative Visionaries Thriving</p>
+              </div>
+            </div>
+            <div className="rounded-2xl overflow-hidden shadow-soft group">
+              <img
+                src={athleteTrophy}
+                alt="African athlete holding a gold trophy in celebration"
+                className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-500"
+                loading="lazy"
+              />
+              <div className="p-4 bg-card">
+                <p className="text-sm font-medium text-foreground">Champions Building Legacies</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Services Section */}
       <section className="py-24 px-6 bg-secondary/30">
         <div className="container max-w-6xl mx-auto">
