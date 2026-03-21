@@ -1,6 +1,5 @@
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import AssetSummaryCard from "@/components/dashboard/profile/AssetSummaryCard";
-import ComplianceOverview from "@/components/dashboard/profile/ComplianceOverview";
 import ContractExpiryTimeline from "@/components/dashboard/profile/ContractExpiryTimeline";
 import QuickStats from "@/components/dashboard/profile/QuickStats";
 import LifeFile from "@/components/dashboard/profile/LifeFile";
