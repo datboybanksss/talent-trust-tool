@@ -10,6 +10,9 @@ import {
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
+import athletesCelebrating from "@/assets/athletes-celebrating.jpg";
+import artistsCelebrating from "@/assets/artists-celebrating.jpg";
+import athleteTrophy from "@/assets/athlete-trophy.jpg";
 
 const athleteCategories = [
   { title: "Rugby Players", href: "/client-type?type=rugby-players", description: "Contract and wealth management for rugby professionals" },
