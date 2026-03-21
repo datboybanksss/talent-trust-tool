@@ -223,6 +223,16 @@ const Landing = () => {
               title="Financial Products"
               description="Connect with vetted advisors and access exclusive financial solutions."
             />
+            <ServiceCard
+              icon={Briefcase}
+              title="Funding Application Support"
+              description="Get guidance and support to apply for funding opportunities tailored to your career."
+            />
+            <ServiceCard
+              icon={ArrowRight}
+              title="Investment Opportunity"
+              description="Explore vetted property and franchise investment opportunities to grow your wealth."
+            />
           </div>
         </div>
       </section>
