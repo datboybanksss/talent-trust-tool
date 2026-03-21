@@ -27,6 +27,8 @@ import PayslipTaxDocuments from "./pages/PayslipTaxDocuments";
 import ApplyForFunding from "./pages/ApplyForFunding";
 import ContractManager from "./pages/ContractManager";
 import EndorsementTracker from "./pages/EndorsementTracker";
+import RoyaltyTracker from "./pages/RoyaltyTracker";
+import CreativePortfolio from "./pages/CreativePortfolio";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
