@@ -161,4 +161,9 @@ const athleteNavItems = [
   { icon: Handshake, label: "Endorsement Tracker", href: "/dashboard/endorsements" },
 ];
 
+const artistNavItems = [
+  { icon: Music, label: "Royalty Tracker", href: "/dashboard/royalties" },
+  { icon: Brush, label: "Creative Portfolio", href: "/dashboard/creative-portfolio" },
+];
+
 export default Sidebar;
