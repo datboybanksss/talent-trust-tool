@@ -31,7 +31,7 @@ const Profile = () => {
       quarterlyChange: "+12.5%",
       companiesCount: 3,
       contractsCount: 8,
-      complianceScore: 85,
+      complianceScore: undefined,
       assets: [
         { title: "Business Assets", value: "R 2,500,000", count: 3, trend: { value: 8.2, positive: true } },
         { title: "Investments", value: "R 850,000", count: 5, trend: { value: 15.3, positive: true } },
