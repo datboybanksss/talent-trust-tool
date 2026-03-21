@@ -204,11 +204,6 @@ const Landing = () => {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             <ServiceCard
-              icon={Briefcase}
-              title="Business Setup"
-              description="Establish your professional entity with proper legal structures from day one."
-            />
-            <ServiceCard
               icon={Shield}
               title="Wealth Protection"
               description="Secure your assets with Trust structures designed for high-net-worth individuals."
