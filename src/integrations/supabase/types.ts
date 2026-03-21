@@ -14,6 +14,108 @@ export type Database = {
   }
   public: {
     Tables: {
+      artist_projects: {
+        Row: {
+          budget: number | null
+          collaborators: string | null
+          created_at: string
+          currency: string
+          description: string | null
+          id: string
+          notes: string | null
+          platform: string | null
+          project_type: string
+          release_date: string | null
+          start_date: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          budget?: number | null
+          collaborators?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          notes?: string | null
+          platform?: string | null
+          project_type?: string
+          release_date?: string | null
+          start_date?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          budget?: number | null
+          collaborators?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          notes?: string | null
+          platform?: string | null
+          project_type?: string
+          release_date?: string | null
+          start_date?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      artist_royalties: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          notes: string | null
+          period_end: string | null
+          period_start: string
+          reference_number: string | null
+          source_name: string
+          source_type: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          notes?: string | null
+          period_end?: string | null
+          period_start: string
+          reference_number?: string | null
+          source_name: string
+          source_type?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          notes?: string | null
+          period_end?: string | null
+          period_start?: string
+          reference_number?: string | null
+          source_name?: string
+          source_type?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       athlete_contracts: {
         Row: {
           contract_type: string

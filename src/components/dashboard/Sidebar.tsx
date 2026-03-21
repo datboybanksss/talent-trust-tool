@@ -23,7 +23,9 @@ import {
   Trophy,
   Palette,
   FileText,
-  Handshake
+  Handshake,
+  Music,
+  Brush
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -63,6 +65,13 @@ const Sidebar = () => {
           />
         ))}
         {isAthlete && athleteNavItems.map((item) => (
+          <NavItem
+            key={item.href}
+            {...item}
+            active={location.pathname === item.href}
+          />
+        ))}
+        {isArtist && artistNavItems.map((item) => (
           <NavItem
             key={item.href}
             {...item}
@@ -150,6 +159,11 @@ const navItems = [
 const athleteNavItems = [
   { icon: FileText, label: "Contract Manager", href: "/dashboard/contracts" },
   { icon: Handshake, label: "Endorsement Tracker", href: "/dashboard/endorsements" },
+];
+
+const artistNavItems = [
+  { icon: Music, label: "Royalty Tracker", href: "/dashboard/royalties" },
+  { icon: Brush, label: "Creative Portfolio", href: "/dashboard/creative-portfolio" },
 ];
 
 export default Sidebar;

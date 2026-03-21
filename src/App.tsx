@@ -27,6 +27,8 @@ import PayslipTaxDocuments from "./pages/PayslipTaxDocuments";
 import ApplyForFunding from "./pages/ApplyForFunding";
 import ContractManager from "./pages/ContractManager";
 import EndorsementTracker from "./pages/EndorsementTracker";
+import RoyaltyTracker from "./pages/RoyaltyTracker";
+import CreativePortfolio from "./pages/CreativePortfolio";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -60,6 +62,8 @@ const App = () => (
             <Route path="/dashboard/apply-for-funding" element={<ProtectedRoute><ApplyForFunding /></ProtectedRoute>} />
             <Route path="/dashboard/contracts" element={<ProtectedRoute><ContractManager /></ProtectedRoute>} />
             <Route path="/dashboard/endorsements" element={<ProtectedRoute><EndorsementTracker /></ProtectedRoute>} />
+            <Route path="/dashboard/royalties" element={<ProtectedRoute><RoyaltyTracker /></ProtectedRoute>} />
+            <Route path="/dashboard/creative-portfolio" element={<ProtectedRoute><CreativePortfolio /></ProtectedRoute>} />
             <Route path="/client-type" element={<ClientType />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
