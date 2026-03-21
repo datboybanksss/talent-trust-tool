@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useProfile } from "@/hooks/useProfile";
 import { 
   Shield, 
   LayoutDashboard, 
@@ -16,10 +17,11 @@ import {
   Heart,
   Home,
   Store,
-  
   CircleDollarSign,
   FileSpreadsheet,
-  Receipt
+  Receipt,
+  Trophy,
+  Palette
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -27,12 +29,17 @@ import { cn } from "@/lib/utils";
 const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
+  const { profile, isAthlete, isArtist } = useProfile();
 
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
   };
+
+  const displayName = profile?.display_name || user?.email?.split("@")[0] || "User";
+  const initials = displayName.slice(0, 2).toUpperCase();
+  const clientLabel = isAthlete ? "Athlete" : isArtist ? "Artist" : "Member";
 
   return (
     <aside className="fixed left-0 top-0 bottom-0 w-64 bg-card border-r border-border p-6 flex flex-col">
@@ -69,11 +76,15 @@ const Sidebar = () => {
       <div className="mt-4 p-4 bg-secondary rounded-xl">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-semibold">
-            JD
+            {initials}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-medium text-foreground truncate">John Doe</p>
-            <p className="text-xs text-muted-foreground truncate">Athlete</p>
+            <p className="font-medium text-foreground truncate">{displayName}</p>
+            <div className="flex items-center gap-1">
+              {isAthlete && <Trophy className="w-3 h-3 text-gold" />}
+              {isArtist && <Palette className="w-3 h-3 text-gold" />}
+              <p className="text-xs text-muted-foreground truncate">{clientLabel}</p>
+            </div>
           </div>
         </div>
       </div>
