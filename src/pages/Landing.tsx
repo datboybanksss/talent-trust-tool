@@ -579,6 +579,25 @@ const ProblemCard = ({ emoji, stat, description }: { emoji: string; stat: string
   </div>
 );
 
+const ArtistPainCard = ({ icon: Icon, before, after }: { icon: React.ElementType; before: string; after: string }) => (
+  <motion.div
+    variants={staggerItem}
+    className="p-6 rounded-2xl bg-card border border-border/50 hover:border-gold/30 transition-all duration-300 space-y-4"
+  >
+    <div className="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center">
+      <Icon className="w-5 h-5 text-gold" />
+    </div>
+    <div className="flex items-start gap-2">
+      <span className="text-destructive text-lg leading-none mt-0.5">✗</span>
+      <p className="text-sm text-muted-foreground line-through decoration-destructive/40">{before}</p>
+    </div>
+    <div className="flex items-start gap-2">
+      <CheckCircle2 className="w-4 h-4 text-gold shrink-0 mt-0.5" />
+      <p className="text-sm text-foreground font-medium">{after}</p>
+    </div>
+  </motion.div>
+);
+
 const FeatureCard = ({ icon: Icon, title, description }: { icon: React.ElementType; title: string; description: string }) => (
   <motion.div
     variants={staggerItem}
