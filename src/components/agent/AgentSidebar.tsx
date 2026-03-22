@@ -41,6 +41,7 @@ const mainNavItems = [
   { title: "Deal Pipeline", icon: Kanban, view: "pipeline" as const },
   { title: "Calendar", icon: CalendarDays, view: "calendar" as const },
   { title: "Compare", icon: BarChart3, view: "compare" as const },
+  { title: "Agreement Templates", icon: FileText, view: "templates" as const },
 ];
 
 const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, setActiveView }: AgentSidebarProps) => {
