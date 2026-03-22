@@ -141,6 +141,7 @@ const SharePortal = () => {
     setEmail("");
     setSelectedRole("");
     setCustomSections([]);
+    setConfidentialityAccepted(false);
     setDialogOpen(false);
   };
 
