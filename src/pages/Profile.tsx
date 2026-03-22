@@ -1,5 +1,6 @@
+import { useState } from "react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
-import { useProfile } from "@/hooks/useProfile";
+import { useProfile, ClientType } from "@/hooks/useProfile";
 import AssetSummaryCard from "@/components/dashboard/profile/AssetSummaryCard";
 import ContractExpiryTimeline from "@/components/dashboard/profile/ContractExpiryTimeline";
 import QuickStats from "@/components/dashboard/profile/QuickStats";
@@ -24,12 +25,28 @@ import {
   Trophy,
   Palette,
   Music,
-  Target
+  Target,
+  Settings
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 const Profile = () => {
-  const { isAthlete, isArtist } = useProfile();
+  const { isAthlete, isArtist, clientType, updateClientType } = useProfile();
+  const [saving, setSaving] = useState(false);
+
+  const handleClientTypeChange = async (value: string) => {
+    setSaving(true);
+    const newType = (value === "default" ? null : value) as ClientType;
+    const result = await updateClientType(newType);
+    setSaving(false);
+    if (result?.error) {
+      toast({ title: "Error", description: "Failed to update client type.", variant: "destructive" });
+    } else {
+      toast({ title: "Updated", description: `Profile switched to ${value === "default" ? "General" : value}.` });
+    }
+  };
 
   const handleGenerateReport = () => {
     generateExecutiveReportPDF({
@@ -67,8 +84,37 @@ const Profile = () => {
         : "Overview of your assets and business health"
       }
     >
-      {/* Generate Report Button */}
-      <div className="flex justify-end mb-6">
+      {/* Settings & Actions Row */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        {/* Client Type Switcher */}
+        <div className="bg-card rounded-2xl border border-border p-4 shadow-soft flex items-center gap-4">
+          <div className="w-9 h-9 rounded-xl bg-accent/50 flex items-center justify-center">
+            <Settings className="w-4 h-4 text-muted-foreground" />
+          </div>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+            <Label className="text-sm text-muted-foreground whitespace-nowrap">Profile Type:</Label>
+            <RadioGroup
+              value={clientType ?? "default"}
+              onValueChange={handleClientTypeChange}
+              className="flex gap-4"
+              disabled={saving}
+            >
+              <div className="flex items-center gap-1.5">
+                <RadioGroupItem value="default" id="type-default" />
+                <Label htmlFor="type-default" className="text-sm cursor-pointer">General</Label>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <RadioGroupItem value="athlete" id="type-athlete" />
+                <Label htmlFor="type-athlete" className="text-sm cursor-pointer">Athlete</Label>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <RadioGroupItem value="artist" id="type-artist" />
+                <Label htmlFor="type-artist" className="text-sm cursor-pointer">Artist</Label>
+              </div>
+            </RadioGroup>
+          </div>
+        </div>
+
         <Button onClick={handleGenerateReport} variant="outline" className="gap-2 border-primary/30 hover:bg-primary/10 text-foreground">
           <Download className="w-4 h-4 text-primary" />
           Generate Executive Report
