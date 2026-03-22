@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
@@ -112,6 +113,7 @@ const SharePortal = () => {
   const [email, setEmail] = useState("");
   const [selectedRole, setSelectedRole] = useState("");
   const [customSections, setCustomSections] = useState<PortalSection[]>([]);
+  const [confidentialityAccepted, setConfidentialityAccepted] = useState(false);
 
   const activePreset = ROLE_PRESETS.find((r) => r.id === selectedRole);
   const effectiveSections = selectedRole === "custom" ? customSections : (activePreset?.sections ?? []);
@@ -121,7 +123,7 @@ const SharePortal = () => {
   };
 
   const handleInvite = () => {
-    if (!name || !email || !selectedRole) return;
+    if (!name || !email || !selectedRole || !confidentialityAccepted) return;
     const preset = ROLE_PRESETS.find((r) => r.id === selectedRole)!;
     const newMember: SharedStaffMember = {
       id: crypto.randomUUID(),
@@ -139,6 +141,7 @@ const SharePortal = () => {
     setEmail("");
     setSelectedRole("");
     setCustomSections([]);
+    setConfidentialityAccepted(false);
     setDialogOpen(false);
   };
 
@@ -227,7 +230,34 @@ const SharePortal = () => {
                 </div>
               )}
 
-              <Button onClick={handleInvite} disabled={!name || !email || !selectedRole || effectiveSections.length === 0} className="w-full" variant="gold">
+              {/* Confidentiality Acknowledgement */}
+              <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
+                <div className="flex items-start gap-2">
+                  <Shield className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                  <p className="text-xs font-semibold text-foreground">Confidentiality & Data Use Acknowledgement</p>
+                </div>
+                <div className="text-xs text-muted-foreground space-y-2 pl-6">
+                  <p>By accepting this invitation, the invited person acknowledges and agrees to the following:</p>
+                  <ul className="list-disc pl-4 space-y-1">
+                    <li>All client information, financial data, contracts, and personal details accessed through this portal are strictly confidential.</li>
+                    <li>Information may only be used for the specific purpose related to their designated role and may not be copied, shared, or disclosed to any third party.</li>
+                    <li>Unauthorised use, distribution, or reproduction of any information constitutes a breach of confidentiality and may result in legal action under the Protection of Personal Information Act (POPIA) and common law.</li>
+                    <li>Access may be revoked at any time without notice, and all data must be returned or destroyed upon revocation.</li>
+                  </ul>
+                </div>
+                <div className="flex items-start gap-2 pl-6 pt-1">
+                  <Checkbox
+                    id="confidentiality"
+                    checked={confidentialityAccepted}
+                    onCheckedChange={(checked) => setConfidentialityAccepted(checked === true)}
+                  />
+                  <label htmlFor="confidentiality" className="text-xs leading-tight cursor-pointer text-foreground">
+                    I confirm that the invited person will be required to acknowledge these confidentiality terms before accessing the portal.
+                  </label>
+                </div>
+              </div>
+
+              <Button onClick={handleInvite} disabled={!name || !email || !selectedRole || effectiveSections.length === 0 || !confidentialityAccepted} className="w-full" variant="gold">
                 <Mail className="w-4 h-4 mr-2" />
                 Send Invitation
               </Button>
