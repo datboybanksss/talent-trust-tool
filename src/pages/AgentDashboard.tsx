@@ -25,6 +25,7 @@ import {
 import DealPipeline from "@/components/dashboard/DealPipeline";
 import ClientComparison from "@/components/dashboard/ClientComparison";
 import AgentSidebar from "@/components/agent/AgentSidebar";
+import AgentNotifications from "@/components/agent/AgentNotifications";
 import * as XLSX from "xlsx";
 
 interface Invitation {
@@ -517,6 +518,10 @@ const AgentDashboard = () => {
                 <SidebarTrigger className="mr-1" />
                 <h1 className="text-lg font-display font-bold text-foreground">Agent Portal</h1>
               </div>
+              <AgentNotifications
+                pendingCount={pendingCount}
+                recentActivity={MOCK_RECENT_ACTIVITY}
+              />
             </div>
           </header>
 
