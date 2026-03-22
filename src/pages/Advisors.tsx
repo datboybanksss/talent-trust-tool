@@ -108,7 +108,7 @@ interface Advisor {
   category: Category;
   phone: string;
   cell: string;
-  whatsapp: string;
+  
   email: string;
   website: string;
 }
