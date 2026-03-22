@@ -113,6 +113,7 @@ const SharePortal = () => {
   const [email, setEmail] = useState("");
   const [selectedRole, setSelectedRole] = useState("");
   const [customSections, setCustomSections] = useState<PortalSection[]>([]);
+  const [confidentialityAccepted, setConfidentialityAccepted] = useState(false);
 
   const activePreset = ROLE_PRESETS.find((r) => r.id === selectedRole);
   const effectiveSections = selectedRole === "custom" ? customSections : (activePreset?.sections ?? []);
