@@ -1,5 +1,6 @@
+import { useState } from "react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
-import { useProfile } from "@/hooks/useProfile";
+import { useProfile, ClientType } from "@/hooks/useProfile";
 import AssetSummaryCard from "@/components/dashboard/profile/AssetSummaryCard";
 import ContractExpiryTimeline from "@/components/dashboard/profile/ContractExpiryTimeline";
 import QuickStats from "@/components/dashboard/profile/QuickStats";
@@ -24,12 +25,28 @@ import {
   Trophy,
   Palette,
   Music,
-  Target
+  Target,
+  Settings
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 const Profile = () => {
-  const { isAthlete, isArtist } = useProfile();
+  const { isAthlete, isArtist, clientType, updateClientType } = useProfile();
+  const [saving, setSaving] = useState(false);
+
+  const handleClientTypeChange = async (value: string) => {
+    setSaving(true);
+    const newType = (value === "default" ? null : value) as ClientType;
+    const result = await updateClientType(newType);
+    setSaving(false);
+    if (result?.error) {
+      toast({ title: "Error", description: "Failed to update client type.", variant: "destructive" });
+    } else {
+      toast({ title: "Updated", description: `Profile switched to ${value === "default" ? "General" : value}.` });
+    }
+  };
 
   const handleGenerateReport = () => {
     generateExecutiveReportPDF({
