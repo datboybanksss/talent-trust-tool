@@ -123,7 +123,7 @@ const SharePortal = () => {
   };
 
   const handleInvite = () => {
-    if (!name || !email || !selectedRole) return;
+    if (!name || !email || !selectedRole || !confidentialityAccepted) return;
     const preset = ROLE_PRESETS.find((r) => r.id === selectedRole)!;
     const newMember: SharedStaffMember = {
       id: crypto.randomUUID(),
