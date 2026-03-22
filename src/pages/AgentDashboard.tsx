@@ -367,8 +367,47 @@ const AgentDashboard = () => {
                       <Label>Notes (visible to client)</Label>
                       <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Pre-populated notes..." rows={3} />
                     </div>
+
+                    {/* Document Upload */}
+                    <div>
+                      <Label>Documents (contracts, compliance)</Label>
+                      <div className="mt-1.5 border border-dashed border-border rounded-lg p-4 text-center">
+                        <input
+                          type="file"
+                          multiple
+                          accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                          onChange={handleFileSelect}
+                          className="hidden"
+                          id="agent-doc-upload"
+                        />
+                        <label htmlFor="agent-doc-upload" className="cursor-pointer flex flex-col items-center gap-2">
+                          <Upload className="w-6 h-6 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground">
+                            Click to upload or drag files here
+                          </span>
+                          <span className="text-xs text-muted-foreground">PDF, DOC, JPG, PNG — max 20MB each</span>
+                        </label>
+                      </div>
+                      {uploadedFiles.length > 0 && (
+                        <div className="mt-2 space-y-1.5">
+                          {uploadedFiles.map((file, idx) => (
+                            <div key={idx} className="flex items-center gap-2 bg-secondary/50 rounded-lg px-3 py-2 text-sm">
+                              <Paperclip className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                              <span className="truncate text-foreground flex-1">{file.name}</span>
+                              <span className="text-xs text-muted-foreground shrink-0">
+                                {(file.size / 1024).toFixed(0)}KB
+                              </span>
+                              <button onClick={() => removeFile(idx)} className="shrink-0 hover:text-destructive transition-colors">
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
                     <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleCreateInvitation} disabled={isCreating || !clientName || !clientEmail}>
-                      {isCreating ? "Creating..." : "Create & Generate Link"}
+                      {isCreating ? (isUploading ? "Uploading documents..." : "Creating...") : `Create & Generate Link${uploadedFiles.length > 0 ? ` (${uploadedFiles.length} files)` : ""}`}
                     </Button>
                   </div>
                 </DialogContent>
