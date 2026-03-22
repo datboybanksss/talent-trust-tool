@@ -496,28 +496,113 @@ const Landing = () => {
         </div>
       </section>
 
+      {/* ─── AGENT / MANAGER PAIN POINTS ──────────────────── */}
+      <section className="py-24 px-6 bg-secondary/30 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-gold/5 rounded-full blur-[120px]" />
+        <div className="container max-w-5xl mx-auto relative">
+          <Reveal>
+            <div className="text-center mb-14">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-gold/10 border border-gold/20 rounded-full mb-6">
+                <Briefcase className="w-4 h-4 text-gold" />
+                <span className="text-sm font-medium text-gold">For Agents & Managers</span>
+              </div>
+              <h2 className="text-3xl md:text-5xl font-display font-bold text-foreground mb-4">
+                Stop Managing Careers on WhatsApp<br />
+                <span className="text-gradient-gold">and Spreadsheets.</span>
+              </h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
+                Your clients trust you with their livelihood. But without the right systems, one missed deadline or lost document can cost you a client — or worse, a lawsuit.
+              </p>
+            </div>
+          </Reveal>
+
+          {/* Pain point stats */}
+          <Reveal delay={0.1}>
+            <div className="grid sm:grid-cols-3 gap-5 mb-10">
+              <ProblemCard emoji="📱" stat="87%" description="Of agents still manage client docs via WhatsApp and email" />
+              <ProblemCard emoji="⏰" stat="1 in 3" description="Agents have missed a critical contract renewal deadline" />
+              <ProblemCard emoji="🔓" stat="R0" description="Protection if a client disputes your record-keeping" />
+            </div>
+          </Reveal>
+
+          {/* Before / After cards */}
+          <motion.div
+            variants={stagger}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true }}
+            className="grid md:grid-cols-2 gap-5"
+          >
+            <ArtistPainCard
+              icon={Users}
+              before="Client profiles scattered across folders, notes, and memory"
+              after="One centralised portal with every client's contracts, deals, and compliance status"
+            />
+            <ArtistPainCard
+              icon={FileText}
+              before="Manually chasing contract renewals and tax deadlines"
+              after="Automated alerts for every expiry, renewal, and SARS submission"
+            />
+            <ArtistPainCard
+              icon={Share2}
+              before="Sharing sensitive client info with accountants via unsecured email"
+              after="Granular, time-limited access for staff with digital confidentiality sign-off"
+            />
+            <ArtistPainCard
+              icon={BarChart3}
+              before="No way to show clients a consolidated view of their career value"
+              after="Executive PDF reports, deal pipelines, and client comparison dashboards"
+            />
+          </motion.div>
+
+          <Reveal delay={0.3}>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-10">
+              <Button variant="gold" size="lg" asChild className="group">
+                <Link to="/agent-register">
+                  Register as Agent / Manager
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </Button>
+              <Button variant="outline" size="lg" asChild>
+                <Link to="/agent-register">Sign In to Agent Portal</Link>
+              </Button>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
       {/* ─── FOMO CTA ────────────────────────────────────── */}
-      <section className="py-20 px-6 relative overflow-hidden">
+      <section className="py-24 px-6 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-gold/10 via-background to-gold/5" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gold/8 rounded-full blur-[150px]" />
         <div className="container max-w-3xl mx-auto relative text-center space-y-6">
           <Reveal>
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gold/10 border border-gold/20 rounded-full mb-2">
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-gold opacity-75" />
-                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-gold" />
-              </span>
-              <span className="text-sm font-medium text-foreground">Limited Early-Access Spots</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-destructive/10 border border-destructive/20 rounded-full mb-2">
+              <Clock className="w-4 h-4 text-destructive" />
+              <span className="text-sm font-semibold text-destructive">Limited Early-Access Spots Remaining</span>
             </div>
-            <h2 className="text-3xl md:text-5xl font-display font-bold text-foreground">
-              Your Legacy Won't Build Itself.
+            <h2 className="text-3xl md:text-5xl font-display font-bold text-foreground leading-tight">
+              Every Week You Wait,<br />
+              <span className="text-gradient-gold">Someone Like You Loses It All.</span>
             </h2>
             <p className="text-muted-foreground max-w-xl mx-auto text-lg">
-              Join <strong className="text-foreground">1,200+</strong> athletes and artists who are already protecting their future. The earlier you start, the more you save.
+              <strong className="text-foreground">1,200+ athletes, artists, and agents</strong> have already locked in their spot. Early-access members get lifetime pricing and priority onboarding. Once spots are filled, the price doubles.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
+
+            {/* Urgency countdown-style badges */}
+            <div className="flex flex-wrap justify-center gap-3 pt-2">
+              <span className="px-3 py-1.5 rounded-full bg-destructive/10 border border-destructive/20 text-xs font-semibold text-destructive">
+                Only 83 spots left
+              </span>
+              <span className="px-3 py-1.5 rounded-full bg-gold/10 border border-gold/20 text-xs font-semibold text-gold">
+                Lifetime pricing for early members
+              </span>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-6">
               <Button variant="hero" size="xl" asChild className="group">
                 <Link to="/auth">
-                  Claim My Spot Now
+                  Claim My Spot Now — It's Free
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </Button>
@@ -526,33 +611,6 @@ const Landing = () => {
               <span className="flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5 text-gold" /> Free to start</span>
               <span className="flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5 text-gold" /> No credit card</span>
               <span className="flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5 text-gold" /> Cancel anytime</span>
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* ─── AGENT CTA ───────────────────────────────────── */}
-      <section className="py-20 px-6 bg-secondary/30">
-        <div className="container max-w-4xl mx-auto text-center space-y-6">
-          <Reveal>
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-secondary rounded-full">
-              <Briefcase className="w-4 h-4 text-gold" />
-              <span className="text-sm font-medium text-foreground">For Agents & Managers</span>
-            </div>
-            <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground">
-              Are You an Athletes' Agent or Artists' Manager?
-            </h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">
-              Create and pre-populate profiles for your clients with a designated activation link.
-              Once your client confirms, their profile goes live — with full POPIA-compliant privacy.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button variant="gold" size="lg" asChild>
-                <Link to="/agent-register">Register as Agent / Manager</Link>
-              </Button>
-              <Button variant="outline" size="lg" asChild>
-                <Link to="/agent-register">Sign In to Agent Portal</Link>
-              </Button>
             </div>
           </Reveal>
         </div>
