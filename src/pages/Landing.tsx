@@ -992,13 +992,34 @@ const AgentPricingSection = () => {
 
               {/* Price */}
               <div className="mt-3 mb-1">
-                <span className="text-3xl font-display font-bold text-foreground">
-                  R{tier.priceZAR.toLocaleString()}
-                </span>
-                <span className="text-sm text-muted-foreground">/month</span>
+                {isAnnual ? (
+                  <>
+                    <span className="text-sm text-muted-foreground line-through mr-2">
+                      R{tier.priceZAR.toLocaleString()}
+                    </span>
+                    <span className="text-3xl font-display font-bold text-foreground">
+                      R{Math.round(tier.priceZAR * 0.8).toLocaleString()}
+                    </span>
+                    <span className="text-sm text-muted-foreground">/month</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-3xl font-display font-bold text-foreground">
+                      R{tier.priceZAR.toLocaleString()}
+                    </span>
+                    <span className="text-sm text-muted-foreground">/month</span>
+                  </>
+                )}
               </div>
               {isInternational && (
-                <p className="text-xs text-muted-foreground mb-1">≈ ${tier.priceUSD}/month USD</p>
+                <p className="text-xs text-muted-foreground mb-1">
+                  ≈ ${isAnnual ? Math.round(tier.priceUSD * 0.8) : tier.priceUSD}/month USD
+                </p>
+              )}
+              {isAnnual && (
+                <p className="text-xs text-muted-foreground mb-1">
+                  Billed R{Math.round(tier.priceZAR * 0.8 * 12).toLocaleString()}/year
+                </p>
               )}
               <p className="text-xs font-semibold text-gold mb-3">First 2 months free</p>
 
