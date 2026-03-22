@@ -31,15 +31,17 @@ interface AgentSidebarProps {
   onNewClient: () => void;
   onBulkImport: () => void;
   agentProfile: { role: string; company_name: string } | null;
+  activeView: "clients" | "pipeline" | "compare";
+  setActiveView: (view: "clients" | "pipeline" | "compare") => void;
 }
 
 const mainNavItems = [
-  { title: "Clients", url: "/agent-dashboard", icon: Users, view: "clients" },
-  { title: "Deal Pipeline", url: "/agent-dashboard?view=pipeline", icon: Kanban, view: "pipeline" },
-  { title: "Compare", url: "/agent-dashboard?view=compare", icon: BarChart3, view: "compare" },
+  { title: "Clients", icon: Users, view: "clients" as const },
+  { title: "Deal Pipeline", icon: Kanban, view: "pipeline" as const },
+  { title: "Compare", icon: BarChart3, view: "compare" as const },
 ];
 
-const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile }: AgentSidebarProps) => {
+const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, setActiveView }: AgentSidebarProps) => {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const { signOut } = useAuth();
