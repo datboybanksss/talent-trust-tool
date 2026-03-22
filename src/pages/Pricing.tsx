@@ -2,8 +2,14 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   ArrowRight, Check, X, Zap, Users, Calendar, Clock, CheckCircle2,
-  Shield, Trophy, Palette
+  Shield, Trophy, Palette, HelpCircle
 } from "lucide-react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
