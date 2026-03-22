@@ -246,9 +246,9 @@ const AgentDashboard = () => {
     setFormTab("basic");
   };
 
-
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    const maxSize = 20 * 1024 * 1024; // 20MB
+    const maxSize = 20 * 1024 * 1024;
     const validFiles = files.filter(f => f.size <= maxSize);
     if (validFiles.length < files.length) {
       toast({ title: "File too large", description: "Files must be under 20MB each.", variant: "destructive" });
