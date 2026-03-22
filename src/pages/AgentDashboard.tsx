@@ -22,6 +22,7 @@ import {
   Upload, X, Paperclip, Kanban, List, Plus, Trash2, FileSpreadsheet, AlertCircle,
   Handshake, Download, Menu, User
 } from "lucide-react";
+import CurrentTierBadge from "@/components/subscription/CurrentTierBadge";
 import DealPipeline from "@/components/dashboard/DealPipeline";
 import ClientComparison from "@/components/dashboard/ClientComparison";
 import AgentSidebar from "@/components/agent/AgentSidebar";
@@ -577,6 +578,7 @@ const AgentDashboard = () => {
               <div className="flex items-center gap-3">
                 <SidebarTrigger className="mr-1" />
                 <h1 className="text-lg font-display font-bold text-foreground">Agent Portal</h1>
+                <CurrentTierBadge tierType="agent" />
               </div>
               <AgentNotifications
                 pendingCount={pendingCount}

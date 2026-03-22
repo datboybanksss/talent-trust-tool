@@ -1,6 +1,7 @@
 import { useState } from "react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { useProfile, ClientType } from "@/hooks/useProfile";
+import CurrentTierBadge from "@/components/subscription/CurrentTierBadge";
 import AssetSummaryCard from "@/components/dashboard/profile/AssetSummaryCard";
 import ContractExpiryTimeline from "@/components/dashboard/profile/ContractExpiryTimeline";
 import QuickStats from "@/components/dashboard/profile/QuickStats";
@@ -84,6 +85,11 @@ const Profile = () => {
         : "Overview of your assets and business health"
       }
     >
+      {/* Subscription Tier */}
+      <div className="mb-4">
+        <CurrentTierBadge tierType="client" />
+      </div>
+
       {/* Settings & Actions Row */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         {/* Client Type Switcher */}

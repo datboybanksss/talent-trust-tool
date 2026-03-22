@@ -1,5 +1,6 @@
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { useProfile } from "@/hooks/useProfile";
+import CurrentTierBadge from "@/components/subscription/CurrentTierBadge";
 import StatsCard from "@/components/dashboard/StatsCard";
 import PropertyInvestments from "@/components/dashboard/PropertyInvestments";
 import FranchiseInvestments from "@/components/dashboard/FranchiseInvestments";
@@ -48,6 +49,11 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout title={greeting} subtitle={subtitle}>
+      {/* Subscription Tier */}
+      <div className="mb-4">
+        <CurrentTierBadge tierType="client" />
+      </div>
+
       {/* Client Type Banner */}
       {clientType && (
         <div className={`rounded-2xl p-4 mb-6 flex items-center gap-4 ${
