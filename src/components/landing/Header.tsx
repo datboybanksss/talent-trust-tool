@@ -200,10 +200,16 @@ const Header = () => {
 
               <div className="flex flex-col gap-2 pt-4 border-t border-border">
                 <Button variant="ghost" className="text-foreground justify-start" asChild>
-                  <Link to="/auth">Sign In</Link>
+                  <Link to="/pricing" onClick={() => setMobileMenuOpen(false)}>Pricing</Link>
+                </Button>
+                <Button variant="ghost" className="text-foreground justify-start" asChild>
+                  <Link to="/contact" onClick={() => setMobileMenuOpen(false)}>Contact</Link>
+                </Button>
+                <Button variant="ghost" className="text-foreground justify-start" asChild>
+                  <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>Sign In</Link>
                 </Button>
                 <Button variant="hero" asChild>
-                  <Link to="/auth">Secure My Legacy</Link>
+                  <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>Secure My Legacy</Link>
                 </Button>
               </div>
             </div>
