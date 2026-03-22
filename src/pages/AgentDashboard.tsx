@@ -471,7 +471,7 @@ const AgentDashboard = () => {
     fetchInvitations();
   };
 
-
+  const handleSignOut = async () => {
     await signOut();
     navigate("/");
   };
