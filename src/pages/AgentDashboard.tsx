@@ -340,10 +340,19 @@ const AgentDashboard = () => {
           >
             <Kanban className="w-4 h-4 mr-1.5" /> Deal Pipeline
           </Button>
+          <Button
+            variant={activeView === "compare" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setActiveView("compare")}
+          >
+            <BarChart3 className="w-4 h-4 mr-1.5" /> Compare
+          </Button>
         </div>
 
         {activeView === "pipeline" ? (
           <DealPipeline />
+        ) : activeView === "compare" ? (
+          <ClientComparison />
         ) : (
         <>
         {/* Main Content Grid */}
