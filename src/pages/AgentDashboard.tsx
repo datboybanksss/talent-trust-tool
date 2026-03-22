@@ -105,6 +105,47 @@ const AgentDashboard = () => {
   const [bulkProgress, setBulkProgress] = useState(0);
   const bulkInputRef = useRef<HTMLInputElement>(null);
 
+  // Staff confidentiality gate state
+  const [staffAccess, setStaffAccess] = useState<{
+    id: string;
+    agent_company: string;
+    role_label: string;
+    sections: string[];
+    confidentiality_accepted_at: string | null;
+  } | null>(null);
+  const [staffCheckDone, setStaffCheckDone] = useState(false);
+
+  // Check if current user is a staff member who needs to accept confidentiality
+  useEffect(() => {
+    const checkStaffAccess = async () => {
+      if (!user) return;
+      const { data } = await supabase
+        .from("portal_staff_access")
+        .select("id, role_label, sections, confidentiality_accepted_at, agent_id")
+        .eq("staff_user_id", user.id)
+        .maybeSingle();
+
+      if (data && !data.confidentiality_accepted_at) {
+        // Also try to get agent company name
+        const { data: agentData } = await supabase
+          .from("agent_manager_profiles")
+          .select("company_name")
+          .eq("user_id", data.agent_id)
+          .maybeSingle();
+
+        setStaffAccess({
+          id: data.id,
+          agent_company: agentData?.company_name || "Agent Portal",
+          role_label: data.role_label,
+          sections: (data.sections as string[]) || [],
+          confidentiality_accepted_at: data.confidentiality_accepted_at,
+        });
+      }
+      setStaffCheckDone(true);
+    };
+    checkStaffAccess();
+  }, [user]);
+
   const triggerBulkImport = () => {
     bulkInputRef.current?.click();
   };
