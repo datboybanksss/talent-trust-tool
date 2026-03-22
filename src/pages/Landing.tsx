@@ -184,8 +184,8 @@ const Landing = () => {
             transition={{ duration: 0.6, delay: 0.4 }}
             className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed"
           >
-            <strong className="text-foreground">78% of professional athletes go broke within 5 years of retiring.</strong>
-            {" "}LegacyBuilder gives you the tools to make sure you're in the other 22%.
+            <strong className="text-foreground">78% of athletes go broke within 5 years of retiring. Most artists never get paid what they're owed.</strong>
+            {" "}LegacyBuilder gives you the vault, the plan, and the tools to protect what you've built — for you and your family.
           </motion.p>
 
           {/* CTAs */}
