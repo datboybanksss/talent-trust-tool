@@ -108,7 +108,7 @@ interface Advisor {
   category: Category;
   phone: string;
   cell: string;
-  whatsapp: string;
+  
   email: string;
   website: string;
 }
@@ -147,9 +147,6 @@ const AdvisorCard = ({ advisor }: { advisor: Advisor }) => (
       <a href={`tel:${advisor.cell}`} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
         <Smartphone className="w-4 h-4" /> {advisor.cell}
       </a>
-      <a href={`https://wa.me/${advisor.whatsapp.replace(/[^0-9]/g, "")}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-        <MessageCircle className="w-4 h-4" /> {advisor.whatsapp}
-      </a>
       <a href={`mailto:${advisor.email}`} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
         <Mail className="w-4 h-4" /> {advisor.email}
       </a>
@@ -173,55 +170,55 @@ const advisors: Advisor[] = [
   {
     id: "1", name: "Sarah van der Merwe", title: "Corporate Attorney", company: "Van der Merwe Legal",
     specialty: "Company Law, Trust Formation, Sports Contracts", rating: 5, reviews: 28, category: "Legal",
-    phone: "+27 11 123 4567", cell: "+27 82 123 4567", whatsapp: "+27 82 123 4567",
+    phone: "+27 11 123 4567", cell: "+27 82 123 4567",
     email: "sarah@vdmlegal.co.za", website: "https://vdmlegal.co.za",
   },
   {
     id: "2", name: "David Nkosi", title: "Chartered Accountant", company: "Nkosi & Associates",
     specialty: "Tax Planning, Financial Statements, SARS Compliance", rating: 5, reviews: 45, category: "Financial",
-    phone: "+27 11 234 5678", cell: "+27 83 234 5678", whatsapp: "+27 83 234 5678",
+    phone: "+27 11 234 5678", cell: "+27 83 234 5678",
     email: "david@nkosiassociates.co.za", website: "https://nkosiassociates.co.za",
   },
   {
     id: "3", name: "Lisa Thompson", title: "Wealth Manager", company: "Legacy Wealth Management",
     specialty: "Investment Strategy, Estate Planning, Athlete Finances", rating: 4, reviews: 32, category: "Financial",
-    phone: "+27 11 345 6789", cell: "+27 84 345 6789", whatsapp: "+27 84 345 6789",
+    phone: "+27 11 345 6789", cell: "+27 84 345 6789",
     email: "lisa@legacywealth.co.za", website: "https://legacywealth.co.za",
   },
   {
     id: "4", name: "Michael Botha", title: "Business Consultant", company: "Botha Business Advisory",
     specialty: "Business Strategy, Brand Development, Sponsorship Deals", rating: 5, reviews: 19, category: "Business",
-    phone: "+27 11 456 7890", cell: "+27 85 456 7890", whatsapp: "+27 85 456 7890",
+    phone: "+27 11 456 7890", cell: "+27 85 456 7890",
     email: "michael@bothabusiness.co.za", website: "https://bothabusiness.co.za",
   },
   {
     id: "5", name: "Priya Naidoo", title: "IP Attorney", company: "Naidoo IP Law",
     specialty: "Intellectual Property, Trademark Registration, Artist Rights", rating: 5, reviews: 24, category: "Legal",
-    phone: "+27 11 567 8901", cell: "+27 86 567 8901", whatsapp: "+27 86 567 8901",
+    phone: "+27 11 567 8901", cell: "+27 86 567 8901",
     email: "priya@naidooip.co.za", website: "https://naidooip.co.za",
   },
   {
     id: "6", name: "James Molefe", title: "Insurance Broker", company: "Shield Insurance",
     specialty: "Personal Liability, Career Insurance, Asset Protection", rating: 4, reviews: 38, category: "Insurance",
-    phone: "+27 11 678 9012", cell: "+27 87 678 9012", whatsapp: "+27 87 678 9012",
+    phone: "+27 11 678 9012", cell: "+27 87 678 9012",
     email: "james@shieldinsurance.co.za", website: "https://shieldinsurance.co.za",
   },
   {
     id: "7", name: "Thandeka Zulu", title: "Financial Planner", company: "Zulu Financial Planning",
     specialty: "Retirement Planning, Risk Management, Tax Optimization", rating: 5, reviews: 31, category: "Financial",
-    phone: "+27 11 789 0123", cell: "+27 72 789 0123", whatsapp: "+27 72 789 0123",
+    phone: "+27 11 789 0123", cell: "+27 72 789 0123",
     email: "thandeka@zulufinancial.co.za", website: "https://zulufinancial.co.za",
   },
   {
     id: "8", name: "Andre du Plessis", title: "Business Strategist", company: "Du Plessis Consulting",
     specialty: "Franchise Development, Market Entry, Growth Strategy", rating: 4, reviews: 22, category: "Business",
-    phone: "+27 11 890 1234", cell: "+27 73 890 1234", whatsapp: "+27 73 890 1234",
+    phone: "+27 11 890 1234", cell: "+27 73 890 1234",
     email: "andre@dpconsulting.co.za", website: "https://dpconsulting.co.za",
   },
   {
     id: "9", name: "Nomsa Khumalo", title: "Life Insurance Specialist", company: "Guardian Life SA",
     specialty: "Life Cover, Disability Insurance, Income Protection", rating: 5, reviews: 41, category: "Insurance",
-    phone: "+27 11 901 2345", cell: "+27 74 901 2345", whatsapp: "+27 74 901 2345",
+    phone: "+27 11 901 2345", cell: "+27 74 901 2345",
     email: "nomsa@guardianlife.co.za", website: "https://guardianlife.co.za",
   },
 ];
