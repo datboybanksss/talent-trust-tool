@@ -92,7 +92,7 @@ const AgentDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [activeView, setActiveView] = useState<"clients" | "pipeline" | "compare">("clients");
 
-  // Form state
+  // Form state — basic
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
   const [clientPhone, setClientPhone] = useState("");
@@ -100,6 +100,32 @@ const AgentDashboard = () => {
   const [notes, setNotes] = useState("");
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+
+  // Form state — extended profile
+  const [teamOrAgency, setTeamOrAgency] = useState("");
+  const [sportOrDiscipline, setSportOrDiscipline] = useState("");
+  const [marketValue, setMarketValue] = useState("");
+  const [location, setLocation] = useState("");
+  const [nationality, setNationality] = useState("South African");
+  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [idNumber, setIdNumber] = useState("");
+  const [socialHandle, setSocialHandle] = useState("");
+
+  // Form state — deals
+  interface PreDeal {
+    brand: string;
+    type: string;
+    value: string;
+    startDate: string;
+    endDate: string;
+    status: string;
+  }
+  const [preDeals, setPreDeals] = useState<PreDeal[]>([]);
+
+  // Form state — spreadsheet import
+  const [importedData, setImportedData] = useState<Record<string, string> | null>(null);
+  const [importErrors, setImportErrors] = useState<string[]>([]);
+  const [formTab, setFormTab] = useState("basic");
 
   useEffect(() => {
     if (!user) {
