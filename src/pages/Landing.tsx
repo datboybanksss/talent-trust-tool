@@ -902,6 +902,7 @@ const agentPricingTiers = [
 
 const AgentPricingSection = () => {
   const [isInternational, setIsInternational] = useState(false);
+  const [isAnnual, setIsAnnual] = useState(false);
 
   useEffect(() => {
     try {
