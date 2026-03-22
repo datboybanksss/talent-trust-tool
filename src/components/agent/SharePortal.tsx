@@ -433,6 +433,78 @@ const SharePortal = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Edit Staff Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit Staff Access</DialogTitle>
+            <DialogDescription>
+              Update role and section access for {editingMember?.name}.
+            </DialogDescription>
+          </DialogHeader>
+          {editingMember && (
+            <div className="space-y-4 pt-2">
+              <div className="rounded-lg border border-border p-3">
+                <p className="font-medium text-sm">{editingMember.name}</p>
+                <p className="text-xs text-muted-foreground">{editingMember.email}</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Role</Label>
+                <Select value={editRole} onValueChange={(val) => {
+                  setEditRole(val);
+                  if (val !== "custom") {
+                    const preset = ROLE_PRESETS.find((r) => r.id === val);
+                    setEditSections(preset?.sections ?? []);
+                  }
+                }}>
+                  <SelectTrigger><SelectValue placeholder="Select a role..." /></SelectTrigger>
+                  <SelectContent>
+                    {ROLE_PRESETS.map((r) => (
+                      <SelectItem key={r.id} value={r.id}>{r.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {editActivePreset && <p className="text-xs text-muted-foreground">{editActivePreset.description}</p>}
+              </div>
+
+              <div className="space-y-3">
+                <Label className="text-xs uppercase tracking-wider text-muted-foreground">
+                  {editRole === "custom" ? "Choose sections" : "Sections included (customisable)"}
+                </Label>
+                <div className="space-y-2">
+                  {ALL_SECTIONS.map((sec) => {
+                    const enabled = editEffectiveSections.includes(sec.id);
+                    return (
+                      <div key={sec.id} className="flex items-center justify-between p-2 rounded-lg border border-border">
+                        <div className="flex items-center gap-2">
+                          <sec.icon className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm">{sec.label}</span>
+                        </div>
+                        <Switch
+                          checked={enabled}
+                          onCheckedChange={() => {
+                            if (editRole !== "custom") {
+                              if (!editSections.length) setEditSections(editActivePreset?.sections ?? []);
+                              setEditRole("custom");
+                            }
+                            toggleEditSection(sec.id);
+                          }}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <Button onClick={handleSaveEdit} disabled={editEffectiveSections.length === 0} className="w-full" variant="gold">
+                Save Changes
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
