@@ -15,8 +15,9 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Briefcase, UserPlus, Copy, CheckCircle2, Clock, Mail, LogOut, Shield,
   Users, TrendingUp, FileText, Calendar, ArrowUpRight, BarChart3, Eye,
-  Upload, X, Paperclip
+  Upload, X, Paperclip, Kanban, List
 } from "lucide-react";
+import DealPipeline from "@/components/dashboard/DealPipeline";
 
 interface Invitation {
   id: string;
@@ -84,6 +85,7 @@ const AgentDashboard = () => {
     company_name: "Roc Nation Sports SA",
   });
   const [loading, setLoading] = useState(false);
+  const [activeView, setActiveView] = useState<"clients" | "pipeline">("clients");
 
   // Form state
   const [clientName, setClientName] = useState("");
@@ -321,6 +323,28 @@ const AgentDashboard = () => {
           </CardContent>
         </Card>
 
+        {/* View Toggle */}
+        <div className="flex items-center gap-2">
+          <Button
+            variant={activeView === "clients" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setActiveView("clients")}
+          >
+            <List className="w-4 h-4 mr-1.5" /> Clients
+          </Button>
+          <Button
+            variant={activeView === "pipeline" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setActiveView("pipeline")}
+          >
+            <Kanban className="w-4 h-4 mr-1.5" /> Deal Pipeline
+          </Button>
+        </div>
+
+        {activeView === "pipeline" ? (
+          <DealPipeline />
+        ) : (
+        <>
         {/* Main Content Grid */}
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Client List — 2 cols */}
@@ -555,6 +579,8 @@ const AgentDashboard = () => {
             </Card>
           </div>
         </div>
+        </>
+        )}
       </div>
     </div>
   );
