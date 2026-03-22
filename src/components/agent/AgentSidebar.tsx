@@ -50,7 +50,7 @@ const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, set
   const { signOut } = useAuth();
   const navigate = useNavigate();
 
-  const handleNavClick = (view: "clients" | "pipeline" | "compare" | "calendar") => {
+  const handleNavClick = (view: "clients" | "pipeline" | "compare" | "calendar" | "templates") => {
     setActiveView(view);
     if (isMobile) toggleSidebar();
   };
