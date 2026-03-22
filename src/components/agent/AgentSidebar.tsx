@@ -41,10 +41,20 @@ const mainNavItems = [
 ];
 
 const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, setActiveView }: AgentSidebarProps) => {
-  const { state } = useSidebar();
+  const { state, isMobile, toggleSidebar } = useSidebar();
   const collapsed = state === "collapsed";
   const { signOut } = useAuth();
   const navigate = useNavigate();
+
+  const handleNavClick = (view: "clients" | "pipeline" | "compare") => {
+    setActiveView(view);
+    if (isMobile) toggleSidebar();
+  };
+
+  const handleAction = (action: () => void) => {
+    action();
+    if (isMobile) toggleSidebar();
+  };
 
   const roleLabel = agentProfile?.role === "athlete_agent" ? "Athletes' Agent" : "Artists' Manager";
 
@@ -54,7 +64,7 @@ const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, set
   };
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="offcanvas">
       <SidebarContent>
         {/* Brand */}
         <SidebarGroup>
@@ -79,7 +89,7 @@ const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, set
               {mainNavItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
-                    onClick={() => setActiveView(item.view)}
+                    onClick={() => handleNavClick(item.view)}
                     className={`hover:bg-muted/50 ${activeView === item.view ? "bg-primary/10 text-primary font-medium" : ""}`}
                   >
                     <item.icon className="mr-2 h-4 w-4" />
@@ -97,13 +107,13 @@ const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, set
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton onClick={onNewClient} className="hover:bg-muted/50">
+                <SidebarMenuButton onClick={() => handleAction(onNewClient)} className="hover:bg-muted/50">
                   <UserPlus className="mr-2 h-4 w-4 text-primary" />
                   {!collapsed && <span>Add New Client</span>}
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton onClick={onBulkImport} className="hover:bg-muted/50">
+                <SidebarMenuButton onClick={() => handleAction(onBulkImport)} className="hover:bg-muted/50">
                   <FileSpreadsheet className="mr-2 h-4 w-4 text-primary" />
                   {!collapsed && <span>Bulk Import</span>}
                 </SidebarMenuButton>
