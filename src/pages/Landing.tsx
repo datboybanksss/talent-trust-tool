@@ -746,6 +746,31 @@ const PricingSection = () => {
             <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
               Start free, upgrade when you're ready. Every plan includes a personal demo with our team.
             </p>
+
+            {/* Billing Toggle */}
+            <div className="flex items-center justify-center gap-3 mt-8">
+              <span className={cn("text-sm font-medium transition-colors", !isAnnual ? "text-foreground" : "text-muted-foreground")}>Monthly</span>
+              <button
+                onClick={() => setIsAnnual(!isAnnual)}
+                className={cn(
+                  "relative w-14 h-7 rounded-full transition-colors duration-300",
+                  isAnnual ? "bg-gold" : "bg-border"
+                )}
+              >
+                <span className={cn(
+                  "absolute top-0.5 left-0.5 w-6 h-6 rounded-full bg-background shadow-md transition-transform duration-300",
+                  isAnnual && "translate-x-7"
+                )} />
+              </button>
+              <span className={cn("text-sm font-medium transition-colors", isAnnual ? "text-foreground" : "text-muted-foreground")}>
+                Annual
+              </span>
+              {isAnnual && (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gold/10 text-gold border border-gold/20">
+                  Save 20%
+                </span>
+              )}
+            </div>
           </div>
         </Reveal>
 
