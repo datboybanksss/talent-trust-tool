@@ -97,6 +97,9 @@ const Landing = () => {
 
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-foreground">
+              <Link to="/agent-register">Agents & Managers</Link>
+            </Button>
+            <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-foreground">
               <Link to="/auth">Sign In</Link>
             </Button>
             <Button variant="hero" size="sm" asChild>
