@@ -579,6 +579,8 @@ const AgentDashboard = () => {
             </Card>
           </div>
         </div>
+        </>
+        )}
       </div>
     </div>
   );
