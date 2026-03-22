@@ -85,12 +85,23 @@ const AgentAthleteProfile = () => {
                 {athlete.athletic.currentTeam || athlete.athletic.discipline} · {athlete.personal.nationality}
               </p>
             </div>
-            <div className="hidden sm:flex flex-col items-end gap-1">
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">Profile</span>
-                <span className="text-sm font-bold text-foreground">{athlete.profileCompleteness}%</span>
+            <div className="hidden sm:flex items-center gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => generateAthleteProfilePDF(athlete)}
+                className="gap-1.5"
+              >
+                <FileDown className="w-4 h-4" />
+                Export PDF
+              </Button>
+              <div className="flex flex-col items-end gap-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Profile</span>
+                  <span className="text-sm font-bold text-foreground">{athlete.profileCompleteness}%</span>
+                </div>
+                <Progress value={athlete.profileCompleteness} className="w-32 h-1.5" />
               </div>
-              <Progress value={athlete.profileCompleteness} className="w-32 h-1.5" />
             </div>
           </div>
 
