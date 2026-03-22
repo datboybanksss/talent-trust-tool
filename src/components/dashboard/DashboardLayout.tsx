@@ -44,6 +44,7 @@ const DashboardLayout = ({ children, title, subtitle }: DashboardLayoutProps) =>
         </header>
         
         <div className="p-8">
+          <AnnouncementBanner />
           {children}
         </div>
       </main>
