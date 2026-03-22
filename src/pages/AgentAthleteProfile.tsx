@@ -11,8 +11,9 @@ import { Label } from "@/components/ui/label";
 import {
   ArrowLeft, User, Briefcase, Accessibility, Activity,
   HeartPulse, DollarSign, Megaphone, Plane, FolderOpen,
-  Shield, Menu
+  Shield, Menu, FileDown
 } from "lucide-react";
+import { generateAthleteProfilePDF } from "@/utils/athleteProfilePdf";
 import { mockAthleteProfiles } from "@/data/mockAthleteProfiles";
 import { ProfileRole, canAccessSection } from "@/types/athleteProfile";
 import PersonalInfoSection from "@/components/agent/athlete-profile/PersonalInfoSection";
