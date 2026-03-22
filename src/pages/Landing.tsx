@@ -184,8 +184,8 @@ const Landing = () => {
             transition={{ duration: 0.6, delay: 0.4 }}
             className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed"
           >
-            <strong className="text-foreground">78% of professional athletes go broke within 5 years of retiring.</strong>
-            {" "}LegacyBuilder gives you the tools to make sure you're in the other 22%.
+            <strong className="text-foreground">78% of athletes go broke within 5 years of retiring. Most artists never get paid what they're owed.</strong>
+            {" "}LegacyBuilder gives you the vault, the plan, and the tools to protect what you've built — for you and your family.
           </motion.p>
 
           {/* CTAs */}
@@ -257,7 +257,7 @@ const Landing = () => {
       {/* ─── "THE PROBLEM" — urgency section ─────────────── */}
       <section className="py-24 px-6 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-destructive/5 to-background" />
-        <div className="container max-w-4xl mx-auto relative text-center space-y-8">
+        <div className="container max-w-5xl mx-auto relative text-center space-y-8">
           <Reveal>
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-destructive/10 border border-destructive/20 rounded-full">
               <Clock className="w-4 h-4 text-destructive" />
@@ -269,20 +269,98 @@ const Landing = () => {
               Every Day Without a Plan<br />Is a Day Closer to Losing It All.
             </h2>
           </Reveal>
-          <Reveal delay={0.2}>
-            <div className="grid sm:grid-cols-3 gap-6 pt-4">
+
+          {/* Athletes row */}
+          <Reveal delay={0.15}>
+            <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold flex items-center justify-center gap-2">
+              <Trophy className="w-4 h-4 text-gold" /> Athletes
+            </p>
+            <div className="grid sm:grid-cols-3 gap-5 pt-3">
               <ProblemCard emoji="💸" stat="R2.3B" description="Lost by SA athletes to mismanagement every year" />
-              <ProblemCard emoji="📄" stat="60%" description="Of artists have no estate plan or will in place" />
               <ProblemCard emoji="⚠️" stat="3 in 5" description="Athletes face financial distress after retirement" />
+              <ProblemCard emoji="📉" stat="78%" description="Of pro athletes go broke within 5 years of retiring" />
             </div>
           </Reveal>
-          <Reveal delay={0.3}>
+
+          {/* Artists row */}
+          <Reveal delay={0.25}>
+            <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold flex items-center justify-center gap-2 pt-6">
+              <Palette className="w-4 h-4 text-gold" /> Artists & Creatives
+            </p>
+            <div className="grid sm:grid-cols-3 gap-5 pt-3">
+              <ProblemCard emoji="📄" stat="60%" description="Of artists have no estate plan or will in place" />
+              <ProblemCard emoji="🎵" stat="73%" description="Of musicians don't track their royalty income properly" />
+              <ProblemCard emoji="🏦" stat="R0" description="Funding lost because paperwork wasn't in order" />
+            </div>
+          </Reveal>
+
+          <Reveal delay={0.35}>
             <Button variant="hero" size="lg" asChild className="group mt-4">
               <Link to="/auth">
                 Don't Become a Statistic
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
             </Button>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ─── ARTIST PAIN POINTS — dedicated section ──────── */}
+      <section className="py-24 px-6 bg-foreground/[0.03]">
+        <div className="container max-w-5xl mx-auto">
+          <Reveal>
+            <div className="text-center mb-14">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-gold/10 border border-gold/20 rounded-full mb-6">
+                <Palette className="w-4 h-4 text-gold" />
+                <span className="text-sm font-medium text-gold">Built for Creatives</span>
+              </div>
+              <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-4">
+                Your Art Deserves Better Than a Shoebox of Receipts.
+              </h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                Whether you're chasing royalties from SAMRO, applying for NFVF funding, or just trying to make sure your family is covered — LegacyBuilder replaces the chaos with one organised, secure system.
+              </p>
+            </div>
+          </Reveal>
+
+          <motion.div
+            variants={stagger}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true }}
+            className="grid md:grid-cols-2 gap-5"
+          >
+            <ArtistPainCard
+              icon={FileText}
+              before="Contracts scattered across WhatsApp, email, and hard drives"
+              after="Every contract stored, searchable, and tracked with expiry alerts"
+            />
+            <ArtistPainCard
+              icon={TrendingUp}
+              before="No idea which royalties are owed or overdue"
+              after="Royalty tracker by source — streaming, SAMRO, publishing, sync"
+            />
+            <ArtistPainCard
+              icon={Briefcase}
+              before="Funding applications rejected because docs were missing"
+              after="All compliance docs organised and ready to attach instantly"
+            />
+            <ArtistPainCard
+              icon={FolderHeart}
+              before="No will, no trust, family left with nothing if the worst happens"
+              after="Life File with beneficiaries, emergency contacts, and estate docs"
+            />
+          </motion.div>
+
+          <Reveal delay={0.3}>
+            <div className="text-center mt-10">
+              <Button variant="hero" size="lg" asChild className="group">
+                <Link to="/auth">
+                  Get My Admin Sorted — Free
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </Button>
+            </div>
           </Reveal>
         </div>
       </section>
@@ -499,6 +577,25 @@ const ProblemCard = ({ emoji, stat, description }: { emoji: string; stat: string
     <p className="text-2xl font-display font-bold text-destructive">{stat}</p>
     <p className="text-sm text-muted-foreground">{description}</p>
   </div>
+);
+
+const ArtistPainCard = ({ icon: Icon, before, after }: { icon: React.ElementType; before: string; after: string }) => (
+  <motion.div
+    variants={staggerItem}
+    className="p-6 rounded-2xl bg-card border border-border/50 hover:border-gold/30 transition-all duration-300 space-y-4"
+  >
+    <div className="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center">
+      <Icon className="w-5 h-5 text-gold" />
+    </div>
+    <div className="flex items-start gap-2">
+      <span className="text-destructive text-lg leading-none mt-0.5">✗</span>
+      <p className="text-sm text-muted-foreground line-through decoration-destructive/40">{before}</p>
+    </div>
+    <div className="flex items-start gap-2">
+      <CheckCircle2 className="w-4 h-4 text-gold shrink-0 mt-0.5" />
+      <p className="text-sm text-foreground font-medium">{after}</p>
+    </div>
+  </motion.div>
 );
 
 const FeatureCard = ({ icon: Icon, title, description }: { icon: React.ElementType; title: string; description: string }) => (
