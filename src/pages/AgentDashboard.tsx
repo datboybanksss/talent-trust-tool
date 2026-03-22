@@ -601,6 +601,8 @@ const AgentDashboard = () => {
           <DealPipeline />
         ) : activeView === "compare" ? (
           <ClientComparison />
+        ) : activeView === "calendar" ? (
+          <AgentCalendar />
         ) : (
         <>
         {/* Main Content Grid */}
