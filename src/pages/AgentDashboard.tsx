@@ -22,6 +22,7 @@ import {
   Upload, X, Paperclip, Kanban, List, Plus, Trash2, FileSpreadsheet, AlertCircle,
   Handshake, Download, Menu, User
 } from "lucide-react";
+import CurrentTierBadge from "@/components/subscription/CurrentTierBadge";
 import DealPipeline from "@/components/dashboard/DealPipeline";
 import ClientComparison from "@/components/dashboard/ClientComparison";
 import AgentSidebar from "@/components/agent/AgentSidebar";
