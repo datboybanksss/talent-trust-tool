@@ -54,7 +54,7 @@ const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, set
   };
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="offcanvas">
       <SidebarContent>
         {/* Brand */}
         <SidebarGroup>
