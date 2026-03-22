@@ -18,6 +18,7 @@ import {
   Upload, X, Paperclip, Kanban, List
 } from "lucide-react";
 import DealPipeline from "@/components/dashboard/DealPipeline";
+import ClientComparison from "@/components/dashboard/ClientComparison";
 
 interface Invitation {
   id: string;
