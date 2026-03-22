@@ -571,11 +571,25 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* ─── PRICING ─────────────────────────────────────── */}
-      <PricingSection />
-
-      {/* ─── AGENT / MANAGER PRICING ─────────────────────── */}
-      <AgentPricingSection />
+      {/* ─── VIEW PRICING CTA ─────────────────────────────── */}
+      <section className="py-16 px-6 bg-secondary/30">
+        <div className="container max-w-3xl mx-auto text-center space-y-6">
+          <Reveal>
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground">
+              Transparent Pricing for Every Stage
+            </h2>
+            <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+              Plans for athletes, artists, agents, managers, and association bodies — starting free.
+            </p>
+            <Button variant="hero" size="lg" asChild className="group">
+              <Link to="/pricing">
+                View Pricing Plans
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </Button>
+          </Reveal>
+        </div>
+      </section>
 
       {/* ─── FOMO CTA ────────────────────────────────────── */}
       <section className="py-24 px-6 relative overflow-hidden">
