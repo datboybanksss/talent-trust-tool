@@ -26,6 +26,7 @@ import MediaBrandSection from "@/components/agent/athlete-profile/MediaBrandSect
 import TravelSection from "@/components/agent/athlete-profile/TravelSection";
 import DocumentVaultSection from "@/components/agent/athlete-profile/DocumentVaultSection";
 import AccessConsentSection from "@/components/agent/athlete-profile/AccessConsentSection";
+import ExpiryAlertsPanel from "@/components/agent/athlete-profile/ExpiryAlertsPanel";
 
 const tabs = [
   { id: "personal", label: "Personal", icon: User, section: "personal" },
