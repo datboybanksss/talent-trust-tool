@@ -499,81 +499,227 @@ const AgentDashboard = () => {
                     <UserPlus className="w-4 h-4 mr-2" /> New Client
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-lg">
+                <DialogContent className="max-w-2xl max-h-[90vh]">
                   <DialogHeader>
                     <DialogTitle>Create Client Profile</DialogTitle>
                     <DialogDescription>
-                      Pre-populate your client's profile. They will receive an activation link to claim it.
+                      Pre-populate your client's profile with detailed information, deals, and documents. Import from a spreadsheet or fill in manually.
                     </DialogDescription>
                   </DialogHeader>
-                  <div className="space-y-4">
-                    <div>
-                      <Label>Client Name *</Label>
-                      <Input value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Full name" />
-                    </div>
-                    <div>
-                      <Label>Client Email *</Label>
-                      <Input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="client@email.com" />
-                    </div>
-                    <div>
-                      <Label>Client Phone</Label>
-                      <Input value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} placeholder="+27..." />
-                    </div>
-                    <div>
-                      <Label>Client Type *</Label>
-                      <Select value={clientType || "athlete"} onValueChange={setClientType}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="athlete">Athlete</SelectItem>
-                          <SelectItem value="artist">Artist</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label>Notes (visible to client)</Label>
-                      <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Pre-populated notes..." rows={3} />
-                    </div>
 
-                    {/* Document Upload */}
-                    <div>
-                      <Label>Documents (contracts, compliance)</Label>
-                      <div className="mt-1.5 border border-dashed border-border rounded-lg p-4 text-center">
-                        <input
-                          type="file"
-                          multiple
-                          accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                          onChange={handleFileSelect}
-                          className="hidden"
-                          id="agent-doc-upload"
-                        />
-                        <label htmlFor="agent-doc-upload" className="cursor-pointer flex flex-col items-center gap-2">
-                          <Upload className="w-6 h-6 text-muted-foreground" />
-                          <span className="text-sm text-muted-foreground">
-                            Click to upload or drag files here
-                          </span>
-                          <span className="text-xs text-muted-foreground">PDF, DOC, JPG, PNG — max 20MB each</span>
-                        </label>
+                  {/* Spreadsheet Import Banner */}
+                  <div className="border border-dashed border-primary/40 bg-primary/5 rounded-lg p-3 flex items-center gap-3">
+                    <FileSpreadsheet className="w-5 h-5 text-primary shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground">Import from Spreadsheet</p>
+                      <p className="text-[10px] text-muted-foreground">Upload .xlsx or .csv with client data to auto-fill fields</p>
+                    </div>
+                    <input type="file" accept=".xlsx,.xls,.csv" onChange={handleSpreadsheetImport} className="hidden" id="spreadsheet-import" />
+                    <label htmlFor="spreadsheet-import">
+                      <Button variant="outline" size="sm" asChild><span><Upload className="w-3.5 h-3.5 mr-1" /> Import</span></Button>
+                    </label>
+                  </div>
+                  {importErrors.length > 0 && (
+                    <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 rounded-lg px-3 py-2">
+                      <AlertCircle className="w-4 h-4 shrink-0" /> {importErrors[0]}
+                    </div>
+                  )}
+                  {importedData && (
+                    <div className="flex items-center gap-2 text-sm text-green-700 bg-green-500/10 rounded-lg px-3 py-2">
+                      <CheckCircle2 className="w-4 h-4 shrink-0" /> Spreadsheet data imported — review and adjust below.
+                    </div>
+                  )}
+
+                  <ScrollArea className="max-h-[55vh] pr-4">
+                  <Tabs value={formTab} onValueChange={setFormTab} className="space-y-4">
+                    <TabsList className="grid w-full grid-cols-4">
+                      <TabsTrigger value="basic" className="text-xs">Basic Info</TabsTrigger>
+                      <TabsTrigger value="profile" className="text-xs">Profile</TabsTrigger>
+                      <TabsTrigger value="deals" className="text-xs">Deals ({preDeals.length})</TabsTrigger>
+                      <TabsTrigger value="docs" className="text-xs">Documents</TabsTrigger>
+                    </TabsList>
+
+                    {/* Basic Info Tab */}
+                    <TabsContent value="basic" className="space-y-3">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-xs">Client Name *</Label>
+                          <Input value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Full name" />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Client Email *</Label>
+                          <Input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="client@email.com" />
+                        </div>
                       </div>
-                      {uploadedFiles.length > 0 && (
-                        <div className="mt-2 space-y-1.5">
-                          {uploadedFiles.map((file, idx) => (
-                            <div key={idx} className="flex items-center gap-2 bg-secondary/50 rounded-lg px-3 py-2 text-sm">
-                              <Paperclip className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                              <span className="truncate text-foreground flex-1">{file.name}</span>
-                              <span className="text-xs text-muted-foreground shrink-0">
-                                {(file.size / 1024).toFixed(0)}KB
-                              </span>
-                              <button onClick={() => removeFile(idx)} className="shrink-0 hover:text-destructive transition-colors">
-                                <X className="w-3.5 h-3.5" />
-                              </button>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-xs">Client Phone</Label>
+                          <Input value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} placeholder="+27..." />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Client Type *</Label>
+                          <Select value={clientType || "athlete"} onValueChange={setClientType}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="athlete">Athlete</SelectItem>
+                              <SelectItem value="artist">Artist</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-xs">Notes (visible to client)</Label>
+                        <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Pre-populated notes..." rows={2} />
+                      </div>
+                    </TabsContent>
+
+                    {/* Profile Tab */}
+                    <TabsContent value="profile" className="space-y-3">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-xs">{clientType === "artist" ? "Discipline" : "Sport"}</Label>
+                          <Input value={sportOrDiscipline} onChange={(e) => setSportOrDiscipline(e.target.value)} placeholder={clientType === "artist" ? "e.g. Recording Artist" : "e.g. Rugby"} />
+                        </div>
+                        <div>
+                          <Label className="text-xs">{clientType === "artist" ? "Agency / Label" : "Team / Club"}</Label>
+                          <Input value={teamOrAgency} onChange={(e) => setTeamOrAgency(e.target.value)} placeholder={clientType === "artist" ? "e.g. Epic Records" : "e.g. Springboks"} />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-xs">Market Value (estimated)</Label>
+                          <Input value={marketValue} onChange={(e) => setMarketValue(e.target.value)} placeholder="e.g. R45,000,000" />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Location</Label>
+                          <Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="e.g. Cape Town, SA" />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-xs">Nationality</Label>
+                          <Input value={nationality} onChange={(e) => setNationality(e.target.value)} placeholder="e.g. South African" />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Date of Birth</Label>
+                          <Input type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-xs">ID / Passport Number</Label>
+                          <Input value={idNumber} onChange={(e) => setIdNumber(e.target.value)} placeholder="National ID or passport" />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Primary Social Handle</Label>
+                          <Input value={socialHandle} onChange={(e) => setSocialHandle(e.target.value)} placeholder="@handle" />
+                        </div>
+                      </div>
+                    </TabsContent>
+
+                    {/* Deals Tab */}
+                    <TabsContent value="deals" className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs text-muted-foreground">Add existing contracts, endorsements, or partnerships.</p>
+                        <Button variant="outline" size="sm" onClick={addDeal}>
+                          <Plus className="w-3.5 h-3.5 mr-1" /> Add Deal
+                        </Button>
+                      </div>
+                      {preDeals.length === 0 ? (
+                        <div className="py-6 text-center border border-dashed border-border rounded-lg">
+                          <Handshake className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
+                          <p className="text-sm text-muted-foreground">No deals added yet</p>
+                          <Button variant="ghost" size="sm" className="mt-2" onClick={addDeal}>
+                            <Plus className="w-3.5 h-3.5 mr-1" /> Add First Deal
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {preDeals.map((deal, idx) => (
+                            <div key={idx} className="p-3 rounded-lg border border-border/50 bg-secondary/20 space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-medium text-muted-foreground">Deal {idx + 1}</span>
+                                <button onClick={() => removeDeal(idx)} className="text-muted-foreground hover:text-destructive transition-colors">
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                              <div className="grid grid-cols-2 gap-2">
+                                <Input placeholder="Brand / Partner" value={deal.brand} onChange={(e) => updateDeal(idx, "brand", e.target.value)} className="h-8 text-xs" />
+                                <Select value={deal.type} onValueChange={(v) => updateDeal(idx, "type", v)}>
+                                  <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="Endorsement">Endorsement</SelectItem>
+                                    <SelectItem value="Player Contract">Player Contract</SelectItem>
+                                    <SelectItem value="Recording Contract">Recording Contract</SelectItem>
+                                    <SelectItem value="Publishing">Publishing</SelectItem>
+                                    <SelectItem value="Brand Ambassador">Brand Ambassador</SelectItem>
+                                    <SelectItem value="Image Rights">Image Rights</SelectItem>
+                                    <SelectItem value="Sponsorship">Sponsorship</SelectItem>
+                                    <SelectItem value="Other">Other</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div className="grid grid-cols-3 gap-2">
+                                <Input placeholder="Value (e.g. R5M/yr)" value={deal.value} onChange={(e) => updateDeal(idx, "value", e.target.value)} className="h-8 text-xs" />
+                                <Input type="date" placeholder="Start" value={deal.startDate} onChange={(e) => updateDeal(idx, "startDate", e.target.value)} className="h-8 text-xs" />
+                                <Input type="date" placeholder="End" value={deal.endDate} onChange={(e) => updateDeal(idx, "endDate", e.target.value)} className="h-8 text-xs" />
+                              </div>
+                              <Select value={deal.status} onValueChange={(v) => updateDeal(idx, "status", v)}>
+                                <SelectTrigger className="h-8 text-xs w-36"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="active">Active</SelectItem>
+                                  <SelectItem value="negotiating">Negotiating</SelectItem>
+                                  <SelectItem value="expired">Expired</SelectItem>
+                                </SelectContent>
+                              </Select>
                             </div>
                           ))}
                         </div>
                       )}
-                    </div>
+                    </TabsContent>
 
+                    {/* Documents Tab */}
+                    <TabsContent value="docs" className="space-y-3">
+                      <div>
+                        <Label className="text-xs">Upload Documents (contracts, compliance, ID)</Label>
+                        <div className="mt-1.5 border border-dashed border-border rounded-lg p-4 text-center">
+                          <input type="file" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onChange={handleFileSelect} className="hidden" id="agent-doc-upload" />
+                          <label htmlFor="agent-doc-upload" className="cursor-pointer flex flex-col items-center gap-2">
+                            <Upload className="w-6 h-6 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">Click to upload or drag files here</span>
+                            <span className="text-xs text-muted-foreground">PDF, DOC, JPG, PNG — max 20MB each</span>
+                          </label>
+                        </div>
+                        {uploadedFiles.length > 0 && (
+                          <div className="mt-2 space-y-1.5">
+                            {uploadedFiles.map((file, idx) => (
+                              <div key={idx} className="flex items-center gap-2 bg-secondary/50 rounded-lg px-3 py-2 text-sm">
+                                <Paperclip className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                                <span className="truncate text-foreground flex-1">{file.name}</span>
+                                <span className="text-xs text-muted-foreground shrink-0">{(file.size / 1024).toFixed(0)}KB</span>
+                                <button onClick={() => removeFile(idx)} className="shrink-0 hover:text-destructive transition-colors">
+                                  <X className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </TabsContent>
+                  </Tabs>
+                  </ScrollArea>
+
+                  {/* Summary & Submit */}
+                  <div className="border-t border-border pt-3 space-y-2">
+                    <div className="flex flex-wrap gap-2 text-[10px] text-muted-foreground">
+                      {clientName && <Badge variant="secondary" className="text-[10px]">{clientName}</Badge>}
+                      {sportOrDiscipline && <Badge variant="secondary" className="text-[10px]">{sportOrDiscipline}</Badge>}
+                      {preDeals.length > 0 && <Badge variant="secondary" className="text-[10px]">{preDeals.length} deal{preDeals.length > 1 ? "s" : ""}</Badge>}
+                      {uploadedFiles.length > 0 && <Badge variant="secondary" className="text-[10px]">{uploadedFiles.length} file{uploadedFiles.length > 1 ? "s" : ""}</Badge>}
+                      {marketValue && <Badge variant="secondary" className="text-[10px]">{marketValue}</Badge>}
+                    </div>
                     <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleCreateInvitation} disabled={isCreating || !clientName || !clientEmail}>
-                      {isCreating ? (isUploading ? "Uploading documents..." : "Creating...") : `Create & Generate Link${uploadedFiles.length > 0 ? ` (${uploadedFiles.length} files)` : ""}`}
+                      {isCreating ? (isUploading ? "Uploading documents..." : "Creating...") : "Create Profile & Generate Link"}
                     </Button>
                   </div>
                 </DialogContent>
