@@ -130,6 +130,9 @@ const Landing = () => {
           </div>
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-foreground">
+              <Link to="/pricing">Pricing</Link>
+            </Button>
+            <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-foreground">
               <Link to="/agent-register">Agents & Managers</Link>
             </Button>
             <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-foreground">
