@@ -98,6 +98,11 @@ const AgentDashboard = () => {
   const [bulkPreview, setBulkPreview] = useState<{ name: string; email: string; phone: string; type: string; sport: string; team: string; marketValue: string; valid: boolean; error?: string }[]>([]);
   const [bulkImporting, setBulkImporting] = useState(false);
   const [bulkProgress, setBulkProgress] = useState(0);
+  const bulkInputRef = useRef<HTMLInputElement>(null);
+
+  const triggerBulkImport = () => {
+    bulkInputRef.current?.click();
+  };
 
   // Form state — basic
   const [clientName, setClientName] = useState("");
