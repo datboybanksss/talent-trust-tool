@@ -86,6 +86,10 @@ const Footer = () => {
             <a href="#" className="text-sm text-muted-foreground hover:text-gold transition-colors">
               POPIA Compliance
             </a>
+            <Link to="/admin" className="text-sm text-muted-foreground hover:text-gold transition-colors flex items-center gap-1">
+              <Shield className="w-3 h-3" />
+              Admin
+            </Link>
           </div>
         </div>
       </div>

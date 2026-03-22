@@ -35,6 +35,7 @@ import EndorsementTracker from "./pages/EndorsementTracker";
 import RoyaltyTracker from "./pages/RoyaltyTracker";
 import CreativePortfolio from "./pages/CreativePortfolio";
 import NotFound from "./pages/NotFound";
+import AdminDashboard from "./pages/AdminDashboard";
 
 const queryClient = new QueryClient();
 
@@ -75,6 +76,7 @@ const App = () => (
             <Route path="/dashboard/royalties" element={<ProtectedRoute><RoyaltyTracker /></ProtectedRoute>} />
             <Route path="/dashboard/creative-portfolio" element={<ProtectedRoute><CreativePortfolio /></ProtectedRoute>} />
             <Route path="/client-type" element={<ClientType />} />
+            <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
