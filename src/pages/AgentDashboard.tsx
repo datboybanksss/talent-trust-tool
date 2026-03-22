@@ -26,6 +26,7 @@ import DealPipeline from "@/components/dashboard/DealPipeline";
 import ClientComparison from "@/components/dashboard/ClientComparison";
 import AgentSidebar from "@/components/agent/AgentSidebar";
 import AgentNotifications from "@/components/agent/AgentNotifications";
+import AgentCalendar from "@/components/agent/AgentCalendar";
 import * as XLSX from "xlsx";
 
 interface Invitation {
