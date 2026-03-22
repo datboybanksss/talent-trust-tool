@@ -26,6 +26,7 @@ import MediaBrandSection from "@/components/agent/athlete-profile/MediaBrandSect
 import TravelSection from "@/components/agent/athlete-profile/TravelSection";
 import DocumentVaultSection from "@/components/agent/athlete-profile/DocumentVaultSection";
 import AccessConsentSection from "@/components/agent/athlete-profile/AccessConsentSection";
+import ExpiryAlertsPanel from "@/components/agent/athlete-profile/ExpiryAlertsPanel";
 
 const tabs = [
   { id: "personal", label: "Personal", icon: User, section: "personal" },
@@ -118,7 +119,10 @@ const AgentAthleteProfile = () => {
       </div>
 
       {/* Tabs Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+        {currentRole === "agent" && (
+          <ExpiryAlertsPanel athlete={athlete} onNavigateToTab={setActiveTab} />
+        )}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <ScrollArea className="w-full mb-6">
             <TabsList className="inline-flex h-auto p-1 bg-muted/50 rounded-xl w-auto">
