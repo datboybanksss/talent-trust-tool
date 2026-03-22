@@ -136,11 +136,11 @@ const ContractManager = () => {
         }
       }
 
-      const { error } = await supabase.from("athlete_contracts").update(payload).eq("id", editingContract.id);
+      const { error } = await supabase.from("athlete_contracts").update(payload as any).eq("id", editingContract.id);
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); setUploading(false); return; }
       toast({ title: "Contract updated" });
     } else {
-      const { data, error } = await supabase.from("athlete_contracts").insert(payload).select("id").single();
+      const { data, error } = await supabase.from("athlete_contracts").insert(payload as any).select("id").single();
       if (error || !data) { toast({ title: "Error", description: error?.message || "Insert failed", variant: "destructive" }); setUploading(false); return; }
 
       if (selectedFile) {
