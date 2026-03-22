@@ -257,7 +257,7 @@ const Landing = () => {
       {/* ─── "THE PROBLEM" — urgency section ─────────────── */}
       <section className="py-24 px-6 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-destructive/5 to-background" />
-        <div className="container max-w-4xl mx-auto relative text-center space-y-8">
+        <div className="container max-w-5xl mx-auto relative text-center space-y-8">
           <Reveal>
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-destructive/10 border border-destructive/20 rounded-full">
               <Clock className="w-4 h-4 text-destructive" />
@@ -269,20 +269,98 @@ const Landing = () => {
               Every Day Without a Plan<br />Is a Day Closer to Losing It All.
             </h2>
           </Reveal>
-          <Reveal delay={0.2}>
-            <div className="grid sm:grid-cols-3 gap-6 pt-4">
+
+          {/* Athletes row */}
+          <Reveal delay={0.15}>
+            <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold flex items-center justify-center gap-2">
+              <Trophy className="w-4 h-4 text-gold" /> Athletes
+            </p>
+            <div className="grid sm:grid-cols-3 gap-5 pt-3">
               <ProblemCard emoji="💸" stat="R2.3B" description="Lost by SA athletes to mismanagement every year" />
-              <ProblemCard emoji="📄" stat="60%" description="Of artists have no estate plan or will in place" />
               <ProblemCard emoji="⚠️" stat="3 in 5" description="Athletes face financial distress after retirement" />
+              <ProblemCard emoji="📉" stat="78%" description="Of pro athletes go broke within 5 years of retiring" />
             </div>
           </Reveal>
-          <Reveal delay={0.3}>
+
+          {/* Artists row */}
+          <Reveal delay={0.25}>
+            <p className="text-xs uppercase tracking-widest text-muted-foreground font-semibold flex items-center justify-center gap-2 pt-6">
+              <Palette className="w-4 h-4 text-gold" /> Artists & Creatives
+            </p>
+            <div className="grid sm:grid-cols-3 gap-5 pt-3">
+              <ProblemCard emoji="📄" stat="60%" description="Of artists have no estate plan or will in place" />
+              <ProblemCard emoji="🎵" stat="73%" description="Of musicians don't track their royalty income properly" />
+              <ProblemCard emoji="🏦" stat="R0" description="Funding lost because paperwork wasn't in order" />
+            </div>
+          </Reveal>
+
+          <Reveal delay={0.35}>
             <Button variant="hero" size="lg" asChild className="group mt-4">
               <Link to="/auth">
                 Don't Become a Statistic
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
             </Button>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ─── ARTIST PAIN POINTS — dedicated section ──────── */}
+      <section className="py-24 px-6 bg-foreground/[0.03]">
+        <div className="container max-w-5xl mx-auto">
+          <Reveal>
+            <div className="text-center mb-14">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-gold/10 border border-gold/20 rounded-full mb-6">
+                <Palette className="w-4 h-4 text-gold" />
+                <span className="text-sm font-medium text-gold">Built for Creatives</span>
+              </div>
+              <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-4">
+                Your Art Deserves Better Than a Shoebox of Receipts.
+              </h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                Whether you're chasing royalties from SAMRO, applying for NFVF funding, or just trying to make sure your family is covered — LegacyBuilder replaces the chaos with one organised, secure system.
+              </p>
+            </div>
+          </Reveal>
+
+          <motion.div
+            variants={stagger}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true }}
+            className="grid md:grid-cols-2 gap-5"
+          >
+            <ArtistPainCard
+              icon={FileText}
+              before="Contracts scattered across WhatsApp, email, and hard drives"
+              after="Every contract stored, searchable, and tracked with expiry alerts"
+            />
+            <ArtistPainCard
+              icon={TrendingUp}
+              before="No idea which royalties are owed or overdue"
+              after="Royalty tracker by source — streaming, SAMRO, publishing, sync"
+            />
+            <ArtistPainCard
+              icon={Briefcase}
+              before="Funding applications rejected because docs were missing"
+              after="All compliance docs organised and ready to attach instantly"
+            />
+            <ArtistPainCard
+              icon={FolderHeart}
+              before="No will, no trust, family left with nothing if the worst happens"
+              after="Life File with beneficiaries, emergency contacts, and estate docs"
+            />
+          </motion.div>
+
+          <Reveal delay={0.3}>
+            <div className="text-center mt-10">
+              <Button variant="hero" size="lg" asChild className="group">
+                <Link to="/auth">
+                  Get My Admin Sorted — Free
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </Button>
+            </div>
           </Reveal>
         </div>
       </section>
