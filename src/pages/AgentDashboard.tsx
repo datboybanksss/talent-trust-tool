@@ -124,19 +124,61 @@ const AgentDashboard = () => {
     if (data && data.length > 0) setInvitations(data);
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const maxSize = 20 * 1024 * 1024; // 20MB
+    const validFiles = files.filter(f => f.size <= maxSize);
+    if (validFiles.length < files.length) {
+      toast({ title: "File too large", description: "Files must be under 20MB each.", variant: "destructive" });
+    }
+    setUploadedFiles(prev => [...prev, ...validFiles]);
+    e.target.value = "";
+  };
+
+  const removeFile = (index: number) => {
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleCreateInvitation = async () => {
     if (!clientName || !clientEmail || !clientType) return;
     setIsCreating(true);
 
+    // Upload files first if any
+    const documentsMeta: { file_name: string; storage_path: string; document_type: string }[] = [];
+
+    if (user && uploadedFiles.length > 0) {
+      setIsUploading(true);
+      for (const file of uploadedFiles) {
+        const filePath = `${user.id}/${Date.now()}_${file.name}`;
+        const { error: uploadError } = await supabase.storage
+          .from("agent-client-documents")
+          .upload(filePath, file);
+        if (!uploadError) {
+          documentsMeta.push({
+            file_name: file.name,
+            storage_path: filePath,
+            document_type: file.name.toLowerCase().includes("contract") ? "contract" : "compliance",
+          });
+        }
+      }
+      setIsUploading(false);
+    }
+
     if (user) {
-      await supabase.from("client_invitations").insert({
+      const { error } = await supabase.from("client_invitations").insert({
         agent_id: user.id,
         client_name: clientName,
         client_email: clientEmail,
         client_phone: clientPhone || null,
         client_type: clientType,
-        pre_populated_data: { notes },
+        pre_populated_data: { notes, documents: documentsMeta },
       });
+
+      if (error) {
+        toast({ title: "Error", description: "Failed to create invitation.", variant: "destructive" });
+        setIsCreating(false);
+        return;
+      }
     }
 
     // Add to local state for demo
@@ -152,9 +194,15 @@ const AgentDashboard = () => {
     };
     setInvitations((prev) => [newInvitation, ...prev]);
     setIsCreating(false);
-    toast({ title: "Invitation Created", description: `Activation link ready for ${clientName}.` });
+    const docCount = uploadedFiles.length;
+    toast({
+      title: "Invitation Created",
+      description: `Activation link ready for ${clientName}${docCount > 0 ? ` with ${docCount} document${docCount > 1 ? "s" : ""}` : ""}.`,
+    });
     setClientName(""); setClientEmail(""); setClientPhone(""); setClientType(""); setNotes("");
+    setUploadedFiles([]);
     setDialogOpen(false);
+    fetchInvitations();
   };
 
   const copyLink = (token: string) => {
