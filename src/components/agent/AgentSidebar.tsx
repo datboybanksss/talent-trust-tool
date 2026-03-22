@@ -45,7 +45,6 @@ const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, set
   const collapsed = state === "collapsed";
   const { signOut } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
 
   const roleLabel = agentProfile?.role === "athlete_agent" ? "Athletes' Agent" : "Artists' Manager";
 
