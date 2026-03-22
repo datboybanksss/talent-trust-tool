@@ -27,6 +27,7 @@ import ClientComparison from "@/components/dashboard/ClientComparison";
 import AgentSidebar from "@/components/agent/AgentSidebar";
 import AgentNotifications from "@/components/agent/AgentNotifications";
 import AgentCalendar from "@/components/agent/AgentCalendar";
+import AgreementTemplates from "@/components/agent/AgreementTemplates";
 import * as XLSX from "xlsx";
 
 interface Invitation {
