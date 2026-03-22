@@ -608,6 +608,8 @@ const AgentDashboard = () => {
           <AgentCalendar />
         ) : activeView === "templates" ? (
           <AgreementTemplates />
+        ) : activeView === "share" ? (
+          <SharePortal />
         ) : (
         <>
         {/* Main Content Grid */}
