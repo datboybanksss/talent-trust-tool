@@ -41,10 +41,20 @@ const mainNavItems = [
 ];
 
 const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, setActiveView }: AgentSidebarProps) => {
-  const { state } = useSidebar();
+  const { state, isMobile, toggleSidebar } = useSidebar();
   const collapsed = state === "collapsed";
   const { signOut } = useAuth();
   const navigate = useNavigate();
+
+  const handleNavClick = (view: "clients" | "pipeline" | "compare") => {
+    setActiveView(view);
+    if (isMobile) toggleSidebar();
+  };
+
+  const handleAction = (action: () => void) => {
+    action();
+    if (isMobile) toggleSidebar();
+  };
 
   const roleLabel = agentProfile?.role === "athlete_agent" ? "Athletes' Agent" : "Artists' Manager";
 
