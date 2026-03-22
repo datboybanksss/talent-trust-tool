@@ -107,13 +107,13 @@ const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, set
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton onClick={onNewClient} className="hover:bg-muted/50">
+                <SidebarMenuButton onClick={() => handleAction(onNewClient)} className="hover:bg-muted/50">
                   <UserPlus className="mr-2 h-4 w-4 text-primary" />
                   {!collapsed && <span>Add New Client</span>}
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton onClick={onBulkImport} className="hover:bg-muted/50">
+                <SidebarMenuButton onClick={() => handleAction(onBulkImport)} className="hover:bg-muted/50">
                   <FileSpreadsheet className="mr-2 h-4 w-4 text-primary" />
                   {!collapsed && <span>Bulk Import</span>}
                 </SidebarMenuButton>
