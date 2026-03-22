@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import {
   Shield, Lock, FileText, Users, Briefcase, ArrowRight, Trophy, Palette,
   FolderHeart, Calculator, TrendingUp, Bell, Share2, BarChart3, Zap,
-  CheckCircle2, Clock, Star, ChevronDown
+  CheckCircle2, Clock, Star, ChevronDown, Check, X, Calendar
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion, useInView } from "framer-motion";
