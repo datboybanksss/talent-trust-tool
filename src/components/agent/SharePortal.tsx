@@ -120,32 +120,42 @@ const SharePortal = () => {
     setCustomSections((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
   };
 
-  const handleInvite = () => {
-    if (!name || !email || !selectedRole || !confidentialityAccepted) return;
+  const handleInvite = async () => {
+    if (!name || !email || !selectedRole || !confidentialityAccepted || !user) return;
     const preset = ROLE_PRESETS.find((r) => r.id === selectedRole)!;
-    const newMember: SharedStaffMember = {
-      id: crypto.randomUUID(),
-      name,
-      email,
+    const roleLabel = selectedRole === "custom" ? "Custom Role" : preset.label;
+
+    const { error } = await supabase.from("portal_staff_access").insert({
+      agent_id: user.id,
+      staff_email: email,
+      staff_name: name,
       role: selectedRole,
-      roleLabel: selectedRole === "custom" ? "Custom Role" : preset.label,
+      role_label: roleLabel,
       sections: effectiveSections,
       status: "pending",
-      invitedAt: new Date().toISOString(),
-    };
-    setStaff((prev) => [...prev, newMember]);
-    toast({ title: "Invitation sent", description: `${name} has been invited as ${newMember.roleLabel}.` });
+    });
+
+    if (error) {
+      toast({ title: "Error", description: "Could not send invitation.", variant: "destructive" });
+      return;
+    }
+
+    toast({ title: "Invitation sent", description: `${name} has been invited as ${roleLabel}. They must accept the confidentiality terms before accessing the portal.` });
     setName("");
     setEmail("");
     setSelectedRole("");
     setCustomSections([]);
     setConfidentialityAccepted(false);
     setDialogOpen(false);
+    fetchStaff();
   };
 
-  const handleRevoke = (id: string) => {
-    setStaff((prev) => prev.filter((s) => s.id !== id));
-    toast({ title: "Access revoked", description: "Staff member's access has been removed." });
+  const handleRevoke = async (id: string) => {
+    const { error } = await supabase.from("portal_staff_access").delete().eq("id", id);
+    if (!error) {
+      setStaff((prev) => prev.filter((s) => s.id !== id));
+      toast({ title: "Access revoked", description: "Staff member's access has been removed." });
+    }
   };
 
   return (
