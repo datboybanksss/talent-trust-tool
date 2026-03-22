@@ -106,12 +106,18 @@ const SharePortal = () => {
 
   useEffect(() => { fetchStaff(); }, [fetchStaff]);
 
-  // Form state
+  // Form state (invite)
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [selectedRole, setSelectedRole] = useState("");
   const [customSections, setCustomSections] = useState<PortalSection[]>([]);
   const [confidentialityAccepted, setConfidentialityAccepted] = useState(false);
+
+  // Edit state
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingMember, setEditingMember] = useState<SharedStaffMember | null>(null);
+  const [editRole, setEditRole] = useState("");
+  const [editSections, setEditSections] = useState<PortalSection[]>([]);
 
   const activePreset = ROLE_PRESETS.find((r) => r.id === selectedRole);
   const effectiveSections = selectedRole === "custom" ? customSections : (activePreset?.sections ?? []);
