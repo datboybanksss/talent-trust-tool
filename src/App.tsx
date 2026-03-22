@@ -37,6 +37,7 @@ import CreativePortfolio from "./pages/CreativePortfolio";
 import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/AdminDashboard";
 import Pricing from "./pages/Pricing";
+import Contact from "./pages/Contact";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +51,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/pricing" element={<Pricing />} />
+            <Route path="/contact" element={<Contact />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/agent-register" element={<AgentRegister />} />
             <Route path="/agent-dashboard" element={<ProtectedRoute><AgentDashboard /></ProtectedRoute>} />
