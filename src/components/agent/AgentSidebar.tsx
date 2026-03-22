@@ -24,6 +24,7 @@ import {
   LogOut,
   Shield,
   Settings,
+  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -31,8 +32,8 @@ interface AgentSidebarProps {
   onNewClient: () => void;
   onBulkImport: () => void;
   agentProfile: { role: string; company_name: string } | null;
-  activeView: "clients" | "pipeline" | "compare" | "calendar";
-  setActiveView: (view: "clients" | "pipeline" | "compare" | "calendar") => void;
+  activeView: "clients" | "pipeline" | "compare" | "calendar" | "templates";
+  setActiveView: (view: "clients" | "pipeline" | "compare" | "calendar" | "templates") => void;
 }
 
 const mainNavItems = [
@@ -40,6 +41,7 @@ const mainNavItems = [
   { title: "Deal Pipeline", icon: Kanban, view: "pipeline" as const },
   { title: "Calendar", icon: CalendarDays, view: "calendar" as const },
   { title: "Compare", icon: BarChart3, view: "compare" as const },
+  { title: "Agreement Templates", icon: FileText, view: "templates" as const },
 ];
 
 const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, setActiveView }: AgentSidebarProps) => {
@@ -48,7 +50,7 @@ const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, set
   const { signOut } = useAuth();
   const navigate = useNavigate();
 
-  const handleNavClick = (view: "clients" | "pipeline" | "compare" | "calendar") => {
+  const handleNavClick = (view: "clients" | "pipeline" | "compare" | "calendar" | "templates") => {
     setActiveView(view);
     if (isMobile) toggleSidebar();
   };
