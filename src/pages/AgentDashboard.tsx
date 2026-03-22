@@ -577,6 +577,7 @@ const AgentDashboard = () => {
               <div className="flex items-center gap-3">
                 <SidebarTrigger className="mr-1" />
                 <h1 className="text-lg font-display font-bold text-foreground">Agent Portal</h1>
+                <CurrentTierBadge tierType="agent" />
               </div>
               <AgentNotifications
                 pendingCount={pendingCount}
