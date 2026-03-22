@@ -557,6 +557,7 @@ const AgentDashboard = () => {
   const activationRate = invitations.length > 0 ? Math.round((activatedCount / invitations.length) * 100) : 0;
 
   return (
+    <>
     <SidebarProvider defaultOpen={false}>
       <div className="min-h-screen flex w-full bg-background">
         <AgentSidebar
