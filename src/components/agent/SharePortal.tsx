@@ -73,43 +73,38 @@ interface SharedStaffMember {
   confidentialityAcceptedAt: string | null;
 }
 
-const MOCK_STAFF: SharedStaffMember[] = [
-  {
-    id: "1",
-    name: "Nomsa Dlamini",
-    email: "nomsa@agency.co.za",
-    role: "pa",
-    roleLabel: "Personal Assistant (PA)",
-    sections: ["clients", "pipeline", "calendar", "compare", "templates"],
-    status: "active",
-    invitedAt: "2026-03-10T08:00:00Z",
-  },
-  {
-    id: "2",
-    name: "James van der Merwe",
-    email: "james@taxconsult.co.za",
-    role: "accountant",
-    roleLabel: "Accountant",
-    sections: ["clients", "pipeline", "compare"],
-    status: "active",
-    invitedAt: "2026-03-12T14:30:00Z",
-  },
-  {
-    id: "3",
-    name: "Priya Naidoo",
-    email: "priya@legalfirm.co.za",
-    role: "lawyer",
-    roleLabel: "Legal / Lawyer",
-    sections: ["clients", "templates"],
-    status: "pending",
-    invitedAt: "2026-03-20T11:00:00Z",
-  },
-];
-
 const SharePortal = () => {
   const { toast } = useToast();
-  const [staff, setStaff] = useState<SharedStaffMember[]>(MOCK_STAFF);
+  const { user } = useAuth();
+  const [staff, setStaff] = useState<SharedStaffMember[]>([]);
+  const [loadingStaff, setLoadingStaff] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+
+  const fetchStaff = useCallback(async () => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from("portal_staff_access")
+      .select("*")
+      .eq("agent_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (!error && data) {
+      setStaff(data.map((d: any) => ({
+        id: d.id,
+        name: d.staff_name,
+        email: d.staff_email,
+        role: d.role,
+        roleLabel: d.role_label,
+        sections: (d.sections || []) as PortalSection[],
+        status: d.status === "active" ? "active" : "pending",
+        invitedAt: d.created_at,
+        confidentialityAcceptedAt: d.confidentiality_accepted_at,
+      })));
+    }
+    setLoadingStaff(false);
+  }, [user]);
+
+  useEffect(() => { fetchStaff(); }, [fetchStaff]);
 
   // Form state
   const [name, setName] = useState("");
