@@ -14,7 +14,8 @@ import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import {
   Briefcase, UserPlus, Copy, CheckCircle2, Clock, Mail, LogOut, Shield,
-  Users, TrendingUp, FileText, Calendar, ArrowUpRight, BarChart3, Eye
+  Users, TrendingUp, FileText, Calendar, ArrowUpRight, BarChart3, Eye,
+  Upload, X, Paperclip
 } from "lucide-react";
 
 interface Invitation {
@@ -90,6 +91,8 @@ const AgentDashboard = () => {
   const [clientPhone, setClientPhone] = useState("");
   const [clientType, setClientType] = useState<string>("");
   const [notes, setNotes] = useState("");
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -121,19 +124,61 @@ const AgentDashboard = () => {
     if (data && data.length > 0) setInvitations(data);
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const maxSize = 20 * 1024 * 1024; // 20MB
+    const validFiles = files.filter(f => f.size <= maxSize);
+    if (validFiles.length < files.length) {
+      toast({ title: "File too large", description: "Files must be under 20MB each.", variant: "destructive" });
+    }
+    setUploadedFiles(prev => [...prev, ...validFiles]);
+    e.target.value = "";
+  };
+
+  const removeFile = (index: number) => {
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleCreateInvitation = async () => {
     if (!clientName || !clientEmail || !clientType) return;
     setIsCreating(true);
 
+    // Upload files first if any
+    const documentsMeta: { file_name: string; storage_path: string; document_type: string }[] = [];
+
+    if (user && uploadedFiles.length > 0) {
+      setIsUploading(true);
+      for (const file of uploadedFiles) {
+        const filePath = `${user.id}/${Date.now()}_${file.name}`;
+        const { error: uploadError } = await supabase.storage
+          .from("agent-client-documents")
+          .upload(filePath, file);
+        if (!uploadError) {
+          documentsMeta.push({
+            file_name: file.name,
+            storage_path: filePath,
+            document_type: file.name.toLowerCase().includes("contract") ? "contract" : "compliance",
+          });
+        }
+      }
+      setIsUploading(false);
+    }
+
     if (user) {
-      await supabase.from("client_invitations").insert({
+      const { error } = await supabase.from("client_invitations").insert({
         agent_id: user.id,
         client_name: clientName,
         client_email: clientEmail,
         client_phone: clientPhone || null,
         client_type: clientType,
-        pre_populated_data: { notes },
+        pre_populated_data: { notes, documents: documentsMeta },
       });
+
+      if (error) {
+        toast({ title: "Error", description: "Failed to create invitation.", variant: "destructive" });
+        setIsCreating(false);
+        return;
+      }
     }
 
     // Add to local state for demo
@@ -149,9 +194,15 @@ const AgentDashboard = () => {
     };
     setInvitations((prev) => [newInvitation, ...prev]);
     setIsCreating(false);
-    toast({ title: "Invitation Created", description: `Activation link ready for ${clientName}.` });
+    const docCount = uploadedFiles.length;
+    toast({
+      title: "Invitation Created",
+      description: `Activation link ready for ${clientName}${docCount > 0 ? ` with ${docCount} document${docCount > 1 ? "s" : ""}` : ""}.`,
+    });
     setClientName(""); setClientEmail(""); setClientPhone(""); setClientType(""); setNotes("");
+    setUploadedFiles([]);
     setDialogOpen(false);
+    fetchInvitations();
   };
 
   const copyLink = (token: string) => {
@@ -316,8 +367,47 @@ const AgentDashboard = () => {
                       <Label>Notes (visible to client)</Label>
                       <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Pre-populated notes..." rows={3} />
                     </div>
+
+                    {/* Document Upload */}
+                    <div>
+                      <Label>Documents (contracts, compliance)</Label>
+                      <div className="mt-1.5 border border-dashed border-border rounded-lg p-4 text-center">
+                        <input
+                          type="file"
+                          multiple
+                          accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                          onChange={handleFileSelect}
+                          className="hidden"
+                          id="agent-doc-upload"
+                        />
+                        <label htmlFor="agent-doc-upload" className="cursor-pointer flex flex-col items-center gap-2">
+                          <Upload className="w-6 h-6 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground">
+                            Click to upload or drag files here
+                          </span>
+                          <span className="text-xs text-muted-foreground">PDF, DOC, JPG, PNG — max 20MB each</span>
+                        </label>
+                      </div>
+                      {uploadedFiles.length > 0 && (
+                        <div className="mt-2 space-y-1.5">
+                          {uploadedFiles.map((file, idx) => (
+                            <div key={idx} className="flex items-center gap-2 bg-secondary/50 rounded-lg px-3 py-2 text-sm">
+                              <Paperclip className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                              <span className="truncate text-foreground flex-1">{file.name}</span>
+                              <span className="text-xs text-muted-foreground shrink-0">
+                                {(file.size / 1024).toFixed(0)}KB
+                              </span>
+                              <button onClick={() => removeFile(idx)} className="shrink-0 hover:text-destructive transition-colors">
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
                     <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleCreateInvitation} disabled={isCreating || !clientName || !clientEmail}>
-                      {isCreating ? "Creating..." : "Create & Generate Link"}
+                      {isCreating ? (isUploading ? "Uploading documents..." : "Creating...") : `Create & Generate Link${uploadedFiles.length > 0 ? ` (${uploadedFiles.length} files)` : ""}`}
                     </Button>
                   </div>
                 </DialogContent>
