@@ -15,8 +15,9 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Briefcase, UserPlus, Copy, CheckCircle2, Clock, Mail, LogOut, Shield,
   Users, TrendingUp, FileText, Calendar, ArrowUpRight, BarChart3, Eye,
-  Upload, X, Paperclip
+  Upload, X, Paperclip, Kanban, List
 } from "lucide-react";
+import DealPipeline from "@/components/dashboard/DealPipeline";
 
 interface Invitation {
   id: string;
