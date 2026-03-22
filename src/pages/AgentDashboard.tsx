@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,15 +14,17 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
 import {
   Briefcase, UserPlus, Copy, CheckCircle2, Clock, Mail, LogOut, Shield,
   Users, TrendingUp, FileText, Calendar, ArrowUpRight, BarChart3, Eye,
   Upload, X, Paperclip, Kanban, List, Plus, Trash2, FileSpreadsheet, AlertCircle,
-  Handshake, Download
+  Handshake, Download, Menu
 } from "lucide-react";
 import DealPipeline from "@/components/dashboard/DealPipeline";
 import ClientComparison from "@/components/dashboard/ClientComparison";
+import AgentSidebar from "@/components/agent/AgentSidebar";
 import * as XLSX from "xlsx";
 
 interface Invitation {
@@ -96,6 +98,11 @@ const AgentDashboard = () => {
   const [bulkPreview, setBulkPreview] = useState<{ name: string; email: string; phone: string; type: string; sport: string; team: string; marketValue: string; valid: boolean; error?: string }[]>([]);
   const [bulkImporting, setBulkImporting] = useState(false);
   const [bulkProgress, setBulkProgress] = useState(0);
+  const bulkInputRef = useRef<HTMLInputElement>(null);
+
+  const triggerBulkImport = () => {
+    bulkInputRef.current?.click();
+  };
 
   // Form state — basic
   const [clientName, setClientName] = useState("");
@@ -490,26 +497,30 @@ const AgentDashboard = () => {
   const activationRate = invitations.length > 0 ? Math.round((activatedCount / invitations.length) * 100) : 0;
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border/50 bg-card sticky top-0 z-40">
-        <div className="container py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-              <Briefcase className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-lg font-display font-bold text-foreground">Agent Portal</h1>
-              <p className="text-xs text-muted-foreground">{roleLabel} — {agentProfile?.company_name}</p>
-            </div>
-          </div>
-          <Button variant="ghost" size="sm" onClick={handleSignOut}>
-            <LogOut className="w-4 h-4 mr-2" /> Sign Out
-          </Button>
-        </div>
-      </header>
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-background">
+        <AgentSidebar
+          onNewClient={() => setDialogOpen(true)}
+          onBulkImport={triggerBulkImport}
+          agentProfile={agentProfile}
+          activeView={activeView}
+          setActiveView={setActiveView}
+        />
+        {/* Hidden bulk import input */}
+        <input type="file" accept=".xlsx,.xls,.csv" onChange={handleBulkFileSelect} className="hidden" ref={bulkInputRef} />
 
-      <div className="container py-8 max-w-6xl mx-auto space-y-8">
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Header */}
+          <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-lg border-b border-border px-6 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <SidebarTrigger className="mr-1" />
+                <h1 className="text-lg font-display font-bold text-foreground">Agent Portal</h1>
+              </div>
+            </div>
+          </header>
+
+          <div className="p-6 max-w-6xl mx-auto w-full space-y-8">
         {/* Stats Row */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="border-border/50">
@@ -580,31 +591,6 @@ const AgentDashboard = () => {
             </div>
           </CardContent>
         </Card>
-
-        {/* View Toggle */}
-        <div className="flex items-center gap-2">
-          <Button
-            variant={activeView === "clients" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setActiveView("clients")}
-          >
-            <List className="w-4 h-4 mr-1.5" /> Clients
-          </Button>
-          <Button
-            variant={activeView === "pipeline" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setActiveView("pipeline")}
-          >
-            <Kanban className="w-4 h-4 mr-1.5" /> Deal Pipeline
-          </Button>
-          <Button
-            variant={activeView === "compare" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setActiveView("compare")}
-          >
-            <BarChart3 className="w-4 h-4 mr-1.5" /> Compare
-          </Button>
-        </div>
 
         {activeView === "pipeline" ? (
           <DealPipeline />
@@ -944,33 +930,6 @@ const AgentDashboard = () => {
               </CardContent>
             </Card>
 
-            {/* Quick Actions */}
-            <Card className="border-border/50">
-              <CardContent className="p-5">
-                <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-primary" />
-                  Quick Actions
-                </h3>
-                <div className="space-y-2">
-                  <Button variant="outline" className="w-full justify-start text-sm" onClick={() => setDialogOpen(true)}>
-                    <UserPlus className="w-4 h-4 mr-2 text-primary" /> Add New Client
-                  </Button>
-                  <div className="relative">
-                    <input type="file" accept=".xlsx,.xls,.csv" onChange={handleBulkFileSelect} className="hidden" id="bulk-import-input" />
-                    <label htmlFor="bulk-import-input" className="w-full">
-                      <Button variant="outline" className="w-full justify-start text-sm" asChild>
-                        <span><FileSpreadsheet className="w-4 h-4 mr-2 text-primary" /> Bulk Import Clients</span>
-                      </Button>
-                    </label>
-                  </div>
-                  <Button variant="outline" className="w-full justify-start text-sm" disabled>
-                    <Mail className="w-4 h-4 mr-2 text-primary" /> Resend All Pending
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Client Breakdown */}
             <Card className="border-border/50">
               <CardContent className="p-5">
                 <h3 className="font-semibold text-foreground mb-4">Client Breakdown</h3>
@@ -999,7 +958,6 @@ const AgentDashboard = () => {
         </div>
         </>
         )}
-      </div>
 
       {/* Bulk Import Dialog */}
       <Dialog open={bulkDialogOpen} onOpenChange={setBulkDialogOpen}>
@@ -1090,7 +1048,10 @@ const AgentDashboard = () => {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+          </div>
+        </div>
+      </div>
+    </SidebarProvider>
   );
 };
 
