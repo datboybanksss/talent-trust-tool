@@ -1,21 +1,19 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import {
   ArrowLeft, User, Briefcase, Accessibility, Activity,
   HeartPulse, DollarSign, Megaphone, Plane, FolderOpen,
-  Shield, Menu, FileDown
+  Shield, FileDown, Pencil, Save, X
 } from "lucide-react";
+import { toast } from "sonner";
 import { generateAthleteProfilePDF } from "@/utils/athleteProfilePdf";
 import { mockAthleteProfiles } from "@/data/mockAthleteProfiles";
-import { ProfileRole, canAccessSection } from "@/types/athleteProfile";
+import { ProfileRole, canAccessSection, AthleteFullProfile } from "@/types/athleteProfile";
 import PersonalInfoSection from "@/components/agent/athlete-profile/PersonalInfoSection";
 import RepresentationSection from "@/components/agent/athlete-profile/RepresentationSection";
 import ParaAthleteSection from "@/components/agent/athlete-profile/ParaAthleteSection";
@@ -47,16 +45,38 @@ const AgentAthleteProfile = () => {
   const [currentRole, setCurrentRole] = useState<ProfileRole>("agent");
   const [activeTab, setActiveTab] = useState("personal");
 
-  // Find athlete profile by id, default to first
-  const athlete = mockAthleteProfiles.find((a) => a.id === athleteId) || mockAthleteProfiles[0];
+  const baseAthlete = mockAthleteProfiles.find((a) => a.id === athleteId) || mockAthleteProfiles[0];
+  const [athlete, setAthlete] = useState<AthleteFullProfile>(JSON.parse(JSON.stringify(baseAthlete)));
+  const [editMode, setEditMode] = useState(false);
+  const [backupData, setBackupData] = useState<AthleteFullProfile | null>(null);
+
+  const handleEdit = () => {
+    setBackupData(JSON.parse(JSON.stringify(athlete)));
+    setEditMode(true);
+  };
+
+  const handleSave = () => {
+    setEditMode(false);
+    setBackupData(null);
+    toast.success("Profile updated successfully");
+  };
+
+  const handleCancel = () => {
+    if (backupData) setAthlete(backupData);
+    setEditMode(false);
+    setBackupData(null);
+  };
+
+  const updateSection = <K extends keyof AthleteFullProfile>(key: K, value: AthleteFullProfile[K]) => {
+    setAthlete((prev) => ({ ...prev, [key]: value }));
+  };
 
   const visibleTabs = tabs.filter((t) => {
     if (t.id === "access") return currentRole === "agent";
-    if (t.id === "para_athlete" && !athlete.paraAthlete.enabled) return currentRole === "agent"; // show toggle for agent
+    if (t.id === "para_athlete" && !athlete.paraAthlete.enabled) return currentRole === "agent";
     return canAccessSection(currentRole, t.section);
   });
 
-  // If active tab is hidden, reset
   if (!visibleTabs.find((t) => t.id === activeTab)) {
     setActiveTab(visibleTabs[0]?.id || "personal");
   }
@@ -81,22 +101,44 @@ const AgentAthleteProfile = () => {
                   </Badge>
                 )}
                 <Badge variant="outline" className="text-xs">{athlete.athletic.sport}</Badge>
+                {editMode && (
+                  <Badge className="bg-warning/15 text-warning border-0 text-xs animate-pulse">
+                    <Pencil className="w-3 h-3 mr-1" /> Editing
+                  </Badge>
+                )}
               </div>
               <p className="text-sm text-muted-foreground mt-0.5">
                 {athlete.athletic.currentTeam || athlete.athletic.discipline} · {athlete.personal.nationality}
               </p>
             </div>
-            <div className="hidden sm:flex items-center gap-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => generateAthleteProfilePDF(athlete)}
-                className="gap-1.5"
-              >
-                <FileDown className="w-4 h-4" />
-                Export PDF
-              </Button>
-              <div className="flex flex-col items-end gap-1">
+            <div className="hidden sm:flex items-center gap-2">
+              {editMode ? (
+                <>
+                  <Button variant="outline" size="sm" onClick={handleCancel} className="gap-1.5">
+                    <X className="w-4 h-4" /> Cancel
+                  </Button>
+                  <Button size="sm" onClick={handleSave} className="gap-1.5">
+                    <Save className="w-4 h-4" /> Save Changes
+                  </Button>
+                </>
+              ) : (
+                <>
+                  {currentRole === "agent" && (
+                    <Button variant="outline" size="sm" onClick={handleEdit} className="gap-1.5">
+                      <Pencil className="w-4 h-4" /> Edit Profile
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => generateAthleteProfilePDF(athlete)}
+                    className="gap-1.5"
+                  >
+                    <FileDown className="w-4 h-4" /> Export PDF
+                  </Button>
+                </>
+              )}
+              <div className="flex flex-col items-end gap-1 ml-2">
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-muted-foreground">Profile</span>
                   <span className="text-sm font-bold text-foreground">{athlete.profileCompleteness}%</span>
@@ -104,6 +146,24 @@ const AgentAthleteProfile = () => {
                 <Progress value={athlete.profileCompleteness} className="w-32 h-1.5" />
               </div>
             </div>
+          </div>
+
+          {/* Mobile edit buttons */}
+          <div className="sm:hidden flex gap-2 mb-3">
+            {editMode ? (
+              <>
+                <Button variant="outline" size="sm" onClick={handleCancel} className="flex-1 gap-1.5">
+                  <X className="w-4 h-4" /> Cancel
+                </Button>
+                <Button size="sm" onClick={handleSave} className="flex-1 gap-1.5">
+                  <Save className="w-4 h-4" /> Save
+                </Button>
+              </>
+            ) : currentRole === "agent" ? (
+              <Button variant="outline" size="sm" onClick={handleEdit} className="gap-1.5">
+                <Pencil className="w-4 h-4" /> Edit Profile
+              </Button>
+            ) : null}
           </div>
 
           {/* Role indicator */}
@@ -120,7 +180,7 @@ const AgentAthleteProfile = () => {
 
       {/* Tabs Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
-        {currentRole === "agent" && (
+        {currentRole === "agent" && !editMode && (
           <ExpiryAlertsPanel athlete={athlete} onNavigateToTab={setActiveTab} />
         )}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -141,28 +201,60 @@ const AgentAthleteProfile = () => {
           </ScrollArea>
 
           <TabsContent value="personal">
-            <PersonalInfoSection data={athlete.personal} />
+            <PersonalInfoSection
+              data={athlete.personal}
+              editMode={editMode}
+              onChange={(d) => updateSection("personal", d)}
+            />
           </TabsContent>
           <TabsContent value="representation">
-            <RepresentationSection data={athlete.representation} />
+            <RepresentationSection
+              data={athlete.representation}
+              editMode={editMode}
+              onChange={(d) => updateSection("representation", d)}
+            />
           </TabsContent>
           <TabsContent value="para_athlete">
-            <ParaAthleteSection data={athlete.paraAthlete} />
+            <ParaAthleteSection
+              data={athlete.paraAthlete}
+              editMode={editMode}
+              onChange={(d) => updateSection("paraAthlete", d)}
+            />
           </TabsContent>
           <TabsContent value="athletic">
-            <AthleticSection data={athlete.athletic} />
+            <AthleticSection
+              data={athlete.athletic}
+              editMode={editMode}
+              onChange={(d) => updateSection("athletic", d)}
+            />
           </TabsContent>
           <TabsContent value="health">
-            <HealthWelfareSection data={athlete.health} />
+            <HealthWelfareSection
+              data={athlete.health}
+              editMode={editMode}
+              onChange={(d) => updateSection("health", d)}
+            />
           </TabsContent>
           <TabsContent value="commercial">
-            <CommercialSection data={athlete.commercial} />
+            <CommercialSection
+              data={athlete.commercial}
+              editMode={editMode}
+              onChange={(d) => updateSection("commercial", d)}
+            />
           </TabsContent>
           <TabsContent value="media">
-            <MediaBrandSection data={athlete.media} />
+            <MediaBrandSection
+              data={athlete.media}
+              editMode={editMode}
+              onChange={(d) => updateSection("media", d)}
+            />
           </TabsContent>
           <TabsContent value="travel">
-            <TravelSection data={athlete.travel} />
+            <TravelSection
+              data={athlete.travel}
+              editMode={editMode}
+              onChange={(d) => updateSection("travel", d)}
+            />
           </TabsContent>
           <TabsContent value="documents">
             <DocumentVaultSection data={athlete.documents} />
