@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Shield, Lock, FileText, Users, Briefcase, ArrowRight, ChevronDown, Trophy, Palette, FolderHeart, Calculator } from "lucide-react";
+import { Shield, Lock, FileText, Users, Briefcase, ArrowRight, ChevronDown, Trophy, Palette, FolderHeart, Calculator, TrendingUp, Bell, Share2, BarChart3 } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   NavigationMenu,
@@ -140,6 +140,72 @@ const Landing = () => {
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Link>
           </Button>
+        </div>
+      </section>
+
+      {/* Key Features Snapshot */}
+      <section className="py-20 px-6 bg-secondary/20">
+        <div className="container max-w-6xl mx-auto">
+          <div className="text-center mb-14">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gold/10 border border-gold/20 rounded-full mb-6">
+              <BarChart3 className="w-4 h-4 text-gold" />
+              <span className="text-sm font-medium text-gold">Platform Highlights</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-4">
+              Your Entire Career, One Dashboard
+            </h2>
+            <p className="text-muted-foreground max-w-xl mx-auto">
+              A snapshot of what LegacyBuilder puts at your fingertips — from contract management to estate planning.
+            </p>
+          </div>
+
+          {/* Feature Stats Row */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+            <SnapshotStat value="100%" label="Document Encryption" />
+            <SnapshotStat value="Real-Time" label="Contract Alerts" />
+            <SnapshotStat value="POPIA" label="Fully Compliant" />
+            <SnapshotStat value="24/7" label="Secure Access" />
+          </div>
+
+          {/* Feature Highlights Grid */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <FeatureSnapshotCard
+              icon={FileText}
+              title="Contract Manager"
+              description="Track all active contracts, endorsements, and deal values with expiry alerts."
+              accent="from-gold/20 to-gold/5"
+            />
+            <FeatureSnapshotCard
+              icon={FolderHeart}
+              title="Life File & Estate Planning"
+              description="Organise wills, trusts, beneficiaries, and emergency contacts — share securely with loved ones."
+              accent="from-primary/20 to-primary/5"
+            />
+            <FeatureSnapshotCard
+              icon={TrendingUp}
+              title="Investment Tracker"
+              description="Monitor property and franchise investments with ROI calculations and portfolio overviews."
+              accent="from-gold/20 to-gold/5"
+            />
+            <FeatureSnapshotCard
+              icon={Bell}
+              title="Smart Reminders"
+              description="Automated alerts for tax deadlines, contract renewals, and compliance milestones."
+              accent="from-primary/20 to-primary/5"
+            />
+            <FeatureSnapshotCard
+              icon={Share2}
+              title="Secure Sharing"
+              description="Grant time-limited, section-level access to advisors, agents, or family members."
+              accent="from-gold/20 to-gold/5"
+            />
+            <FeatureSnapshotCard
+              icon={Calculator}
+              title="Budget & Cash Flow"
+              description="Monthly budget planner with category breakdowns and spending-vs-income insights."
+              accent="from-primary/20 to-primary/5"
+            />
+          </div>
         </div>
       </section>
 
@@ -302,6 +368,30 @@ const ServiceCard = ({ icon: Icon, title, description }: ServiceCardProps) => (
       <Icon className="w-6 h-6 text-gold" />
     </div>
     <h3 className="text-lg font-display font-semibold text-foreground mb-2">{title}</h3>
+    <p className="text-muted-foreground text-sm leading-relaxed">{description}</p>
+  </div>
+);
+
+const SnapshotStat = ({ value, label }: { value: string; label: string }) => (
+  <div className="text-center p-5 rounded-2xl bg-card border border-border/50">
+    <p className="text-2xl md:text-3xl font-display font-bold text-gold mb-1">{value}</p>
+    <p className="text-xs text-muted-foreground uppercase tracking-wider">{label}</p>
+  </div>
+);
+
+interface FeatureSnapshotCardProps {
+  icon: React.ElementType;
+  title: string;
+  description: string;
+  accent: string;
+}
+
+const FeatureSnapshotCard = ({ icon: Icon, title, description, accent }: FeatureSnapshotCardProps) => (
+  <div className="group p-5 rounded-2xl bg-card border border-border/50 hover:border-gold/30 transition-all duration-300 hover:shadow-gold">
+    <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${accent} flex items-center justify-center mb-3`}>
+      <Icon className="w-5 h-5 text-gold" />
+    </div>
+    <h3 className="text-base font-display font-semibold text-foreground mb-1.5">{title}</h3>
     <p className="text-muted-foreground text-sm leading-relaxed">{description}</p>
   </div>
 );
