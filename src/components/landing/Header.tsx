@@ -135,6 +135,9 @@ const Header = () => {
               <Link to="/pricing">Pricing</Link>
             </Button>
             <Button variant="ghost" className="text-foreground hover:bg-secondary" asChild>
+              <Link to="/contact">Contact</Link>
+            </Button>
+            <Button variant="ghost" className="text-foreground hover:bg-secondary" asChild>
               <Link to="/auth">Sign In</Link>
             </Button>
             <Button variant="hero" asChild>
