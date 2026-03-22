@@ -550,6 +550,7 @@ const AgentDashboard = () => {
     );
   }
 
+  const roleLabel = agentProfile?.role === "athlete_agent" ? "Athletes' Agent" : "Artists' Manager";
   const activatedCount = invitations.filter((i) => i.status === "activated").length;
   const pendingCount = invitations.filter((i) => i.status === "pending").length;
   const activationRate = invitations.length > 0 ? Math.round((activatedCount / invitations.length) * 100) : 0;
