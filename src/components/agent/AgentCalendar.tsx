@@ -164,14 +164,20 @@ const AgentCalendar = () => {
 
   return (
     <div className="space-y-6">
-      {/* Legend */}
-      <div className="flex flex-wrap gap-3">
-        {Object.entries(eventTypeConfig).map(([key, config]) => (
-          <div key={key} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <span className={`w-2 h-2 rounded-full ${config.dotColor}`} />
-            {config.label}
-          </div>
-        ))}
+      {/* Legend + Export */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex flex-wrap gap-3">
+          {Object.entries(eventTypeConfig).map(([key, config]) => (
+            <div key={key} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <span className={`w-2 h-2 rounded-full ${config.dotColor}`} />
+              {config.label}
+            </div>
+          ))}
+        </div>
+        <Button variant="outline" size="sm" onClick={handleExportAll}>
+          <Download className="w-3.5 h-3.5 mr-1.5" />
+          Export All (.ics)
+        </Button>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
