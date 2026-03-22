@@ -347,7 +347,21 @@ const AgentDashboard = () => {
     toast({ title: "Link Copied", description: "Activation link copied to clipboard." });
   };
 
-  const handleSignOut = async () => {
+  const downloadTemplate = () => {
+    const wb = XLSX.utils.book_new();
+    const wsData = [
+      ["Name", "Email", "Phone", "Type", "Sport", "Team", "Market Value", "Location", "Nationality", "Date of Birth", "ID Number", "Social", "Notes"],
+      ["John Doe", "john@example.com", "+27 81 000 0000", "athlete", "Soccer", "Orlando Pirates", "R10,000,000", "Johannesburg, SA", "South African", "1995-06-15", "9506155000000", "@johndoe", "Sample client"],
+      ["", "", "", "", "", "", "", "", "", "", "", "", ""],
+      ["Brand", "Deal Type", "Deal Value", "Start Date", "End Date", "Status", "", "", "", "", "", "", ""],
+      ["Nike", "Endorsement", "R2,000,000/yr", "2025-01-01", "2026-12-31", "active", "", "", "", "", "", "", ""],
+      ["Adidas", "Sponsorship", "R1,500,000", "2025-06-01", "2026-05-31", "negotiating", "", "", "", "", "", "", ""],
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    XLSX.utils.book_append_sheet(wb, ws, "Client Data");
+    XLSX.writeFile(wb, "LegacyBuilder_Client_Template.xlsx");
+  };
+
     await signOut();
     navigate("/");
   };
