@@ -537,7 +537,19 @@ const AgentDashboard = () => {
     );
   }
 
-  const roleLabel = agentProfile?.role === "athlete_agent" ? "Athletes' Agent" : "Artists' Manager";
+  // Show confidentiality gate for staff who haven't accepted
+  if (staffCheckDone && staffAccess && !staffAccess.confidentiality_accepted_at) {
+    return (
+      <ConfidentialityGate
+        staffAccessId={staffAccess.id}
+        agentCompany={staffAccess.agent_company}
+        roleName={staffAccess.role_label}
+        sections={staffAccess.sections}
+        onAccepted={() => setStaffAccess(null)}
+      />
+    );
+  }
+
   const activatedCount = invitations.filter((i) => i.status === "activated").length;
   const pendingCount = invitations.filter((i) => i.status === "pending").length;
   const activationRate = invitations.length > 0 ? Math.round((activatedCount / invitations.length) * 100) : 0;
