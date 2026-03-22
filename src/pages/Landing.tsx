@@ -97,6 +97,9 @@ const Landing = () => {
 
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-foreground">
+              <Link to="/agent-register">Agents & Managers</Link>
+            </Button>
+            <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-foreground">
               <Link to="/auth">Sign In</Link>
             </Button>
             <Button variant="hero" size="sm" asChild>
@@ -243,6 +246,31 @@ const Landing = () => {
               title="Budget Calculator"
               description="Plan and track your monthly budget with smart allocation tools and spending insights."
             />
+          </div>
+        </div>
+      </section>
+
+      {/* Agent & Manager CTA */}
+      <section className="py-20 px-6">
+        <div className="container max-w-4xl mx-auto text-center space-y-6">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-secondary rounded-full">
+            <Briefcase className="w-4 h-4 text-gold" />
+            <span className="text-sm font-medium text-foreground">For Agents & Managers</span>
+          </div>
+          <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground">
+            Are You an Athletes' Agent or Artists' Manager?
+          </h2>
+          <p className="text-muted-foreground max-w-xl mx-auto">
+            Create and pre-populate profiles for your clients with a designated activation link.
+            Once your client confirms, their profile goes live — with full POPIA-compliant privacy.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button variant="gold" size="lg" asChild>
+              <Link to="/agent-register">Register as Agent / Manager</Link>
+            </Button>
+            <Button variant="outline" size="lg" asChild>
+              <Link to="/agent-register">Sign In to Agent Portal</Link>
+            </Button>
           </div>
         </div>
       </section>

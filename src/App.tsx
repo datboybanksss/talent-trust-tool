@@ -6,6 +6,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Landing from "./pages/Landing";
+import AgentRegister from "./pages/AgentRegister";
+import AgentDashboard from "./pages/AgentDashboard";
+import ActivateProfile from "./pages/ActivateProfile";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
@@ -43,6 +46,9 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/agent-register" element={<AgentRegister />} />
+            <Route path="/agent-dashboard" element={<ProtectedRoute><AgentDashboard /></ProtectedRoute>} />
+            <Route path="/activate/:token" element={<ActivateProfile />} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/dashboard/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/dashboard/life-file" element={<ProtectedRoute><LifeFile /></ProtectedRoute>} />
