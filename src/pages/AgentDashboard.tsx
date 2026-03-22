@@ -157,7 +157,96 @@ const AgentDashboard = () => {
     if (data && data.length > 0) setInvitations(data);
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSpreadsheetImport = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const data = new Uint8Array(evt.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: "array" });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows: Record<string, string>[] = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+        if (rows.length === 0) {
+          setImportErrors(["Spreadsheet is empty."]);
+          return;
+        }
+        const row = rows[0]; // first row = client data
+        const keyMap: Record<string, string> = {};
+        Object.keys(row).forEach((k) => { keyMap[k.toLowerCase().trim()] = row[k]; });
+
+        // Auto-map fields
+        if (keyMap["name"] || keyMap["client name"] || keyMap["full name"]) setClientName(keyMap["name"] || keyMap["client name"] || keyMap["full name"]);
+        if (keyMap["email"] || keyMap["client email"]) setClientEmail(keyMap["email"] || keyMap["client email"]);
+        if (keyMap["phone"] || keyMap["client phone"]) setClientPhone(keyMap["phone"] || keyMap["client phone"]);
+        if (keyMap["type"] || keyMap["client type"]) setClientType((keyMap["type"] || keyMap["client type"]).toLowerCase());
+        if (keyMap["team"] || keyMap["agency"]) setTeamOrAgency(keyMap["team"] || keyMap["agency"]);
+        if (keyMap["sport"] || keyMap["discipline"]) setSportOrDiscipline(keyMap["sport"] || keyMap["discipline"]);
+        if (keyMap["market value"] || keyMap["value"]) setMarketValue(keyMap["market value"] || keyMap["value"]);
+        if (keyMap["location"] || keyMap["city"]) setLocation(keyMap["location"] || keyMap["city"]);
+        if (keyMap["nationality"]) setNationality(keyMap["nationality"]);
+        if (keyMap["date of birth"] || keyMap["dob"]) setDateOfBirth(keyMap["date of birth"] || keyMap["dob"]);
+        if (keyMap["id number"] || keyMap["id"]) setIdNumber(keyMap["id number"] || keyMap["id"]);
+        if (keyMap["social"] || keyMap["social handle"] || keyMap["instagram"]) setSocialHandle(keyMap["social"] || keyMap["social handle"] || keyMap["instagram"]);
+        if (keyMap["notes"]) setNotes(keyMap["notes"]);
+
+        // Import deals if multiple rows
+        if (rows.length > 1) {
+          const dealKeys = Object.keys(rows[1]).map((k) => k.toLowerCase().trim());
+          const hasDealCols = dealKeys.some((k) => ["brand", "deal type", "deal value"].includes(k));
+          if (hasDealCols) {
+            const deals: PreDeal[] = rows.slice(1).filter((r) => {
+              const dk: Record<string, string> = {};
+              Object.keys(r).forEach((k) => { dk[k.toLowerCase().trim()] = r[k]; });
+              return dk["brand"];
+            }).map((r) => {
+              const dk: Record<string, string> = {};
+              Object.keys(r).forEach((k) => { dk[k.toLowerCase().trim()] = r[k]; });
+              return {
+                brand: dk["brand"] || "",
+                type: dk["deal type"] || dk["type"] || "Endorsement",
+                value: dk["deal value"] || dk["value"] || "",
+                startDate: dk["start date"] || dk["start"] || "",
+                endDate: dk["end date"] || dk["end"] || "",
+                status: dk["status"] || "active",
+              };
+            });
+            if (deals.length > 0) setPreDeals(deals);
+          }
+        }
+
+        setImportedData(keyMap);
+        setImportErrors([]);
+        toast({ title: "Import Successful", description: `Loaded client data from ${file.name}.` });
+      } catch {
+        setImportErrors(["Could not parse the file. Please use .xlsx or .csv format."]);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+    e.target.value = "";
+  }, [toast]);
+
+  const addDeal = () => {
+    setPreDeals((prev) => [...prev, { brand: "", type: "Endorsement", value: "", startDate: "", endDate: "", status: "active" }]);
+  };
+
+  const updateDeal = (index: number, field: keyof PreDeal, value: string) => {
+    setPreDeals((prev) => prev.map((d, i) => i === index ? { ...d, [field]: value } : d));
+  };
+
+  const removeDeal = (index: number) => {
+    setPreDeals((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const resetForm = () => {
+    setClientName(""); setClientEmail(""); setClientPhone(""); setClientType(""); setNotes("");
+    setUploadedFiles([]); setTeamOrAgency(""); setSportOrDiscipline(""); setMarketValue("");
+    setLocation(""); setNationality("South African"); setDateOfBirth(""); setIdNumber("");
+    setSocialHandle(""); setPreDeals([]); setImportedData(null); setImportErrors([]);
+    setFormTab("basic");
+  };
+
+
     const files = Array.from(e.target.files || []);
     const maxSize = 20 * 1024 * 1024; // 20MB
     const validFiles = files.filter(f => f.size <= maxSize);
