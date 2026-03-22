@@ -91,6 +91,8 @@ const AgentDashboard = () => {
   const [clientPhone, setClientPhone] = useState("");
   const [clientType, setClientType] = useState<string>("");
   const [notes, setNotes] = useState("");
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     if (!user) {
