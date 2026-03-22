@@ -29,6 +29,7 @@ import AgentNotifications from "@/components/agent/AgentNotifications";
 import AgentCalendar from "@/components/agent/AgentCalendar";
 import AgreementTemplates from "@/components/agent/AgreementTemplates";
 import SharePortal from "@/components/agent/SharePortal";
+import AgentChatBot from "@/components/agent/AgentChatBot";
 import ConfidentialityGate from "@/components/agent/ConfidentialityGate";
 import * as XLSX from "xlsx";
 
