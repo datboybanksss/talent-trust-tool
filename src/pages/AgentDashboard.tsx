@@ -323,6 +323,28 @@ const AgentDashboard = () => {
           </CardContent>
         </Card>
 
+        {/* View Toggle */}
+        <div className="flex items-center gap-2">
+          <Button
+            variant={activeView === "clients" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setActiveView("clients")}
+          >
+            <List className="w-4 h-4 mr-1.5" /> Clients
+          </Button>
+          <Button
+            variant={activeView === "pipeline" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setActiveView("pipeline")}
+          >
+            <Kanban className="w-4 h-4 mr-1.5" /> Deal Pipeline
+          </Button>
+        </div>
+
+        {activeView === "pipeline" ? (
+          <DealPipeline />
+        ) : (
+        <>
         {/* Main Content Grid */}
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Client List — 2 cols */}
