@@ -84,8 +84,37 @@ const Profile = () => {
         : "Overview of your assets and business health"
       }
     >
-      {/* Generate Report Button */}
-      <div className="flex justify-end mb-6">
+      {/* Settings & Actions Row */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        {/* Client Type Switcher */}
+        <div className="bg-card rounded-2xl border border-border p-4 shadow-soft flex items-center gap-4">
+          <div className="w-9 h-9 rounded-xl bg-accent/50 flex items-center justify-center">
+            <Settings className="w-4 h-4 text-muted-foreground" />
+          </div>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+            <Label className="text-sm text-muted-foreground whitespace-nowrap">Profile Type:</Label>
+            <RadioGroup
+              value={clientType ?? "default"}
+              onValueChange={handleClientTypeChange}
+              className="flex gap-4"
+              disabled={saving}
+            >
+              <div className="flex items-center gap-1.5">
+                <RadioGroupItem value="default" id="type-default" />
+                <Label htmlFor="type-default" className="text-sm cursor-pointer">General</Label>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <RadioGroupItem value="athlete" id="type-athlete" />
+                <Label htmlFor="type-athlete" className="text-sm cursor-pointer">Athlete</Label>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <RadioGroupItem value="artist" id="type-artist" />
+                <Label htmlFor="type-artist" className="text-sm cursor-pointer">Artist</Label>
+              </div>
+            </RadioGroup>
+          </div>
+        </div>
+
         <Button onClick={handleGenerateReport} variant="outline" className="gap-2 border-primary/30 hover:bg-primary/10 text-foreground">
           <Download className="w-4 h-4 text-primary" />
           Generate Executive Report
