@@ -28,6 +28,7 @@ import AgentSidebar from "@/components/agent/AgentSidebar";
 import AgentNotifications from "@/components/agent/AgentNotifications";
 import AgentCalendar from "@/components/agent/AgentCalendar";
 import AgreementTemplates from "@/components/agent/AgreementTemplates";
+import SharePortal from "@/components/agent/SharePortal";
 import * as XLSX from "xlsx";
 
 interface Invitation {
