@@ -503,6 +503,8 @@ const AgentDashboard = () => {
           onNewClient={() => setDialogOpen(true)}
           onBulkImport={triggerBulkImport}
           agentProfile={agentProfile}
+          activeView={activeView}
+          setActiveView={setActiveView}
         />
         {/* Hidden bulk import input */}
         <input type="file" accept=".xlsx,.xls,.csv" onChange={handleBulkFileSelect} className="hidden" ref={bulkInputRef} />

@@ -76,27 +76,17 @@ const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, set
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainNavItems.map((item) => {
-                const isActive =
-                  item.view === "clients"
-                    ? location.pathname === "/agent-dashboard" && !location.search
-                    : location.search.includes(`view=${item.view}`);
-
-                return (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                      <NavLink
-                        to={item.url}
-                        className="hover:bg-muted/50"
-                        activeClassName={isActive ? "bg-primary/10 text-primary font-medium" : ""}
-                      >
-                        <item.icon className="mr-2 h-4 w-4" />
-                        {!collapsed && <span>{item.title}</span>}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
+              {mainNavItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    onClick={() => setActiveView(item.view)}
+                    className={`hover:bg-muted/50 ${activeView === item.view ? "bg-primary/10 text-primary font-medium" : ""}`}
+                  >
+                    <item.icon className="mr-2 h-4 w-4" />
+                    {!collapsed && <span>{item.title}</span>}
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
