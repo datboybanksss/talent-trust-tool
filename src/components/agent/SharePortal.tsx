@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,45 +70,41 @@ interface SharedStaffMember {
   sections: PortalSection[];
   status: "pending" | "active";
   invitedAt: string;
+  confidentialityAcceptedAt: string | null;
 }
-
-const MOCK_STAFF: SharedStaffMember[] = [
-  {
-    id: "1",
-    name: "Nomsa Dlamini",
-    email: "nomsa@agency.co.za",
-    role: "pa",
-    roleLabel: "Personal Assistant (PA)",
-    sections: ["clients", "pipeline", "calendar", "compare", "templates"],
-    status: "active",
-    invitedAt: "2026-03-10T08:00:00Z",
-  },
-  {
-    id: "2",
-    name: "James van der Merwe",
-    email: "james@taxconsult.co.za",
-    role: "accountant",
-    roleLabel: "Accountant",
-    sections: ["clients", "pipeline", "compare"],
-    status: "active",
-    invitedAt: "2026-03-12T14:30:00Z",
-  },
-  {
-    id: "3",
-    name: "Priya Naidoo",
-    email: "priya@legalfirm.co.za",
-    role: "lawyer",
-    roleLabel: "Legal / Lawyer",
-    sections: ["clients", "templates"],
-    status: "pending",
-    invitedAt: "2026-03-20T11:00:00Z",
-  },
-];
 
 const SharePortal = () => {
   const { toast } = useToast();
-  const [staff, setStaff] = useState<SharedStaffMember[]>(MOCK_STAFF);
+  const { user } = useAuth();
+  const [staff, setStaff] = useState<SharedStaffMember[]>([]);
+  const [loadingStaff, setLoadingStaff] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+
+  const fetchStaff = useCallback(async () => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from("portal_staff_access")
+      .select("*")
+      .eq("agent_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (!error && data) {
+      setStaff(data.map((d: any) => ({
+        id: d.id,
+        name: d.staff_name,
+        email: d.staff_email,
+        role: d.role,
+        roleLabel: d.role_label,
+        sections: (d.sections || []) as PortalSection[],
+        status: d.status === "active" ? "active" : "pending",
+        invitedAt: d.created_at,
+        confidentialityAcceptedAt: d.confidentiality_accepted_at,
+      })));
+    }
+    setLoadingStaff(false);
+  }, [user]);
+
+  useEffect(() => { fetchStaff(); }, [fetchStaff]);
 
   // Form state
   const [name, setName] = useState("");
@@ -122,32 +120,42 @@ const SharePortal = () => {
     setCustomSections((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
   };
 
-  const handleInvite = () => {
-    if (!name || !email || !selectedRole || !confidentialityAccepted) return;
+  const handleInvite = async () => {
+    if (!name || !email || !selectedRole || !confidentialityAccepted || !user) return;
     const preset = ROLE_PRESETS.find((r) => r.id === selectedRole)!;
-    const newMember: SharedStaffMember = {
-      id: crypto.randomUUID(),
-      name,
-      email,
+    const roleLabel = selectedRole === "custom" ? "Custom Role" : preset.label;
+
+    const { error } = await supabase.from("portal_staff_access").insert({
+      agent_id: user.id,
+      staff_email: email,
+      staff_name: name,
       role: selectedRole,
-      roleLabel: selectedRole === "custom" ? "Custom Role" : preset.label,
+      role_label: roleLabel,
       sections: effectiveSections,
       status: "pending",
-      invitedAt: new Date().toISOString(),
-    };
-    setStaff((prev) => [...prev, newMember]);
-    toast({ title: "Invitation sent", description: `${name} has been invited as ${newMember.roleLabel}.` });
+    });
+
+    if (error) {
+      toast({ title: "Error", description: "Could not send invitation.", variant: "destructive" });
+      return;
+    }
+
+    toast({ title: "Invitation sent", description: `${name} has been invited as ${roleLabel}. They must accept the confidentiality terms before accessing the portal.` });
     setName("");
     setEmail("");
     setSelectedRole("");
     setCustomSections([]);
     setConfidentialityAccepted(false);
     setDialogOpen(false);
+    fetchStaff();
   };
 
-  const handleRevoke = (id: string) => {
-    setStaff((prev) => prev.filter((s) => s.id !== id));
-    toast({ title: "Access revoked", description: "Staff member's access has been removed." });
+  const handleRevoke = async (id: string) => {
+    const { error } = await supabase.from("portal_staff_access").delete().eq("id", id);
+    if (!error) {
+      setStaff((prev) => prev.filter((s) => s.id !== id));
+      toast({ title: "Access revoked", description: "Staff member's access has been removed." });
+    }
   };
 
   return (
@@ -304,16 +312,19 @@ const SharePortal = () => {
           <CardTitle className="text-base">Shared Staff ({staff.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          {staff.length === 0 ? (
+          {loadingStaff ? (
+            <p className="text-center text-muted-foreground py-8 animate-pulse">Loading staff...</p>
+          ) : staff.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">No staff members invited yet.</p>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
+                   <TableHead>Name</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Sections</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Confidentiality</TableHead>
                   <TableHead className="w-10" />
                 </TableRow>
               </TableHeader>
@@ -346,6 +357,17 @@ const SharePortal = () => {
                       ) : (
                         <Badge variant="outline" className="text-xs">
                           <Clock className="w-3 h-3 mr-1" /> Pending
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {member.confidentialityAcceptedAt ? (
+                        <Badge variant="secondary" className="text-xs">
+                          <CheckCircle2 className="w-3 h-3 mr-1" /> Accepted
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-xs">
+                          <Clock className="w-3 h-3 mr-1" /> Awaiting
                         </Badge>
                       )}
                     </TableCell>

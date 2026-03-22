@@ -625,6 +625,51 @@ export type Database = {
         }
         Relationships: []
       }
+      portal_staff_access: {
+        Row: {
+          agent_id: string
+          confidentiality_accepted_at: string | null
+          created_at: string
+          id: string
+          role: string
+          role_label: string
+          sections: string[]
+          staff_email: string
+          staff_name: string
+          staff_user_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          agent_id: string
+          confidentiality_accepted_at?: string | null
+          created_at?: string
+          id?: string
+          role?: string
+          role_label?: string
+          sections?: string[]
+          staff_email: string
+          staff_name: string
+          staff_user_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string
+          confidentiality_accepted_at?: string | null
+          created_at?: string
+          id?: string
+          role?: string
+          role_label?: string
+          sections?: string[]
+          staff_email?: string
+          staff_name?: string
+          staff_user_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
