@@ -220,7 +220,7 @@ const SharePortal = () => {
               Invite Staff
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Invite Support Staff</DialogTitle>
               <DialogDescription>Grant access to your Agent Portal with role-based permissions.</DialogDescription>
