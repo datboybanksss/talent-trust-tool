@@ -517,4 +517,89 @@ const AgentPricingSection = () => {
   );
 };
 
+/* ── FAQ Section ───────────────────────────────────────── */
+const faqItems = [
+  {
+    question: "Is LegacyBuilder really free to start?",
+    answer: "Yes! The Starter plan is free forever — no credit card required. You get access to the Life File, 3 document uploads, and 1 emergency contact. Upgrade only when you need more features.",
+  },
+  {
+    question: "How does the 2-month free trial work for agents?",
+    answer: "All agent and manager plans include a full 2-month free trial with no payment details required upfront. You get access to every feature in your chosen tier. Billing only begins after the trial period ends.",
+  },
+  {
+    question: "Can I switch plans at any time?",
+    answer: "Absolutely. You can upgrade or downgrade your plan at any time from your dashboard. When upgrading, you'll get immediate access to the new features. When downgrading, the change takes effect at the end of your current billing cycle.",
+  },
+  {
+    question: "What's the difference between monthly and annual billing?",
+    answer: "Annual billing gives you a 20% discount on all paid plans. For example, the Pro plan drops from R499/month to R399/month when billed annually. You can switch between billing cycles at renewal time.",
+  },
+  {
+    question: "What happens to my data if I downgrade or cancel?",
+    answer: "Your data is always yours. If you downgrade, any features above your new tier become read-only — nothing is deleted. If you cancel entirely, you have 90 days to export your data before it's permanently removed.",
+  },
+  {
+    question: "Do you offer special pricing for sports federations or artist guilds?",
+    answer: "Yes! The Association / Guild plan is designed specifically for governing bodies, player unions, and creative guilds. It includes unlimited members, custom branding, bulk onboarding, and a dedicated account manager. Contact us for custom enterprise pricing.",
+  },
+  {
+    question: "Is my financial data secure?",
+    answer: "Absolutely. LegacyBuilder uses bank-level encryption (AES-256), secure cloud infrastructure, and role-based access controls. Your data is never shared with third parties. We also support granular, time-limited sharing so you control exactly who sees what.",
+  },
+  {
+    question: "What currencies are supported?",
+    answer: "All pricing is in South African Rands (ZAR). If you're visiting from outside South Africa, we also display approximate USD equivalents for your convenience. The platform supports multi-currency tracking for international athletes and artists.",
+  },
+];
+
+const FAQSection = () => (
+  <section className="py-24 px-6 bg-secondary/20">
+    <div className="container max-w-3xl mx-auto">
+      <Reveal>
+        <div className="text-center mb-14">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-gold/10 border border-gold/20 rounded-full mb-6">
+            <HelpCircle className="w-4 h-4 text-gold" />
+            <span className="text-sm font-medium text-gold">Frequently Asked Questions</span>
+          </div>
+          <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-4">
+            Got Questions? We've Got Answers.
+          </h2>
+          <p className="text-muted-foreground text-lg">
+            Everything you need to know about plans, billing, and getting started.
+          </p>
+        </div>
+      </Reveal>
+
+      <Reveal delay={0.1}>
+        <Accordion type="single" collapsible className="space-y-3">
+          {faqItems.map((item, i) => (
+            <AccordionItem
+              key={i}
+              value={`faq-${i}`}
+              className="bg-card border border-border/50 rounded-xl px-6 data-[state=open]:border-gold/30 data-[state=open]:shadow-sm transition-all duration-300"
+            >
+              <AccordionTrigger className="text-left font-medium text-foreground hover:text-gold hover:no-underline py-5">
+                {item.question}
+              </AccordionTrigger>
+              <AccordionContent className="text-muted-foreground leading-relaxed pb-5">
+                {item.answer}
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </Reveal>
+
+      <Reveal delay={0.2}>
+        <p className="text-center text-sm text-muted-foreground mt-10">
+          Still have questions?{" "}
+          <Link to="/auth" className="text-gold hover:underline font-medium">
+            Get in touch with our team
+          </Link>
+        </p>
+      </Reveal>
+    </div>
+  </section>
+);
+
 export default Pricing;
