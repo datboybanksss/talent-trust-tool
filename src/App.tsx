@@ -35,6 +35,7 @@ import EndorsementTracker from "./pages/EndorsementTracker";
 import RoyaltyTracker from "./pages/RoyaltyTracker";
 import CreativePortfolio from "./pages/CreativePortfolio";
 import NotFound from "./pages/NotFound";
+import AdminDashboard from "./pages/AdminDashboard";
 
 const queryClient = new QueryClient();
 
