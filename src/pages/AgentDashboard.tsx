@@ -517,6 +517,10 @@ const AgentDashboard = () => {
                 <SidebarTrigger className="mr-1" />
                 <h1 className="text-lg font-display font-bold text-foreground">Agent Portal</h1>
               </div>
+              <AgentNotifications
+                pendingCount={pendingCount}
+                recentActivity={MOCK_RECENT_ACTIVITY}
+              />
             </div>
           </header>
 
