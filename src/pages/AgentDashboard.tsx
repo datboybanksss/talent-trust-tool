@@ -905,6 +905,11 @@ const AgentDashboard = () => {
                             <Eye className="w-3 h-3 mr-1" /> View
                           </Button>
                         )}
+                        {inv.client_type === "athlete" && (
+                          <Button variant="outline" size="sm" className="text-primary border-primary/30 hidden sm:flex" onClick={(e) => { e.stopPropagation(); navigate(`/agent-dashboard/athlete/${inv.id}`); }}>
+                            <User className="w-3 h-3 mr-1" /> Full Profile
+                          </Button>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
