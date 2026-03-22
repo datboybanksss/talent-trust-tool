@@ -114,7 +114,7 @@ const ContractManager = () => {
 
     setUploading(true);
 
-    const payload: Record<string, unknown> = {
+    const payload = {
       user_id: user.id,
       title: form.title,
       contract_type: form.contract_type,
