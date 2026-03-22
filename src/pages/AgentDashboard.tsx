@@ -953,33 +953,6 @@ const AgentDashboard = () => {
               </CardContent>
             </Card>
 
-            {/* Quick Actions */}
-            <Card className="border-border/50">
-              <CardContent className="p-5">
-                <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-primary" />
-                  Quick Actions
-                </h3>
-                <div className="space-y-2">
-                  <Button variant="outline" className="w-full justify-start text-sm" onClick={() => setDialogOpen(true)}>
-                    <UserPlus className="w-4 h-4 mr-2 text-primary" /> Add New Client
-                  </Button>
-                  <div className="relative">
-                    <input type="file" accept=".xlsx,.xls,.csv" onChange={handleBulkFileSelect} className="hidden" id="bulk-import-input" />
-                    <label htmlFor="bulk-import-input" className="w-full">
-                      <Button variant="outline" className="w-full justify-start text-sm" asChild>
-                        <span><FileSpreadsheet className="w-4 h-4 mr-2 text-primary" /> Bulk Import Clients</span>
-                      </Button>
-                    </label>
-                  </div>
-                  <Button variant="outline" className="w-full justify-start text-sm" disabled>
-                    <Mail className="w-4 h-4 mr-2 text-primary" /> Resend All Pending
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Client Breakdown */}
             <Card className="border-border/50">
               <CardContent className="p-5">
                 <h3 className="font-semibold text-foreground mb-4">Client Breakdown</h3>
