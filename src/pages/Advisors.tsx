@@ -147,9 +147,6 @@ const AdvisorCard = ({ advisor }: { advisor: Advisor }) => (
       <a href={`tel:${advisor.cell}`} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
         <Smartphone className="w-4 h-4" /> {advisor.cell}
       </a>
-      <a href={`https://wa.me/${advisor.whatsapp.replace(/[^0-9]/g, "")}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-        <MessageCircle className="w-4 h-4" /> {advisor.whatsapp}
-      </a>
       <a href={`mailto:${advisor.email}`} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
         <Mail className="w-4 h-4" /> {advisor.email}
       </a>
