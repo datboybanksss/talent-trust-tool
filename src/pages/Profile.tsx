@@ -85,6 +85,11 @@ const Profile = () => {
         : "Overview of your assets and business health"
       }
     >
+      {/* Subscription Tier */}
+      <div className="mb-4">
+        <CurrentTierBadge tierType="client" />
+      </div>
+
       {/* Settings & Actions Row */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         {/* Client Type Switcher */}

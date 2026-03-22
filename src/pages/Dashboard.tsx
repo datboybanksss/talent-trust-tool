@@ -49,6 +49,11 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout title={greeting} subtitle={subtitle}>
+      {/* Subscription Tier */}
+      <div className="mb-4">
+        <CurrentTierBadge tierType="client" />
+      </div>
+
       {/* Client Type Banner */}
       {clientType && (
         <div className={`rounded-2xl p-4 mb-6 flex items-center gap-4 ${
