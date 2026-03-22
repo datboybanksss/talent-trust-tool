@@ -574,6 +574,9 @@ const Landing = () => {
       {/* ─── PRICING ─────────────────────────────────────── */}
       <PricingSection />
 
+      {/* ─── AGENT / MANAGER PRICING ─────────────────────── */}
+      <AgentPricingSection />
+
       {/* ─── FOMO CTA ────────────────────────────────────── */}
       <section className="py-24 px-6 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-gold/10 via-background to-gold/5" />
