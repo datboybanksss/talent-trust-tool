@@ -320,10 +320,11 @@ const SharePortal = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
+                   <TableHead>Name</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Sections</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Confidentiality</TableHead>
                   <TableHead className="w-10" />
                 </TableRow>
               </TableHeader>
