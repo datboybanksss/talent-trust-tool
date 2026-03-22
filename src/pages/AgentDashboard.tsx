@@ -18,6 +18,7 @@ import {
   Upload, X, Paperclip, Kanban, List
 } from "lucide-react";
 import DealPipeline from "@/components/dashboard/DealPipeline";
+import ClientComparison from "@/components/dashboard/ClientComparison";
 
 interface Invitation {
   id: string;
@@ -85,7 +86,7 @@ const AgentDashboard = () => {
     company_name: "Roc Nation Sports SA",
   });
   const [loading, setLoading] = useState(false);
-  const [activeView, setActiveView] = useState<"clients" | "pipeline">("clients");
+  const [activeView, setActiveView] = useState<"clients" | "pipeline" | "compare">("clients");
 
   // Form state
   const [clientName, setClientName] = useState("");
@@ -339,10 +340,19 @@ const AgentDashboard = () => {
           >
             <Kanban className="w-4 h-4 mr-1.5" /> Deal Pipeline
           </Button>
+          <Button
+            variant={activeView === "compare" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setActiveView("compare")}
+          >
+            <BarChart3 className="w-4 h-4 mr-1.5" /> Compare
+          </Button>
         </div>
 
         {activeView === "pipeline" ? (
           <DealPipeline />
+        ) : activeView === "compare" ? (
+          <ClientComparison />
         ) : (
         <>
         {/* Main Content Grid */}
