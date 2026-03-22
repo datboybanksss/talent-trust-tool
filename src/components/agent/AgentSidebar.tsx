@@ -17,6 +17,7 @@ import {
   Users,
   Kanban,
   BarChart3,
+  CalendarDays,
   UserPlus,
   FileSpreadsheet,
   Mail,
