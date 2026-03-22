@@ -293,7 +293,21 @@ const AgentDashboard = () => {
         client_email: clientEmail,
         client_phone: clientPhone || null,
         client_type: clientType,
-        pre_populated_data: { notes, documents: documentsMeta },
+        pre_populated_data: {
+          notes,
+          documents: documentsMeta,
+          profile: {
+            team_or_agency: teamOrAgency,
+            sport_or_discipline: sportOrDiscipline,
+            market_value: marketValue,
+            location,
+            nationality,
+            date_of_birth: dateOfBirth,
+            id_number: idNumber,
+            social_handle: socialHandle,
+          },
+          deals: preDeals,
+        },
       });
 
       if (error) {
