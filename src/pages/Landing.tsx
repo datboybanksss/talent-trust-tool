@@ -250,6 +250,30 @@ const Landing = () => {
         </div>
       </section>
 
+      {/* Agent & Manager CTA */}
+      <section className="py-20 px-6">
+        <div className="container max-w-4xl mx-auto text-center space-y-6">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-secondary rounded-full">
+            <Briefcase className="w-4 h-4 text-gold" />
+            <span className="text-sm font-medium text-foreground">For Agents & Managers</span>
+          </div>
+          <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground">
+            Are You an Athletes' Agent or Artists' Manager?
+          </h2>
+          <p className="text-muted-foreground max-w-xl mx-auto">
+            Create and pre-populate profiles for your clients with a designated activation link.
+            Once your client confirms, their profile goes live — with full POPIA-compliant privacy.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button variant="gold" size="lg" asChild>
+              <Link to="/agent-register">Register as Agent / Manager</Link>
+            </Button>
+            <Button variant="outline" size="lg" asChild>
+              <Link to="/agent-register">Sign In to Agent Portal</Link>
+            </Button>
+          </div>
+        </div>
+
       {/* Footer */}
       <footer className="py-12 px-6 border-t border-border/50">
         <div className="container max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
