@@ -164,6 +164,45 @@ const SharePortal = () => {
     }
   };
 
+  const openEdit = (member: SharedStaffMember) => {
+    setEditingMember(member);
+    setEditRole(member.role);
+    setEditSections([...member.sections]);
+    setEditDialogOpen(true);
+  };
+
+  const editActivePreset = ROLE_PRESETS.find((r) => r.id === editRole);
+  const editEffectiveSections = editRole === "custom" ? editSections : (editActivePreset?.sections ?? []);
+
+  const toggleEditSection = (s: PortalSection) => {
+    setEditSections((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingMember) return;
+    const preset = ROLE_PRESETS.find((r) => r.id === editRole);
+    const roleLabel = editRole === "custom" ? "Custom Role" : (preset?.label ?? "Custom Role");
+
+    const { error } = await supabase
+      .from("portal_staff_access")
+      .update({
+        role: editRole,
+        role_label: roleLabel,
+        sections: editEffectiveSections,
+      })
+      .eq("id", editingMember.id);
+
+    if (error) {
+      toast({ title: "Error", description: "Could not update staff member.", variant: "destructive" });
+      return;
+    }
+
+    toast({ title: "Updated", description: `${editingMember.name}'s role has been updated.` });
+    setEditDialogOpen(false);
+    setEditingMember(null);
+    fetchStaff();
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
