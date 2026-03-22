@@ -804,18 +804,36 @@ const PricingSection = () => {
               <h3 className="text-xl font-display font-bold text-foreground">{tier.name}</h3>
 
               <div className="mt-3 mb-1">
-                <span className="text-3xl font-display font-bold text-foreground">
-                  {tier.priceZAR === 0 ? "Free" : `R${tier.priceZAR.toLocaleString()}`}
-                </span>
-                {tier.priceZAR > 0 && (
-                  <span className="text-sm text-muted-foreground">/month</span>
+                {tier.priceZAR === 0 ? (
+                  <span className="text-3xl font-display font-bold text-foreground">Free</span>
+                ) : isAnnual ? (
+                  <>
+                    <span className="text-sm text-muted-foreground line-through mr-2">
+                      R{tier.priceZAR.toLocaleString()}
+                    </span>
+                    <span className="text-3xl font-display font-bold text-foreground">
+                      R{Math.round(tier.priceZAR * 0.8).toLocaleString()}
+                    </span>
+                    <span className="text-sm text-muted-foreground">/month</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-3xl font-display font-bold text-foreground">
+                      R{tier.priceZAR.toLocaleString()}
+                    </span>
+                    <span className="text-sm text-muted-foreground">/month</span>
+                  </>
                 )}
               </div>
               {isInternational && tier.priceUSD > 0 && (
-                <p className="text-xs text-muted-foreground mb-2">≈ ${tier.priceUSD}/month USD</p>
+                <p className="text-xs text-muted-foreground mb-1">
+                  ≈ ${isAnnual ? Math.round(tier.priceUSD * 0.8) : tier.priceUSD}/month USD
+                </p>
               )}
-              {tier.priceZAR === 0 && (
-                <p className="text-xs text-muted-foreground mb-2">No credit card required</p>
+              {isAnnual && tier.priceZAR > 0 && (
+                <p className="text-xs text-muted-foreground mb-1">
+                  Billed R{Math.round(tier.priceZAR * 0.8 * 12).toLocaleString()}/year
+                </p>
               )}
 
               <p className="text-sm text-muted-foreground mb-6 leading-relaxed">{tier.description}</p>
