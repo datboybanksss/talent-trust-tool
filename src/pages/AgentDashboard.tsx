@@ -528,7 +528,7 @@ const AgentDashboard = () => {
                     <FileSpreadsheet className="w-5 h-5 text-primary shrink-0" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-foreground">Import from Spreadsheet</p>
-                      <p className="text-[10px] text-muted-foreground">Upload .xlsx or .csv with client data to auto-fill fields</p>
+                      <p className="text-[10px] text-muted-foreground">Upload .xlsx or .csv · <button onClick={downloadTemplate} className="underline text-primary hover:text-primary/80">Download template</button></p>
                     </div>
                     <input type="file" accept=".xlsx,.xls,.csv" onChange={handleSpreadsheetImport} className="hidden" id="spreadsheet-import" />
                     <label htmlFor="spreadsheet-import">
