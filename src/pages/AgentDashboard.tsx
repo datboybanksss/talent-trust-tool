@@ -92,6 +92,10 @@ const AgentDashboard = () => {
   });
   const [loading, setLoading] = useState(false);
   const [activeView, setActiveView] = useState<"clients" | "pipeline" | "compare">("clients");
+  const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
+  const [bulkPreview, setBulkPreview] = useState<{ name: string; email: string; phone: string; type: string; sport: string; team: string; marketValue: string; valid: boolean; error?: string }[]>([]);
+  const [bulkImporting, setBulkImporting] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState(0);
 
   // Form state — basic
   const [clientName, setClientName] = useState("");
