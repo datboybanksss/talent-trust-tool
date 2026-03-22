@@ -574,6 +574,9 @@ const Landing = () => {
       {/* ─── PRICING ─────────────────────────────────────── */}
       <PricingSection />
 
+      {/* ─── AGENT / MANAGER PRICING ─────────────────────── */}
+      <AgentPricingSection />
+
       {/* ─── FOMO CTA ────────────────────────────────────── */}
       <section className="py-24 px-6 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-gold/10 via-background to-gold/5" />
@@ -825,6 +828,198 @@ const PricingSection = () => {
         <Reveal delay={0.3}>
           <p className="text-center text-xs text-muted-foreground mt-8">
             All prices in South African Rands (ZAR). Annual billing available at 20% discount. VAT inclusive.
+          </p>
+        </Reveal>
+      </div>
+    </section>
+  );
+};
+
+/* ── Agent / Manager Pricing Section ──────────────────── */
+
+const agentPricingTiers = [
+  {
+    name: "Solo Agent",
+    badge: "2 Months Free",
+    priceZAR: 799,
+    priceUSD: 43,
+    description: "For independent agents and managers building their client roster.",
+    clientLimit: "Up to 10 clients",
+    features: [
+      { text: "Client invitation & onboarding", included: true },
+      { text: "Centralised client profiles", included: true },
+      { text: "Document vault per client", included: true },
+      { text: "Contract expiry alerts", included: true },
+      { text: "Basic deal pipeline", included: true },
+      { text: "PDF executive reports", included: false },
+      { text: "Staff portal access", included: false },
+      { text: "Custom branding", included: false },
+    ],
+    highlight: false,
+    cta: "Book a Demo",
+  },
+  {
+    name: "Agency",
+    badge: "Most Popular",
+    priceZAR: 2499,
+    priceUSD: 135,
+    description: "For established agencies managing multiple high-value talents.",
+    clientLimit: "Up to 50 clients",
+    features: [
+      { text: "Everything in Solo Agent", included: true },
+      { text: "Unlimited deal pipeline", included: true },
+      { text: "PDF executive reports", included: true },
+      { text: "Client comparison dashboard", included: true },
+      { text: "Staff portal (up to 5 users)", included: true },
+      { text: "Confidentiality gate for staff", included: true },
+      { text: "Calendar & reminder sync", included: true },
+      { text: "Custom branding & white-label", included: false },
+    ],
+    highlight: true,
+    cta: "Book a Demo",
+  },
+  {
+    name: "Association / Guild",
+    badge: "Enterprise",
+    priceZAR: 7999,
+    priceUSD: 429,
+    description: "For sports federations, player unions, artist guilds, and governing bodies.",
+    clientLimit: "Unlimited members",
+    features: [
+      { text: "Everything in Agency", included: true },
+      { text: "Unlimited staff portal users", included: true },
+      { text: "Bulk member onboarding", included: true },
+      { text: "Custom branding & white-label", included: true },
+      { text: "Compliance audit trail", included: true },
+      { text: "API access & integrations", included: true },
+      { text: "Dedicated account manager", included: true },
+      { text: "Quarterly strategy reviews", included: true },
+    ],
+    highlight: false,
+    cta: "Book a Demo",
+  },
+];
+
+const AgentPricingSection = () => {
+  const [isInternational, setIsInternational] = useState(false);
+
+  useEffect(() => {
+    try {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (!tz.includes("Africa/Johannesburg") && !tz.includes("Africa/Harare")) {
+        setIsInternational(true);
+      }
+    } catch {
+      // fallback: show ZAR only
+    }
+  }, []);
+
+  return (
+    <section className="py-24 px-6 relative overflow-hidden">
+      <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-gold/5 rounded-full blur-[120px]" />
+      <div className="container max-w-6xl mx-auto relative">
+        <Reveal>
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gold/10 border border-gold/20 rounded-full mb-6">
+              <Users className="w-4 h-4 text-gold" />
+              <span className="text-sm font-medium text-gold">For Agents, Managers & Associations</span>
+            </div>
+            <h2 className="text-3xl md:text-5xl font-display font-bold text-foreground mb-4">
+              Manage Your Roster Like a<br />
+              <span className="text-gradient-gold">World-Class Operation.</span>
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
+              Every plan includes a <strong className="text-foreground">free 2-month trial</strong> — no credit card, no commitment. Pricing only kicks in after you've experienced the full platform.
+            </p>
+          </div>
+        </Reveal>
+
+        <motion.div
+          variants={stagger}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true }}
+          className="grid md:grid-cols-3 gap-6"
+        >
+          {agentPricingTiers.map((tier) => (
+            <motion.div
+              key={tier.name}
+              variants={staggerItem}
+              className={cn(
+                "relative flex flex-col rounded-2xl border p-7 transition-all duration-300",
+                tier.highlight
+                  ? "bg-card border-gold shadow-gold scale-[1.02] lg:scale-105"
+                  : "bg-card border-border/50 hover:border-gold/30"
+              )}
+            >
+              {/* Badge */}
+              <div className={cn(
+                "inline-flex self-start items-center px-3 py-1 rounded-full text-xs font-semibold mb-4",
+                tier.highlight
+                  ? "bg-gold text-foreground"
+                  : "bg-secondary text-muted-foreground"
+              )}>
+                {tier.badge}
+              </div>
+
+              <h3 className="text-xl font-display font-bold text-foreground">{tier.name}</h3>
+
+              {/* Price */}
+              <div className="mt-3 mb-1">
+                <span className="text-3xl font-display font-bold text-foreground">
+                  R{tier.priceZAR.toLocaleString()}
+                </span>
+                <span className="text-sm text-muted-foreground">/month</span>
+              </div>
+              {isInternational && (
+                <p className="text-xs text-muted-foreground mb-1">≈ ${tier.priceUSD}/month USD</p>
+              )}
+              <p className="text-xs font-semibold text-gold mb-3">First 2 months free</p>
+
+              {/* Client limit */}
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary/50 border border-border/30 mb-5">
+                <Users className="w-4 h-4 text-gold shrink-0" />
+                <span className="text-sm font-medium text-foreground">{tier.clientLimit}</span>
+              </div>
+
+              <p className="text-sm text-muted-foreground mb-6 leading-relaxed">{tier.description}</p>
+
+              {/* Features */}
+              <ul className="space-y-2.5 mb-8 flex-1">
+                {tier.features.map((f, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm">
+                    {f.included ? (
+                      <Check className="w-4 h-4 text-gold shrink-0 mt-0.5" />
+                    ) : (
+                      <X className="w-4 h-4 text-muted-foreground/40 shrink-0 mt-0.5" />
+                    )}
+                    <span className={f.included ? "text-foreground" : "text-muted-foreground/50"}>
+                      {f.text}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+
+              {/* CTA */}
+              <Button
+                variant={tier.highlight ? "hero" : "outline"}
+                size="lg"
+                asChild
+                className="w-full group"
+              >
+                <Link to="/agent-register">
+                  <Calendar className="w-4 h-4 mr-1" />
+                  {tier.cta}
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </Button>
+            </motion.div>
+          ))}
+        </motion.div>
+
+        <Reveal delay={0.3}>
+          <p className="text-center text-xs text-muted-foreground mt-8">
+            All prices in South African Rands (ZAR). Annual billing available at 20% discount. VAT inclusive. Free trial requires no payment details.
           </p>
         </Reveal>
       </div>
