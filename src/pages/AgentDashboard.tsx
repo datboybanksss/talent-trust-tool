@@ -592,31 +592,6 @@ const AgentDashboard = () => {
           </CardContent>
         </Card>
 
-        {/* View Toggle */}
-        <div className="flex items-center gap-2">
-          <Button
-            variant={activeView === "clients" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setActiveView("clients")}
-          >
-            <List className="w-4 h-4 mr-1.5" /> Clients
-          </Button>
-          <Button
-            variant={activeView === "pipeline" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setActiveView("pipeline")}
-          >
-            <Kanban className="w-4 h-4 mr-1.5" /> Deal Pipeline
-          </Button>
-          <Button
-            variant={activeView === "compare" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setActiveView("compare")}
-          >
-            <BarChart3 className="w-4 h-4 mr-1.5" /> Compare
-          </Button>
-        </div>
-
         {activeView === "pipeline" ? (
           <DealPipeline />
         ) : activeView === "compare" ? (
