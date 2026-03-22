@@ -89,7 +89,7 @@ const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, set
               {mainNavItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
-                    onClick={() => setActiveView(item.view)}
+                    onClick={() => handleNavClick(item.view)}
                     className={`hover:bg-muted/50 ${activeView === item.view ? "bg-primary/10 text-primary font-medium" : ""}`}
                   >
                     <item.icon className="mr-2 h-4 w-4" />
