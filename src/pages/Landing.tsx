@@ -902,6 +902,7 @@ const agentPricingTiers = [
 
 const AgentPricingSection = () => {
   const [isInternational, setIsInternational] = useState(false);
+  const [isAnnual, setIsAnnual] = useState(false);
 
   useEffect(() => {
     try {
@@ -931,6 +932,31 @@ const AgentPricingSection = () => {
             <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
               Every plan includes a <strong className="text-foreground">free 2-month trial</strong> — no credit card, no commitment. Pricing only kicks in after you've experienced the full platform.
             </p>
+
+            {/* Billing Toggle */}
+            <div className="flex items-center justify-center gap-3 mt-8">
+              <span className={cn("text-sm font-medium transition-colors", !isAnnual ? "text-foreground" : "text-muted-foreground")}>Monthly</span>
+              <button
+                onClick={() => setIsAnnual(!isAnnual)}
+                className={cn(
+                  "relative w-14 h-7 rounded-full transition-colors duration-300",
+                  isAnnual ? "bg-gold" : "bg-border"
+                )}
+              >
+                <span className={cn(
+                  "absolute top-0.5 left-0.5 w-6 h-6 rounded-full bg-background shadow-md transition-transform duration-300",
+                  isAnnual && "translate-x-7"
+                )} />
+              </button>
+              <span className={cn("text-sm font-medium transition-colors", isAnnual ? "text-foreground" : "text-muted-foreground")}>
+                Annual
+              </span>
+              {isAnnual && (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gold/10 text-gold border border-gold/20">
+                  Save 20%
+                </span>
+              )}
+            </div>
           </div>
         </Reveal>
 
@@ -966,13 +992,34 @@ const AgentPricingSection = () => {
 
               {/* Price */}
               <div className="mt-3 mb-1">
-                <span className="text-3xl font-display font-bold text-foreground">
-                  R{tier.priceZAR.toLocaleString()}
-                </span>
-                <span className="text-sm text-muted-foreground">/month</span>
+                {isAnnual ? (
+                  <>
+                    <span className="text-sm text-muted-foreground line-through mr-2">
+                      R{tier.priceZAR.toLocaleString()}
+                    </span>
+                    <span className="text-3xl font-display font-bold text-foreground">
+                      R{Math.round(tier.priceZAR * 0.8).toLocaleString()}
+                    </span>
+                    <span className="text-sm text-muted-foreground">/month</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-3xl font-display font-bold text-foreground">
+                      R{tier.priceZAR.toLocaleString()}
+                    </span>
+                    <span className="text-sm text-muted-foreground">/month</span>
+                  </>
+                )}
               </div>
               {isInternational && (
-                <p className="text-xs text-muted-foreground mb-1">≈ ${tier.priceUSD}/month USD</p>
+                <p className="text-xs text-muted-foreground mb-1">
+                  ≈ ${isAnnual ? Math.round(tier.priceUSD * 0.8) : tier.priceUSD}/month USD
+                </p>
+              )}
+              {isAnnual && (
+                <p className="text-xs text-muted-foreground mb-1">
+                  Billed R{Math.round(tier.priceZAR * 0.8 * 12).toLocaleString()}/year
+                </p>
               )}
               <p className="text-xs font-semibold text-gold mb-3">First 2 months free</p>
 
