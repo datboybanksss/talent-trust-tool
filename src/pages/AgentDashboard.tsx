@@ -981,7 +981,6 @@ const AgentDashboard = () => {
         </div>
         </>
         )}
-      </div>
 
       {/* Bulk Import Dialog */}
       <Dialog open={bulkDialogOpen} onOpenChange={setBulkDialogOpen}>
