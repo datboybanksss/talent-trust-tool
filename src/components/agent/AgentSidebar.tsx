@@ -17,6 +17,7 @@ import {
   Users,
   Kanban,
   BarChart3,
+  CalendarDays,
   UserPlus,
   FileSpreadsheet,
   Mail,
@@ -30,13 +31,14 @@ interface AgentSidebarProps {
   onNewClient: () => void;
   onBulkImport: () => void;
   agentProfile: { role: string; company_name: string } | null;
-  activeView: "clients" | "pipeline" | "compare";
-  setActiveView: (view: "clients" | "pipeline" | "compare") => void;
+  activeView: "clients" | "pipeline" | "compare" | "calendar";
+  setActiveView: (view: "clients" | "pipeline" | "compare" | "calendar") => void;
 }
 
 const mainNavItems = [
   { title: "Clients", icon: Users, view: "clients" as const },
   { title: "Deal Pipeline", icon: Kanban, view: "pipeline" as const },
+  { title: "Calendar", icon: CalendarDays, view: "calendar" as const },
   { title: "Compare", icon: BarChart3, view: "compare" as const },
 ];
 
@@ -46,7 +48,7 @@ const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, set
   const { signOut } = useAuth();
   const navigate = useNavigate();
 
-  const handleNavClick = (view: "clients" | "pipeline" | "compare") => {
+  const handleNavClick = (view: "clients" | "pipeline" | "compare" | "calendar") => {
     setActiveView(view);
     if (isMobile) toggleSidebar();
   };
