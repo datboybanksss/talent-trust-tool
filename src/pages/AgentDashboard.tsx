@@ -97,7 +97,7 @@ const AgentDashboard = () => {
     company_name: "Roc Nation Sports SA",
   });
   const [loading, setLoading] = useState(false);
-  const [activeView, setActiveView] = useState<"clients" | "pipeline" | "compare" | "calendar" | "templates">("clients");
+  const [activeView, setActiveView] = useState<"clients" | "pipeline" | "compare" | "calendar" | "templates" | "share">("clients");
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
   const [bulkPreview, setBulkPreview] = useState<{ name: string; email: string; phone: string; type: string; sport: string; team: string; marketValue: string; valid: boolean; error?: string }[]>([]);
   const [bulkImporting, setBulkImporting] = useState(false);
