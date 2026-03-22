@@ -366,7 +366,112 @@ const AgentDashboard = () => {
     XLSX.writeFile(wb, "LegacyBuilder_Client_Template.xlsx");
   };
 
-  const handleSignOut = async () => {
+  const downloadBulkTemplate = () => {
+    const wb = XLSX.utils.book_new();
+    const wsData = [
+      ["Name", "Email", "Phone", "Type", "Sport/Discipline", "Team/Agency", "Market Value", "Location", "Nationality"],
+      ["Siya Kolisi", "siya@example.com", "+27 81 234 5678", "athlete", "Rugby", "Springboks", "R45,000,000", "Cape Town", "South African"],
+      ["Tyla Seethal", "tyla@example.com", "+27 84 567 8901", "artist", "Recording Artist", "Epic Records", "R85,000,000", "Johannesburg", "South African"],
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    ws["!cols"] = [{ wch: 20 }, { wch: 25 }, { wch: 18 }, { wch: 10 }, { wch: 18 }, { wch: 18 }, { wch: 15 }, { wch: 15 }, { wch: 15 }];
+    XLSX.utils.book_append_sheet(wb, ws, "Clients");
+    XLSX.writeFile(wb, "LegacyBuilder_Bulk_Import_Template.xlsx");
+  };
+
+  const handleBulkFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const data = new Uint8Array(evt.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: "array" });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows: Record<string, string>[] = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+        if (rows.length === 0) {
+          toast({ title: "Empty File", description: "The spreadsheet has no data rows.", variant: "destructive" });
+          return;
+        }
+
+        const parsed = rows.map((row) => {
+          const k: Record<string, string> = {};
+          Object.keys(row).forEach((key) => { k[key.toLowerCase().trim()] = String(row[key]).trim(); });
+          const name = k["name"] || k["client name"] || k["full name"] || "";
+          const email = k["email"] || k["client email"] || "";
+          const phone = k["phone"] || k["client phone"] || "";
+          const type = (k["type"] || k["client type"] || "athlete").toLowerCase();
+          const sport = k["sport"] || k["discipline"] || k["sport/discipline"] || "";
+          const team = k["team"] || k["agency"] || k["team/agency"] || "";
+          const marketValue = k["market value"] || k["value"] || "";
+
+          let valid = true;
+          let error: string | undefined;
+          if (!name) { valid = false; error = "Missing name"; }
+          else if (!email) { valid = false; error = "Missing email"; }
+          else if (!email.includes("@")) { valid = false; error = "Invalid email"; }
+          else if (!["athlete", "artist"].includes(type)) { valid = false; error = "Type must be athlete or artist"; }
+
+          return { name, email, phone, type, sport, team, marketValue, valid, error };
+        });
+
+        setBulkPreview(parsed);
+        setBulkDialogOpen(true);
+        toast({ title: "File Loaded", description: `${parsed.length} client${parsed.length > 1 ? "s" : ""} found. Review before importing.` });
+      } catch {
+        toast({ title: "Parse Error", description: "Could not read the file. Use .xlsx or .csv format.", variant: "destructive" });
+      }
+    };
+    reader.readAsArrayBuffer(file);
+    e.target.value = "";
+  };
+
+  const handleBulkImport = async () => {
+    const validClients = bulkPreview.filter((c) => c.valid);
+    if (validClients.length === 0) return;
+    setBulkImporting(true);
+    setBulkProgress(0);
+
+    let successCount = 0;
+    for (let i = 0; i < validClients.length; i++) {
+      const c = validClients[i];
+      if (user) {
+        const { error } = await supabase.from("client_invitations").insert({
+          agent_id: user.id,
+          client_name: c.name,
+          client_email: c.email,
+          client_phone: c.phone || null,
+          client_type: c.type,
+          pre_populated_data: JSON.parse(JSON.stringify({
+            profile: { sport_or_discipline: c.sport, team_or_agency: c.team, market_value: c.marketValue },
+          })),
+        });
+        if (!error) successCount++;
+      }
+
+      // Also add to local state
+      const newInv: Invitation = {
+        id: `bulk_${Date.now()}_${i}`,
+        client_name: c.name,
+        client_email: c.email,
+        client_phone: c.phone || null,
+        client_type: c.type,
+        status: "pending",
+        invitation_token: `tok_bulk_${Date.now()}_${i}`,
+        created_at: new Date().toISOString(),
+      };
+      setInvitations((prev) => [newInv, ...prev]);
+      setBulkProgress(Math.round(((i + 1) / validClients.length) * 100));
+    }
+
+    setBulkImporting(false);
+    setBulkDialogOpen(false);
+    setBulkPreview([]);
+    toast({ title: "Bulk Import Complete", description: `${successCount} of ${validClients.length} clients imported successfully.` });
+    fetchInvitations();
+  };
+
+
     await signOut();
     navigate("/");
   };
