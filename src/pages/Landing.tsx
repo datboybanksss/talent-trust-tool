@@ -716,6 +716,7 @@ const pricingTiers = [
 
 const PricingSection = () => {
   const [isInternational, setIsInternational] = useState(false);
+  const [isAnnual, setIsAnnual] = useState(false);
 
   useEffect(() => {
     try {
