@@ -605,6 +605,8 @@ const AgentDashboard = () => {
           <ClientComparison />
         ) : activeView === "calendar" ? (
           <AgentCalendar />
+        ) : activeView === "templates" ? (
+          <AgreementTemplates />
         ) : (
         <>
         {/* Main Content Grid */}
