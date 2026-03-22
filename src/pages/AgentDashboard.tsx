@@ -28,6 +28,7 @@ import AgentSidebar from "@/components/agent/AgentSidebar";
 import AgentNotifications from "@/components/agent/AgentNotifications";
 import AgentCalendar from "@/components/agent/AgentCalendar";
 import AgreementTemplates from "@/components/agent/AgreementTemplates";
+import SharePortal from "@/components/agent/SharePortal";
 import * as XLSX from "xlsx";
 
 interface Invitation {
@@ -96,7 +97,7 @@ const AgentDashboard = () => {
     company_name: "Roc Nation Sports SA",
   });
   const [loading, setLoading] = useState(false);
-  const [activeView, setActiveView] = useState<"clients" | "pipeline" | "compare" | "calendar" | "templates">("clients");
+  const [activeView, setActiveView] = useState<"clients" | "pipeline" | "compare" | "calendar" | "templates" | "share">("clients");
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
   const [bulkPreview, setBulkPreview] = useState<{ name: string; email: string; phone: string; type: string; sport: string; team: string; marketValue: string; valid: boolean; error?: string }[]>([]);
   const [bulkImporting, setBulkImporting] = useState(false);
@@ -607,6 +608,8 @@ const AgentDashboard = () => {
           <AgentCalendar />
         ) : activeView === "templates" ? (
           <AgreementTemplates />
+        ) : activeView === "share" ? (
+          <SharePortal />
         ) : (
         <>
         {/* Main Content Grid */}
