@@ -14,7 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useToast } from "@/hooks/use-toast";
 import {
   UserPlus, Trash2, Shield, Eye, Users, Kanban, CalendarDays,
-  FileText, Mail, Copy, CheckCircle2, Clock, Settings2
+  FileText, Mail, Copy, CheckCircle2, Clock, Settings2, Pencil
 } from "lucide-react";
 
 type PortalSection = "clients" | "pipeline" | "calendar" | "compare" | "templates";
