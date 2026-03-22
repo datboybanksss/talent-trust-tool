@@ -1072,7 +1072,10 @@ const AgentDashboard = () => {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+          </div>
+        </div>
+      </div>
+    </SidebarProvider>
   );
 };
 
