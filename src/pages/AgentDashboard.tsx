@@ -421,7 +421,11 @@ const AgentDashboard = () => {
                 const date = new Date(inv.created_at).toLocaleDateString("en-ZA", { day: "numeric", month: "short", year: "numeric" });
 
                 return (
-                  <Card key={inv.id} className="hover:border-primary/30 transition-all duration-200 hover:shadow-sm">
+                  <Card
+                    key={inv.id}
+                    className="hover:border-primary/30 transition-all duration-200 hover:shadow-sm cursor-pointer"
+                    onClick={() => navigate(`/agent-dashboard/client/${inv.id}`)}
+                  >
                     <CardContent className="p-4 flex items-center justify-between gap-4">
                       <div className="flex items-center gap-4 min-w-0">
                         <div className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 font-semibold text-sm ${
@@ -461,13 +465,13 @@ const AgentDashboard = () => {
                           )}
                         </Badge>
                         {!isActivated && (
-                          <Button variant="outline" size="sm" onClick={() => copyLink(inv.invitation_token)} className="hidden sm:flex">
+                          <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); copyLink(inv.invitation_token); }} className="hidden sm:flex">
                             <Copy className="w-3 h-3 mr-1" /> Copy Link
                           </Button>
                         )}
                         {isActivated && (
-                          <Button variant="ghost" size="sm" className="text-muted-foreground hidden sm:flex" disabled>
-                            <Eye className="w-3 h-3 mr-1" /> No Access
+                          <Button variant="ghost" size="sm" className="text-primary hidden sm:flex" onClick={(e) => { e.stopPropagation(); navigate(`/agent-dashboard/client/${inv.id}`); }}>
+                            <Eye className="w-3 h-3 mr-1" /> View
                           </Button>
                         )}
                       </div>
