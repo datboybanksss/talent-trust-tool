@@ -9,6 +9,7 @@ import Landing from "./pages/Landing";
 import AgentRegister from "./pages/AgentRegister";
 import AgentDashboard from "./pages/AgentDashboard";
 import AgentClientDetail from "./pages/AgentClientDetail";
+import AgentAthleteProfile from "./pages/AgentAthleteProfile";
 import ActivateProfile from "./pages/ActivateProfile";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -50,6 +51,7 @@ const App = () => (
             <Route path="/agent-register" element={<AgentRegister />} />
             <Route path="/agent-dashboard" element={<ProtectedRoute><AgentDashboard /></ProtectedRoute>} />
             <Route path="/agent-dashboard/client/:clientId" element={<ProtectedRoute><AgentClientDetail /></ProtectedRoute>} />
+            <Route path="/agent-dashboard/athlete/:athleteId" element={<ProtectedRoute><AgentAthleteProfile /></ProtectedRoute>} />
             <Route path="/activate/:token" element={<ActivateProfile />} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/dashboard/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />

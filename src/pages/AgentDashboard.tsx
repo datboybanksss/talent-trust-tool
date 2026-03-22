@@ -20,7 +20,7 @@ import {
   Briefcase, UserPlus, Copy, CheckCircle2, Clock, Mail, LogOut, Shield,
   Users, TrendingUp, FileText, Calendar, ArrowUpRight, BarChart3, Eye,
   Upload, X, Paperclip, Kanban, List, Plus, Trash2, FileSpreadsheet, AlertCircle,
-  Handshake, Download, Menu
+  Handshake, Download, Menu, User
 } from "lucide-react";
 import DealPipeline from "@/components/dashboard/DealPipeline";
 import ClientComparison from "@/components/dashboard/ClientComparison";
@@ -903,6 +903,11 @@ const AgentDashboard = () => {
                         {isActivated && (
                           <Button variant="ghost" size="sm" className="text-primary hidden sm:flex" onClick={(e) => { e.stopPropagation(); navigate(`/agent-dashboard/client/${inv.id}`); }}>
                             <Eye className="w-3 h-3 mr-1" /> View
+                          </Button>
+                        )}
+                        {inv.client_type === "athlete" && (
+                          <Button variant="outline" size="sm" className="text-primary border-primary/30 hidden sm:flex" onClick={(e) => { e.stopPropagation(); navigate(`/agent-dashboard/athlete/${inv.id}`); }}>
+                            <User className="w-3 h-3 mr-1" /> Full Profile
                           </Button>
                         )}
                       </div>
