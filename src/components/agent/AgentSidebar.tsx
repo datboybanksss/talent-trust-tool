@@ -43,6 +43,7 @@ const mainNavItems = [
   { title: "Calendar", icon: CalendarDays, view: "calendar" as const },
   { title: "Compare", icon: BarChart3, view: "compare" as const },
   { title: "Agreement Templates", icon: FileText, view: "templates" as const },
+  { title: "Share Portal", icon: Share2, view: "share" as const },
 ];
 
 const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, setActiveView }: AgentSidebarProps) => {
