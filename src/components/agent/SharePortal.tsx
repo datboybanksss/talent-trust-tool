@@ -70,6 +70,7 @@ interface SharedStaffMember {
   sections: PortalSection[];
   status: "pending" | "active";
   invitedAt: string;
+  confidentialityAcceptedAt: string | null;
 }
 
 const MOCK_STAFF: SharedStaffMember[] = [
