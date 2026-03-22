@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import Sidebar from "./Sidebar";
 import ChatBot from "./ChatBot";
+import AnnouncementBanner from "./AnnouncementBanner";
 import { Bell, Search } from "lucide-react";
 
 interface DashboardLayoutProps {
@@ -43,6 +44,7 @@ const DashboardLayout = ({ children, title, subtitle }: DashboardLayoutProps) =>
         </header>
         
         <div className="p-8">
+          <AnnouncementBanner />
           {children}
         </div>
       </main>
