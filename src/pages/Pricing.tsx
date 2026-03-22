@@ -260,6 +260,9 @@ const Pricing = () => {
       {/* Pricing Content */}
       {activeTab === "users" ? <UserPricingSection /> : <AgentPricingSection />}
 
+      {/* FAQ */}
+      <FAQSection />
+
       {/* CTA */}
       <section className="py-20 px-6 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-gold/10 via-background to-gold/5" />
