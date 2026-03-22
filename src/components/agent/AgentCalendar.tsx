@@ -137,6 +137,20 @@ const AgentCalendar = () => {
     ? eventsByDate.get(format(selectedDate, "yyyy-MM-dd")) || []
     : [];
 
+  // Convert CalendarEvent to CalendarEventData for export
+  const toExportData = (ev: CalendarEvent): CalendarEventData => ({
+    title: ev.title,
+    description: `Client: ${ev.client}${ev.meta ? ` | ${ev.meta}` : ""}`,
+    startDate: ev.date,
+    allDay: true,
+  });
+
+  // Export all events as .ics
+  const handleExportAll = () => {
+    const exportEvents = MOCK_EVENTS.map(toExportData);
+    downloadICSFile(exportEvents, "legacybuilder-agent-calendar.ics");
+  };
+
   // Upcoming events (next 14 days from today)
   const upcomingEvents = useMemo(() => {
     const today = new Date();
