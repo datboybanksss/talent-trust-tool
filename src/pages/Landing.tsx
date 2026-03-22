@@ -630,6 +630,208 @@ const Landing = () => {
   );
 };
 
+/* ── Pricing Section ──────────────────────────────────── */
+
+const pricingTiers = [
+  {
+    name: "Starter",
+    badge: "Free Forever",
+    priceZAR: 0,
+    priceUSD: 0,
+    description: "Get started with essential tools to organise your career.",
+    features: [
+      { text: "Life File (basic)", included: true },
+      { text: "3 document uploads", included: true },
+      { text: "1 emergency contact", included: true },
+      { text: "Community resources", included: true },
+      { text: "Contract Manager", included: false },
+      { text: "Investment Tracker", included: false },
+      { text: "Smart Reminders", included: false },
+      { text: "Secure Sharing", included: false },
+    ],
+    highlight: false,
+    cta: "Start Free",
+  },
+  {
+    name: "Pro",
+    badge: "Most Popular",
+    priceZAR: 499,
+    priceUSD: 27,
+    description: "Full access for athletes and artists serious about their legacy.",
+    features: [
+      { text: "Everything in Starter", included: true },
+      { text: "Unlimited documents", included: true },
+      { text: "Contract Manager", included: true },
+      { text: "Smart Reminders & Alerts", included: true },
+      { text: "Budget & Cash Flow", included: true },
+      { text: "Endorsement Tracker", included: true },
+      { text: "Secure Sharing (3 people)", included: true },
+      { text: "Priority Support", included: false },
+    ],
+    highlight: true,
+    cta: "Book a Demo",
+  },
+  {
+    name: "Elite",
+    badge: "Best Value",
+    priceZAR: 1499,
+    priceUSD: 79,
+    description: "For high-net-worth talent who need comprehensive oversight.",
+    features: [
+      { text: "Everything in Pro", included: true },
+      { text: "Investment Tracker", included: true },
+      { text: "Royalty & Revenue Tracking", included: true },
+      { text: "Unlimited Secure Sharing", included: true },
+      { text: "Creative Portfolio", included: true },
+      { text: "PDF Executive Reports", included: true },
+      { text: "Priority Support", included: true },
+      { text: "Dedicated Account Manager", included: false },
+    ],
+    highlight: false,
+    cta: "Book a Demo",
+  },
+  {
+    name: "Legacy",
+    badge: "White Glove",
+    priceZAR: 4999,
+    priceUSD: 269,
+    description: "Full concierge service with dedicated advisory and compliance teams.",
+    features: [
+      { text: "Everything in Elite", included: true },
+      { text: "Dedicated Account Manager", included: true },
+      { text: "Quarterly strategy reviews", included: true },
+      { text: "Trust & estate advisory", included: true },
+      { text: "Offshore structuring support", included: true },
+      { text: "Agent portal access", included: true },
+      { text: "Custom compliance reports", included: true },
+      { text: "VIP onboarding concierge", included: true },
+    ],
+    highlight: false,
+    cta: "Book a Demo",
+  },
+];
+
+const PricingSection = () => {
+  const [isInternational, setIsInternational] = useState(false);
+
+  useEffect(() => {
+    try {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (!tz.includes("Africa/Johannesburg") && !tz.includes("Africa/Harare")) {
+        setIsInternational(true);
+      }
+    } catch {
+      // fallback: show ZAR only
+    }
+  }, []);
+
+  return (
+    <section className="py-24 px-6 bg-secondary/30 relative overflow-hidden">
+      <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-gold/5 rounded-full blur-[120px]" />
+      <div className="container max-w-7xl mx-auto relative">
+        <Reveal>
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gold/10 border border-gold/20 rounded-full mb-6">
+              <Zap className="w-4 h-4 text-gold" />
+              <span className="text-sm font-medium text-gold">Simple, Transparent Pricing</span>
+            </div>
+            <h2 className="text-3xl md:text-5xl font-display font-bold text-foreground mb-4">
+              Choose the Plan That Fits<br />
+              <span className="text-gradient-gold">Your Career Stage.</span>
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
+              Start free, upgrade when you're ready. Every plan includes a personal demo with our team.
+            </p>
+          </div>
+        </Reveal>
+
+        <motion.div
+          variants={stagger}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true }}
+          className="grid md:grid-cols-2 lg:grid-cols-4 gap-5"
+        >
+          {pricingTiers.map((tier) => (
+            <motion.div
+              key={tier.name}
+              variants={staggerItem}
+              className={cn(
+                "relative flex flex-col rounded-2xl border p-6 transition-all duration-300",
+                tier.highlight
+                  ? "bg-card border-gold shadow-gold scale-[1.02] lg:scale-105"
+                  : "bg-card border-border/50 hover:border-gold/30"
+              )}
+            >
+              <div className={cn(
+                "inline-flex self-start items-center px-3 py-1 rounded-full text-xs font-semibold mb-4",
+                tier.highlight
+                  ? "bg-gold text-foreground"
+                  : "bg-secondary text-muted-foreground"
+              )}>
+                {tier.badge}
+              </div>
+
+              <h3 className="text-xl font-display font-bold text-foreground">{tier.name}</h3>
+
+              <div className="mt-3 mb-1">
+                <span className="text-3xl font-display font-bold text-foreground">
+                  {tier.priceZAR === 0 ? "Free" : `R${tier.priceZAR.toLocaleString()}`}
+                </span>
+                {tier.priceZAR > 0 && (
+                  <span className="text-sm text-muted-foreground">/month</span>
+                )}
+              </div>
+              {isInternational && tier.priceUSD > 0 && (
+                <p className="text-xs text-muted-foreground mb-2">≈ ${tier.priceUSD}/month USD</p>
+              )}
+              {tier.priceZAR === 0 && (
+                <p className="text-xs text-muted-foreground mb-2">No credit card required</p>
+              )}
+
+              <p className="text-sm text-muted-foreground mb-6 leading-relaxed">{tier.description}</p>
+
+              <ul className="space-y-2.5 mb-8 flex-1">
+                {tier.features.map((f, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm">
+                    {f.included ? (
+                      <Check className="w-4 h-4 text-gold shrink-0 mt-0.5" />
+                    ) : (
+                      <X className="w-4 h-4 text-muted-foreground/40 shrink-0 mt-0.5" />
+                    )}
+                    <span className={f.included ? "text-foreground" : "text-muted-foreground/50"}>
+                      {f.text}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+
+              <Button
+                variant={tier.highlight ? "hero" : tier.priceZAR === 0 ? "gold" : "outline"}
+                size="lg"
+                asChild
+                className="w-full group"
+              >
+                <Link to="/auth">
+                  <Calendar className="w-4 h-4 mr-1" />
+                  {tier.cta}
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </Button>
+            </motion.div>
+          ))}
+        </motion.div>
+
+        <Reveal delay={0.3}>
+          <p className="text-center text-xs text-muted-foreground mt-8">
+            All prices in South African Rands (ZAR). Annual billing available at 20% discount. VAT inclusive.
+          </p>
+        </Reveal>
+      </div>
+    </section>
+  );
+};
+
 /* ── Sub-components ───────────────────────────────────── */
 
 const ProblemCard = ({ emoji, stat, description }: { emoji: string; stat: string; description: string }) => (
