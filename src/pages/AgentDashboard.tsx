@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,14 +11,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import {
   Briefcase, UserPlus, Copy, CheckCircle2, Clock, Mail, LogOut, Shield,
   Users, TrendingUp, FileText, Calendar, ArrowUpRight, BarChart3, Eye,
-  Upload, X, Paperclip, Kanban, List
+  Upload, X, Paperclip, Kanban, List, Plus, Trash2, FileSpreadsheet, AlertCircle,
+  Handshake
 } from "lucide-react";
 import DealPipeline from "@/components/dashboard/DealPipeline";
 import ClientComparison from "@/components/dashboard/ClientComparison";
+import * as XLSX from "xlsx";
 
 interface Invitation {
   id: string;
@@ -88,7 +93,7 @@ const AgentDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [activeView, setActiveView] = useState<"clients" | "pipeline" | "compare">("clients");
 
-  // Form state
+  // Form state — basic
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
   const [clientPhone, setClientPhone] = useState("");
@@ -96,6 +101,32 @@ const AgentDashboard = () => {
   const [notes, setNotes] = useState("");
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+
+  // Form state — extended profile
+  const [teamOrAgency, setTeamOrAgency] = useState("");
+  const [sportOrDiscipline, setSportOrDiscipline] = useState("");
+  const [marketValue, setMarketValue] = useState("");
+  const [location, setLocation] = useState("");
+  const [nationality, setNationality] = useState("South African");
+  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [idNumber, setIdNumber] = useState("");
+  const [socialHandle, setSocialHandle] = useState("");
+
+  // Form state — deals
+  interface PreDeal {
+    brand: string;
+    type: string;
+    value: string;
+    startDate: string;
+    endDate: string;
+    status: string;
+  }
+  const [preDeals, setPreDeals] = useState<PreDeal[]>([]);
+
+  // Form state — spreadsheet import
+  const [importedData, setImportedData] = useState<Record<string, string> | null>(null);
+  const [importErrors, setImportErrors] = useState<string[]>([]);
+  const [formTab, setFormTab] = useState("basic");
 
   useEffect(() => {
     if (!user) {
@@ -127,9 +158,98 @@ const AgentDashboard = () => {
     if (data && data.length > 0) setInvitations(data);
   };
 
+  const handleSpreadsheetImport = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const data = new Uint8Array(evt.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: "array" });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows: Record<string, string>[] = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+        if (rows.length === 0) {
+          setImportErrors(["Spreadsheet is empty."]);
+          return;
+        }
+        const row = rows[0]; // first row = client data
+        const keyMap: Record<string, string> = {};
+        Object.keys(row).forEach((k) => { keyMap[k.toLowerCase().trim()] = row[k]; });
+
+        // Auto-map fields
+        if (keyMap["name"] || keyMap["client name"] || keyMap["full name"]) setClientName(keyMap["name"] || keyMap["client name"] || keyMap["full name"]);
+        if (keyMap["email"] || keyMap["client email"]) setClientEmail(keyMap["email"] || keyMap["client email"]);
+        if (keyMap["phone"] || keyMap["client phone"]) setClientPhone(keyMap["phone"] || keyMap["client phone"]);
+        if (keyMap["type"] || keyMap["client type"]) setClientType((keyMap["type"] || keyMap["client type"]).toLowerCase());
+        if (keyMap["team"] || keyMap["agency"]) setTeamOrAgency(keyMap["team"] || keyMap["agency"]);
+        if (keyMap["sport"] || keyMap["discipline"]) setSportOrDiscipline(keyMap["sport"] || keyMap["discipline"]);
+        if (keyMap["market value"] || keyMap["value"]) setMarketValue(keyMap["market value"] || keyMap["value"]);
+        if (keyMap["location"] || keyMap["city"]) setLocation(keyMap["location"] || keyMap["city"]);
+        if (keyMap["nationality"]) setNationality(keyMap["nationality"]);
+        if (keyMap["date of birth"] || keyMap["dob"]) setDateOfBirth(keyMap["date of birth"] || keyMap["dob"]);
+        if (keyMap["id number"] || keyMap["id"]) setIdNumber(keyMap["id number"] || keyMap["id"]);
+        if (keyMap["social"] || keyMap["social handle"] || keyMap["instagram"]) setSocialHandle(keyMap["social"] || keyMap["social handle"] || keyMap["instagram"]);
+        if (keyMap["notes"]) setNotes(keyMap["notes"]);
+
+        // Import deals if multiple rows
+        if (rows.length > 1) {
+          const dealKeys = Object.keys(rows[1]).map((k) => k.toLowerCase().trim());
+          const hasDealCols = dealKeys.some((k) => ["brand", "deal type", "deal value"].includes(k));
+          if (hasDealCols) {
+            const deals: PreDeal[] = rows.slice(1).filter((r) => {
+              const dk: Record<string, string> = {};
+              Object.keys(r).forEach((k) => { dk[k.toLowerCase().trim()] = r[k]; });
+              return dk["brand"];
+            }).map((r) => {
+              const dk: Record<string, string> = {};
+              Object.keys(r).forEach((k) => { dk[k.toLowerCase().trim()] = r[k]; });
+              return {
+                brand: dk["brand"] || "",
+                type: dk["deal type"] || dk["type"] || "Endorsement",
+                value: dk["deal value"] || dk["value"] || "",
+                startDate: dk["start date"] || dk["start"] || "",
+                endDate: dk["end date"] || dk["end"] || "",
+                status: dk["status"] || "active",
+              };
+            });
+            if (deals.length > 0) setPreDeals(deals);
+          }
+        }
+
+        setImportedData(keyMap);
+        setImportErrors([]);
+        toast({ title: "Import Successful", description: `Loaded client data from ${file.name}.` });
+      } catch {
+        setImportErrors(["Could not parse the file. Please use .xlsx or .csv format."]);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+    e.target.value = "";
+  }, [toast]);
+
+  const addDeal = () => {
+    setPreDeals((prev) => [...prev, { brand: "", type: "Endorsement", value: "", startDate: "", endDate: "", status: "active" }]);
+  };
+
+  const updateDeal = (index: number, field: keyof PreDeal, value: string) => {
+    setPreDeals((prev) => prev.map((d, i) => i === index ? { ...d, [field]: value } : d));
+  };
+
+  const removeDeal = (index: number) => {
+    setPreDeals((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const resetForm = () => {
+    setClientName(""); setClientEmail(""); setClientPhone(""); setClientType(""); setNotes("");
+    setUploadedFiles([]); setTeamOrAgency(""); setSportOrDiscipline(""); setMarketValue("");
+    setLocation(""); setNationality("South African"); setDateOfBirth(""); setIdNumber("");
+    setSocialHandle(""); setPreDeals([]); setImportedData(null); setImportErrors([]);
+    setFormTab("basic");
+  };
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    const maxSize = 20 * 1024 * 1024; // 20MB
+    const maxSize = 20 * 1024 * 1024;
     const validFiles = files.filter(f => f.size <= maxSize);
     if (validFiles.length < files.length) {
       toast({ title: "File too large", description: "Files must be under 20MB each.", variant: "destructive" });
@@ -174,7 +294,21 @@ const AgentDashboard = () => {
         client_email: clientEmail,
         client_phone: clientPhone || null,
         client_type: clientType,
-        pre_populated_data: { notes, documents: documentsMeta },
+        pre_populated_data: JSON.parse(JSON.stringify({
+          notes,
+          documents: documentsMeta,
+          profile: {
+            team_or_agency: teamOrAgency,
+            sport_or_discipline: sportOrDiscipline,
+            market_value: marketValue,
+            location,
+            nationality,
+            date_of_birth: dateOfBirth,
+            id_number: idNumber,
+            social_handle: socialHandle,
+          },
+          deals: preDeals,
+        })),
       });
 
       if (error) {
@@ -202,8 +336,7 @@ const AgentDashboard = () => {
       title: "Invitation Created",
       description: `Activation link ready for ${clientName}${docCount > 0 ? ` with ${docCount} document${docCount > 1 ? "s" : ""}` : ""}.`,
     });
-    setClientName(""); setClientEmail(""); setClientPhone(""); setClientType(""); setNotes("");
-    setUploadedFiles([]);
+    resetForm();
     setDialogOpen(false);
     fetchInvitations();
   };
@@ -212,6 +345,21 @@ const AgentDashboard = () => {
     const url = `${window.location.origin}/activate/${token}`;
     navigator.clipboard.writeText(url);
     toast({ title: "Link Copied", description: "Activation link copied to clipboard." });
+  };
+
+  const downloadTemplate = () => {
+    const wb = XLSX.utils.book_new();
+    const wsData = [
+      ["Name", "Email", "Phone", "Type", "Sport", "Team", "Market Value", "Location", "Nationality", "Date of Birth", "ID Number", "Social", "Notes"],
+      ["John Doe", "john@example.com", "+27 81 000 0000", "athlete", "Soccer", "Orlando Pirates", "R10,000,000", "Johannesburg, SA", "South African", "1995-06-15", "9506155000000", "@johndoe", "Sample client"],
+      ["", "", "", "", "", "", "", "", "", "", "", "", ""],
+      ["Brand", "Deal Type", "Deal Value", "Start Date", "End Date", "Status", "", "", "", "", "", "", ""],
+      ["Nike", "Endorsement", "R2,000,000/yr", "2025-01-01", "2026-12-31", "active", "", "", "", "", "", "", ""],
+      ["Adidas", "Sponsorship", "R1,500,000", "2025-06-01", "2026-05-31", "negotiating", "", "", "", "", "", "", ""],
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    XLSX.utils.book_append_sheet(wb, ws, "Client Data");
+    XLSX.writeFile(wb, "LegacyBuilder_Client_Template.xlsx");
   };
 
   const handleSignOut = async () => {
@@ -367,81 +515,227 @@ const AgentDashboard = () => {
                     <UserPlus className="w-4 h-4 mr-2" /> New Client
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-lg">
+                <DialogContent className="max-w-2xl max-h-[90vh]">
                   <DialogHeader>
                     <DialogTitle>Create Client Profile</DialogTitle>
                     <DialogDescription>
-                      Pre-populate your client's profile. They will receive an activation link to claim it.
+                      Pre-populate your client's profile with detailed information, deals, and documents. Import from a spreadsheet or fill in manually.
                     </DialogDescription>
                   </DialogHeader>
-                  <div className="space-y-4">
-                    <div>
-                      <Label>Client Name *</Label>
-                      <Input value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Full name" />
-                    </div>
-                    <div>
-                      <Label>Client Email *</Label>
-                      <Input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="client@email.com" />
-                    </div>
-                    <div>
-                      <Label>Client Phone</Label>
-                      <Input value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} placeholder="+27..." />
-                    </div>
-                    <div>
-                      <Label>Client Type *</Label>
-                      <Select value={clientType || "athlete"} onValueChange={setClientType}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="athlete">Athlete</SelectItem>
-                          <SelectItem value="artist">Artist</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label>Notes (visible to client)</Label>
-                      <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Pre-populated notes..." rows={3} />
-                    </div>
 
-                    {/* Document Upload */}
-                    <div>
-                      <Label>Documents (contracts, compliance)</Label>
-                      <div className="mt-1.5 border border-dashed border-border rounded-lg p-4 text-center">
-                        <input
-                          type="file"
-                          multiple
-                          accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                          onChange={handleFileSelect}
-                          className="hidden"
-                          id="agent-doc-upload"
-                        />
-                        <label htmlFor="agent-doc-upload" className="cursor-pointer flex flex-col items-center gap-2">
-                          <Upload className="w-6 h-6 text-muted-foreground" />
-                          <span className="text-sm text-muted-foreground">
-                            Click to upload or drag files here
-                          </span>
-                          <span className="text-xs text-muted-foreground">PDF, DOC, JPG, PNG — max 20MB each</span>
-                        </label>
+                  {/* Spreadsheet Import Banner */}
+                  <div className="border border-dashed border-primary/40 bg-primary/5 rounded-lg p-3 flex items-center gap-3">
+                    <FileSpreadsheet className="w-5 h-5 text-primary shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground">Import from Spreadsheet</p>
+                      <p className="text-[10px] text-muted-foreground">Upload .xlsx or .csv · <button onClick={downloadTemplate} className="underline text-primary hover:text-primary/80">Download template</button></p>
+                    </div>
+                    <input type="file" accept=".xlsx,.xls,.csv" onChange={handleSpreadsheetImport} className="hidden" id="spreadsheet-import" />
+                    <label htmlFor="spreadsheet-import">
+                      <Button variant="outline" size="sm" asChild><span><Upload className="w-3.5 h-3.5 mr-1" /> Import</span></Button>
+                    </label>
+                  </div>
+                  {importErrors.length > 0 && (
+                    <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 rounded-lg px-3 py-2">
+                      <AlertCircle className="w-4 h-4 shrink-0" /> {importErrors[0]}
+                    </div>
+                  )}
+                  {importedData && (
+                    <div className="flex items-center gap-2 text-sm text-green-700 bg-green-500/10 rounded-lg px-3 py-2">
+                      <CheckCircle2 className="w-4 h-4 shrink-0" /> Spreadsheet data imported — review and adjust below.
+                    </div>
+                  )}
+
+                  <ScrollArea className="max-h-[55vh] pr-4">
+                  <Tabs value={formTab} onValueChange={setFormTab} className="space-y-4">
+                    <TabsList className="grid w-full grid-cols-4">
+                      <TabsTrigger value="basic" className="text-xs">Basic Info</TabsTrigger>
+                      <TabsTrigger value="profile" className="text-xs">Profile</TabsTrigger>
+                      <TabsTrigger value="deals" className="text-xs">Deals ({preDeals.length})</TabsTrigger>
+                      <TabsTrigger value="docs" className="text-xs">Documents</TabsTrigger>
+                    </TabsList>
+
+                    {/* Basic Info Tab */}
+                    <TabsContent value="basic" className="space-y-3">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-xs">Client Name *</Label>
+                          <Input value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Full name" />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Client Email *</Label>
+                          <Input type="email" value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} placeholder="client@email.com" />
+                        </div>
                       </div>
-                      {uploadedFiles.length > 0 && (
-                        <div className="mt-2 space-y-1.5">
-                          {uploadedFiles.map((file, idx) => (
-                            <div key={idx} className="flex items-center gap-2 bg-secondary/50 rounded-lg px-3 py-2 text-sm">
-                              <Paperclip className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                              <span className="truncate text-foreground flex-1">{file.name}</span>
-                              <span className="text-xs text-muted-foreground shrink-0">
-                                {(file.size / 1024).toFixed(0)}KB
-                              </span>
-                              <button onClick={() => removeFile(idx)} className="shrink-0 hover:text-destructive transition-colors">
-                                <X className="w-3.5 h-3.5" />
-                              </button>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-xs">Client Phone</Label>
+                          <Input value={clientPhone} onChange={(e) => setClientPhone(e.target.value)} placeholder="+27..." />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Client Type *</Label>
+                          <Select value={clientType || "athlete"} onValueChange={setClientType}>
+                            <SelectTrigger><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="athlete">Athlete</SelectItem>
+                              <SelectItem value="artist">Artist</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="text-xs">Notes (visible to client)</Label>
+                        <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Pre-populated notes..." rows={2} />
+                      </div>
+                    </TabsContent>
+
+                    {/* Profile Tab */}
+                    <TabsContent value="profile" className="space-y-3">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-xs">{clientType === "artist" ? "Discipline" : "Sport"}</Label>
+                          <Input value={sportOrDiscipline} onChange={(e) => setSportOrDiscipline(e.target.value)} placeholder={clientType === "artist" ? "e.g. Recording Artist" : "e.g. Rugby"} />
+                        </div>
+                        <div>
+                          <Label className="text-xs">{clientType === "artist" ? "Agency / Label" : "Team / Club"}</Label>
+                          <Input value={teamOrAgency} onChange={(e) => setTeamOrAgency(e.target.value)} placeholder={clientType === "artist" ? "e.g. Epic Records" : "e.g. Springboks"} />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-xs">Market Value (estimated)</Label>
+                          <Input value={marketValue} onChange={(e) => setMarketValue(e.target.value)} placeholder="e.g. R45,000,000" />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Location</Label>
+                          <Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="e.g. Cape Town, SA" />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-xs">Nationality</Label>
+                          <Input value={nationality} onChange={(e) => setNationality(e.target.value)} placeholder="e.g. South African" />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Date of Birth</Label>
+                          <Input type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-xs">ID / Passport Number</Label>
+                          <Input value={idNumber} onChange={(e) => setIdNumber(e.target.value)} placeholder="National ID or passport" />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Primary Social Handle</Label>
+                          <Input value={socialHandle} onChange={(e) => setSocialHandle(e.target.value)} placeholder="@handle" />
+                        </div>
+                      </div>
+                    </TabsContent>
+
+                    {/* Deals Tab */}
+                    <TabsContent value="deals" className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs text-muted-foreground">Add existing contracts, endorsements, or partnerships.</p>
+                        <Button variant="outline" size="sm" onClick={addDeal}>
+                          <Plus className="w-3.5 h-3.5 mr-1" /> Add Deal
+                        </Button>
+                      </div>
+                      {preDeals.length === 0 ? (
+                        <div className="py-6 text-center border border-dashed border-border rounded-lg">
+                          <Handshake className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
+                          <p className="text-sm text-muted-foreground">No deals added yet</p>
+                          <Button variant="ghost" size="sm" className="mt-2" onClick={addDeal}>
+                            <Plus className="w-3.5 h-3.5 mr-1" /> Add First Deal
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {preDeals.map((deal, idx) => (
+                            <div key={idx} className="p-3 rounded-lg border border-border/50 bg-secondary/20 space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-medium text-muted-foreground">Deal {idx + 1}</span>
+                                <button onClick={() => removeDeal(idx)} className="text-muted-foreground hover:text-destructive transition-colors">
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                              <div className="grid grid-cols-2 gap-2">
+                                <Input placeholder="Brand / Partner" value={deal.brand} onChange={(e) => updateDeal(idx, "brand", e.target.value)} className="h-8 text-xs" />
+                                <Select value={deal.type} onValueChange={(v) => updateDeal(idx, "type", v)}>
+                                  <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="Endorsement">Endorsement</SelectItem>
+                                    <SelectItem value="Player Contract">Player Contract</SelectItem>
+                                    <SelectItem value="Recording Contract">Recording Contract</SelectItem>
+                                    <SelectItem value="Publishing">Publishing</SelectItem>
+                                    <SelectItem value="Brand Ambassador">Brand Ambassador</SelectItem>
+                                    <SelectItem value="Image Rights">Image Rights</SelectItem>
+                                    <SelectItem value="Sponsorship">Sponsorship</SelectItem>
+                                    <SelectItem value="Other">Other</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div className="grid grid-cols-3 gap-2">
+                                <Input placeholder="Value (e.g. R5M/yr)" value={deal.value} onChange={(e) => updateDeal(idx, "value", e.target.value)} className="h-8 text-xs" />
+                                <Input type="date" placeholder="Start" value={deal.startDate} onChange={(e) => updateDeal(idx, "startDate", e.target.value)} className="h-8 text-xs" />
+                                <Input type="date" placeholder="End" value={deal.endDate} onChange={(e) => updateDeal(idx, "endDate", e.target.value)} className="h-8 text-xs" />
+                              </div>
+                              <Select value={deal.status} onValueChange={(v) => updateDeal(idx, "status", v)}>
+                                <SelectTrigger className="h-8 text-xs w-36"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="active">Active</SelectItem>
+                                  <SelectItem value="negotiating">Negotiating</SelectItem>
+                                  <SelectItem value="expired">Expired</SelectItem>
+                                </SelectContent>
+                              </Select>
                             </div>
                           ))}
                         </div>
                       )}
-                    </div>
+                    </TabsContent>
 
+                    {/* Documents Tab */}
+                    <TabsContent value="docs" className="space-y-3">
+                      <div>
+                        <Label className="text-xs">Upload Documents (contracts, compliance, ID)</Label>
+                        <div className="mt-1.5 border border-dashed border-border rounded-lg p-4 text-center">
+                          <input type="file" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onChange={handleFileSelect} className="hidden" id="agent-doc-upload" />
+                          <label htmlFor="agent-doc-upload" className="cursor-pointer flex flex-col items-center gap-2">
+                            <Upload className="w-6 h-6 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">Click to upload or drag files here</span>
+                            <span className="text-xs text-muted-foreground">PDF, DOC, JPG, PNG — max 20MB each</span>
+                          </label>
+                        </div>
+                        {uploadedFiles.length > 0 && (
+                          <div className="mt-2 space-y-1.5">
+                            {uploadedFiles.map((file, idx) => (
+                              <div key={idx} className="flex items-center gap-2 bg-secondary/50 rounded-lg px-3 py-2 text-sm">
+                                <Paperclip className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                                <span className="truncate text-foreground flex-1">{file.name}</span>
+                                <span className="text-xs text-muted-foreground shrink-0">{(file.size / 1024).toFixed(0)}KB</span>
+                                <button onClick={() => removeFile(idx)} className="shrink-0 hover:text-destructive transition-colors">
+                                  <X className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </TabsContent>
+                  </Tabs>
+                  </ScrollArea>
+
+                  {/* Summary & Submit */}
+                  <div className="border-t border-border pt-3 space-y-2">
+                    <div className="flex flex-wrap gap-2 text-[10px] text-muted-foreground">
+                      {clientName && <Badge variant="secondary" className="text-[10px]">{clientName}</Badge>}
+                      {sportOrDiscipline && <Badge variant="secondary" className="text-[10px]">{sportOrDiscipline}</Badge>}
+                      {preDeals.length > 0 && <Badge variant="secondary" className="text-[10px]">{preDeals.length} deal{preDeals.length > 1 ? "s" : ""}</Badge>}
+                      {uploadedFiles.length > 0 && <Badge variant="secondary" className="text-[10px]">{uploadedFiles.length} file{uploadedFiles.length > 1 ? "s" : ""}</Badge>}
+                      {marketValue && <Badge variant="secondary" className="text-[10px]">{marketValue}</Badge>}
+                    </div>
                     <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleCreateInvitation} disabled={isCreating || !clientName || !clientEmail}>
-                      {isCreating ? (isUploading ? "Uploading documents..." : "Creating...") : `Create & Generate Link${uploadedFiles.length > 0 ? ` (${uploadedFiles.length} files)` : ""}`}
+                      {isCreating ? (isUploading ? "Uploading documents..." : "Creating...") : "Create Profile & Generate Link"}
                     </Button>
                   </div>
                 </DialogContent>
