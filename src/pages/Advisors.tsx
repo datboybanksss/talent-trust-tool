@@ -10,13 +10,15 @@ import {
   Calendar,
   Briefcase,
   Scale,
-  PiggyBank,
   Shield,
   Globe,
-  Smartphone
+  Smartphone,
+  Calculator,
+  Receipt,
+  Landmark
 } from "lucide-react";
 
-type Category = "Legal" | "Financial" | "Business" | "Insurance";
+type Category = "Legal" | "Accountants" | "Tax" | "Family Investments" | "Business" | "Insurance";
 
 const Advisors = () => {
   const [activeCategory, setActiveCategory] = useState<Category>("Legal");
@@ -28,7 +30,7 @@ const Advisors = () => {
       title="My Advisors" 
       subtitle="Connect with our network of trusted professionals"
     >
-      <div className="grid sm:grid-cols-4 gap-4 mb-8">
+      <div className="grid sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
         {categories.map((cat) => (
           <CategoryCard
             key={cat.title}
@@ -63,7 +65,9 @@ const Advisors = () => {
 
 const categories: { icon: React.ElementType; title: Category }[] = [
   { icon: Scale, title: "Legal" },
-  { icon: PiggyBank, title: "Financial" },
+  { icon: Calculator, title: "Accountants" },
+  { icon: Receipt, title: "Tax" },
+  { icon: Landmark, title: "Family Investments" },
   { icon: Briefcase, title: "Business" },
   { icon: Shield, title: "Insurance" },
 ];
@@ -90,7 +94,7 @@ const CategoryCard = ({ icon: Icon, title, count, active, onClick }: CategoryCar
         <Icon className="w-5 h-5" />
       </div>
       <div>
-        <p className={`font-medium ${active ? "text-gold" : "text-foreground"}`}>{title}</p>
+        <p className={`font-medium text-sm ${active ? "text-gold" : "text-foreground"}`}>{title}</p>
         <p className="text-xs text-muted-foreground">{count} advisors</p>
       </div>
     </div>
@@ -108,7 +112,6 @@ interface Advisor {
   category: Category;
   phone: string;
   cell: string;
-  
   email: string;
   website: string;
 }
@@ -174,16 +177,46 @@ const advisors: Advisor[] = [
     email: "sarah@vdmlegal.co.za", website: "https://vdmlegal.co.za",
   },
   {
+    id: "5", name: "Priya Naidoo", title: "IP Attorney", company: "Naidoo IP Law",
+    specialty: "Intellectual Property, Trademark Registration, Artist Rights", rating: 5, reviews: 24, category: "Legal",
+    phone: "+27 11 567 8901", cell: "+27 86 567 8901",
+    email: "priya@naidooip.co.za", website: "https://naidooip.co.za",
+  },
+  {
     id: "2", name: "David Nkosi", title: "Chartered Accountant", company: "Nkosi & Associates",
-    specialty: "Tax Planning, Financial Statements, SARS Compliance", rating: 5, reviews: 45, category: "Financial",
+    specialty: "Financial Statements, Auditing, Advisory", rating: 5, reviews: 45, category: "Accountants",
     phone: "+27 11 234 5678", cell: "+27 83 234 5678",
     email: "david@nkosiassociates.co.za", website: "https://nkosiassociates.co.za",
   },
   {
-    id: "3", name: "Lisa Thompson", title: "Wealth Manager", company: "Legacy Wealth Management",
-    specialty: "Investment Strategy, Estate Planning, Athlete Finances", rating: 4, reviews: 32, category: "Financial",
+    id: "10", name: "Ravi Pillay", title: "Senior Accountant", company: "Pillay & Co Accounting",
+    specialty: "Bookkeeping, Payroll, Management Accounts", rating: 5, reviews: 27, category: "Accountants",
+    phone: "+27 11 012 3456", cell: "+27 76 012 3456",
+    email: "ravi@pillayco.co.za", website: "https://pillayco.co.za",
+  },
+  {
+    id: "3", name: "Lisa Thompson", title: "Tax Consultant", company: "Thompson Tax Advisory",
+    specialty: "Tax Planning, SARS Compliance, Tax Returns", rating: 4, reviews: 32, category: "Tax",
     phone: "+27 11 345 6789", cell: "+27 84 345 6789",
-    email: "lisa@legacywealth.co.za", website: "https://legacywealth.co.za",
+    email: "lisa@thompsontax.co.za", website: "https://thompsontax.co.za",
+  },
+  {
+    id: "11", name: "Fatima Essop", title: "Tax Specialist", company: "Essop Tax Solutions",
+    specialty: "Corporate Tax, VAT, International Tax", rating: 5, reviews: 35, category: "Tax",
+    phone: "+27 11 111 2233", cell: "+27 79 111 2233",
+    email: "fatima@essoptax.co.za", website: "https://essoptax.co.za",
+  },
+  {
+    id: "7", name: "Thandeka Zulu", title: "Family Investment Advisor", company: "Zulu Wealth Partners",
+    specialty: "Family Trusts, Generational Wealth, Estate Planning", rating: 5, reviews: 31, category: "Family Investments",
+    phone: "+27 11 789 0123", cell: "+27 72 789 0123",
+    email: "thandeka@zuluwp.co.za", website: "https://zuluwp.co.za",
+  },
+  {
+    id: "12", name: "Johan Venter", title: "Investment Planner", company: "Venter Family Office",
+    specialty: "Investment Strategy, Portfolio Management, Wealth Preservation", rating: 4, reviews: 18, category: "Family Investments",
+    phone: "+27 11 222 3344", cell: "+27 71 222 3344",
+    email: "johan@venterfamily.co.za", website: "https://venterfamily.co.za",
   },
   {
     id: "4", name: "Michael Botha", title: "Business Consultant", company: "Botha Business Advisory",
@@ -192,28 +225,16 @@ const advisors: Advisor[] = [
     email: "michael@bothabusiness.co.za", website: "https://bothabusiness.co.za",
   },
   {
-    id: "5", name: "Priya Naidoo", title: "IP Attorney", company: "Naidoo IP Law",
-    specialty: "Intellectual Property, Trademark Registration, Artist Rights", rating: 5, reviews: 24, category: "Legal",
-    phone: "+27 11 567 8901", cell: "+27 86 567 8901",
-    email: "priya@naidooip.co.za", website: "https://naidooip.co.za",
+    id: "8", name: "Andre du Plessis", title: "Business Strategist", company: "Du Plessis Consulting",
+    specialty: "Franchise Development, Market Entry, Growth Strategy", rating: 4, reviews: 22, category: "Business",
+    phone: "+27 11 890 1234", cell: "+27 73 890 1234",
+    email: "andre@dpconsulting.co.za", website: "https://dpconsulting.co.za",
   },
   {
     id: "6", name: "James Molefe", title: "Insurance Broker", company: "Shield Insurance",
     specialty: "Personal Liability, Career Insurance, Asset Protection", rating: 4, reviews: 38, category: "Insurance",
     phone: "+27 11 678 9012", cell: "+27 87 678 9012",
     email: "james@shieldinsurance.co.za", website: "https://shieldinsurance.co.za",
-  },
-  {
-    id: "7", name: "Thandeka Zulu", title: "Financial Planner", company: "Zulu Financial Planning",
-    specialty: "Retirement Planning, Risk Management, Tax Optimization", rating: 5, reviews: 31, category: "Financial",
-    phone: "+27 11 789 0123", cell: "+27 72 789 0123",
-    email: "thandeka@zulufinancial.co.za", website: "https://zulufinancial.co.za",
-  },
-  {
-    id: "8", name: "Andre du Plessis", title: "Business Strategist", company: "Du Plessis Consulting",
-    specialty: "Franchise Development, Market Entry, Growth Strategy", rating: 4, reviews: 22, category: "Business",
-    phone: "+27 11 890 1234", cell: "+27 73 890 1234",
-    email: "andre@dpconsulting.co.za", website: "https://dpconsulting.co.za",
   },
   {
     id: "9", name: "Nomsa Khumalo", title: "Life Insurance Specialist", company: "Guardian Life SA",
