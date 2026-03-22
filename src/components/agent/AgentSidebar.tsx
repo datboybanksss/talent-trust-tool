@@ -31,8 +31,8 @@ interface AgentSidebarProps {
   onNewClient: () => void;
   onBulkImport: () => void;
   agentProfile: { role: string; company_name: string } | null;
-  activeView: "clients" | "pipeline" | "compare";
-  setActiveView: (view: "clients" | "pipeline" | "compare") => void;
+  activeView: "clients" | "pipeline" | "compare" | "calendar";
+  setActiveView: (view: "clients" | "pipeline" | "compare" | "calendar") => void;
 }
 
 const mainNavItems = [
