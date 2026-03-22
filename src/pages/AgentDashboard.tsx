@@ -497,26 +497,28 @@ const AgentDashboard = () => {
   const activationRate = invitations.length > 0 ? Math.round((activatedCount / invitations.length) * 100) : 0;
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border/50 bg-card sticky top-0 z-40">
-        <div className="container py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-              <Briefcase className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-lg font-display font-bold text-foreground">Agent Portal</h1>
-              <p className="text-xs text-muted-foreground">{roleLabel} — {agentProfile?.company_name}</p>
-            </div>
-          </div>
-          <Button variant="ghost" size="sm" onClick={handleSignOut}>
-            <LogOut className="w-4 h-4 mr-2" /> Sign Out
-          </Button>
-        </div>
-      </header>
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-background">
+        <AgentSidebar
+          onNewClient={() => setDialogOpen(true)}
+          onBulkImport={triggerBulkImport}
+          agentProfile={agentProfile}
+        />
+        {/* Hidden bulk import input */}
+        <input type="file" accept=".xlsx,.xls,.csv" onChange={handleBulkFileSelect} className="hidden" ref={bulkInputRef} />
 
-      <div className="container py-8 max-w-6xl mx-auto space-y-8">
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Header */}
+          <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-lg border-b border-border px-6 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <SidebarTrigger className="mr-1" />
+                <h1 className="text-lg font-display font-bold text-foreground">Agent Portal</h1>
+              </div>
+            </div>
+          </header>
+
+          <div className="p-6 max-w-6xl mx-auto w-full space-y-8">
         {/* Stats Row */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="border-border/50">
