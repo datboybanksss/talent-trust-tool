@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,15 +14,17 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
 import {
   Briefcase, UserPlus, Copy, CheckCircle2, Clock, Mail, LogOut, Shield,
   Users, TrendingUp, FileText, Calendar, ArrowUpRight, BarChart3, Eye,
   Upload, X, Paperclip, Kanban, List, Plus, Trash2, FileSpreadsheet, AlertCircle,
-  Handshake, Download
+  Handshake, Download, Menu
 } from "lucide-react";
 import DealPipeline from "@/components/dashboard/DealPipeline";
 import ClientComparison from "@/components/dashboard/ClientComparison";
+import AgentSidebar from "@/components/agent/AgentSidebar";
 import * as XLSX from "xlsx";
 
 interface Invitation {
