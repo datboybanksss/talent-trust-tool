@@ -4,6 +4,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from "@/components/ui/dropdown-menu";
+import {
   ChevronLeft,
   ChevronRight,
   FileText,
@@ -13,7 +21,18 @@ import {
   CalendarDays,
   Trophy,
   Music,
+  Download,
+  ExternalLink,
+  CalendarPlus,
 } from "lucide-react";
+import {
+  getGoogleCalendarUrl,
+  getOutlookCalendarUrl,
+  getYahooCalendarUrl,
+  downloadSingleICS,
+  downloadICSFile,
+  type CalendarEventData,
+} from "@/utils/calendarExport";
 import {
   format,
   startOfMonth,
@@ -118,6 +137,20 @@ const AgentCalendar = () => {
     ? eventsByDate.get(format(selectedDate, "yyyy-MM-dd")) || []
     : [];
 
+  // Convert CalendarEvent to CalendarEventData for export
+  const toExportData = (ev: CalendarEvent): CalendarEventData => ({
+    title: ev.title,
+    description: `Client: ${ev.client}${ev.meta ? ` | ${ev.meta}` : ""}`,
+    startDate: ev.date,
+    allDay: true,
+  });
+
+  // Export all events as .ics
+  const handleExportAll = () => {
+    const exportEvents = MOCK_EVENTS.map(toExportData);
+    downloadICSFile(exportEvents, "legacybuilder-agent-calendar.ics");
+  };
+
   // Upcoming events (next 14 days from today)
   const upcomingEvents = useMemo(() => {
     const today = new Date();
@@ -131,14 +164,20 @@ const AgentCalendar = () => {
 
   return (
     <div className="space-y-6">
-      {/* Legend */}
-      <div className="flex flex-wrap gap-3">
-        {Object.entries(eventTypeConfig).map(([key, config]) => (
-          <div key={key} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <span className={`w-2 h-2 rounded-full ${config.dotColor}`} />
-            {config.label}
-          </div>
-        ))}
+      {/* Legend + Export */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex flex-wrap gap-3">
+          {Object.entries(eventTypeConfig).map(([key, config]) => (
+            <div key={key} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <span className={`w-2 h-2 rounded-full ${config.dotColor}`} />
+              {config.label}
+            </div>
+          ))}
+        </div>
+        <Button variant="outline" size="sm" onClick={handleExportAll}>
+          <Download className="w-3.5 h-3.5 mr-1.5" />
+          Export All (.ics)
+        </Button>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
@@ -233,6 +272,7 @@ const AgentCalendar = () => {
                   <div className="space-y-2">
                     {selectedEvents.map((ev) => {
                       const config = eventTypeConfig[ev.type];
+                      const exportData = toExportData(ev);
                       return (
                         <div key={ev.id} className="flex items-start gap-2.5 p-2.5 rounded-lg bg-secondary/50">
                           <div className={`w-7 h-7 rounded-md flex items-center justify-center shrink-0 ${config.color}`}>
@@ -252,6 +292,36 @@ const AgentCalendar = () => {
                               )}
                             </div>
                           </div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0">
+                                <CalendarPlus className="w-3.5 h-3.5 text-muted-foreground" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48">
+                              <DropdownMenuLabel className="text-[10px]">Add to Calendar</DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem asChild>
+                                <a href={getGoogleCalendarUrl(exportData)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+                                  <ExternalLink className="w-3 h-3" /> Google Calendar
+                                </a>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem asChild>
+                                <a href={getOutlookCalendarUrl(exportData)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+                                  <ExternalLink className="w-3 h-3" /> Outlook Calendar
+                                </a>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem asChild>
+                                <a href={getYahooCalendarUrl(exportData)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+                                  <ExternalLink className="w-3 h-3" /> Yahoo Calendar
+                                </a>
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => downloadSingleICS(exportData)} className="flex items-center gap-2">
+                                <Download className="w-3 h-3" /> Apple Calendar (.ics)
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       );
                     })}
