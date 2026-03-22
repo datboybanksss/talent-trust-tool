@@ -312,7 +312,9 @@ const SharePortal = () => {
           <CardTitle className="text-base">Shared Staff ({staff.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          {staff.length === 0 ? (
+          {loadingStaff ? (
+            <p className="text-center text-muted-foreground py-8 animate-pulse">Loading staff...</p>
+          ) : staff.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">No staff members invited yet.</p>
           ) : (
             <Table>
