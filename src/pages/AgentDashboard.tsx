@@ -362,6 +362,7 @@ const AgentDashboard = () => {
     XLSX.writeFile(wb, "LegacyBuilder_Client_Template.xlsx");
   };
 
+  const handleSignOut = async () => {
     await signOut();
     navigate("/");
   };
