@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_manager_profiles: {
+        Row: {
+          company_name: string
+          created_at: string
+          id: string
+          phone: string | null
+          registration_number: string | null
+          role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company_name: string
+          created_at?: string
+          id?: string
+          phone?: string | null
+          registration_number?: string | null
+          role: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company_name?: string
+          created_at?: string
+          id?: string
+          phone?: string | null
+          registration_number?: string | null
+          role?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       artist_projects: {
         Row: {
           budget: number | null
@@ -263,6 +296,51 @@ export type Database = {
           relationship?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      client_invitations: {
+        Row: {
+          activated_at: string | null
+          activated_user_id: string | null
+          agent_id: string
+          client_email: string
+          client_name: string
+          client_phone: string | null
+          client_type: string
+          created_at: string
+          id: string
+          invitation_token: string
+          pre_populated_data: Json | null
+          status: string
+        }
+        Insert: {
+          activated_at?: string | null
+          activated_user_id?: string | null
+          agent_id: string
+          client_email: string
+          client_name: string
+          client_phone?: string | null
+          client_type: string
+          created_at?: string
+          id?: string
+          invitation_token?: string
+          pre_populated_data?: Json | null
+          status?: string
+        }
+        Update: {
+          activated_at?: string | null
+          activated_user_id?: string | null
+          agent_id?: string
+          client_email?: string
+          client_name?: string
+          client_phone?: string | null
+          client_type?: string
+          created_at?: string
+          id?: string
+          invitation_token?: string
+          pre_populated_data?: Json | null
+          status?: string
         }
         Relationships: []
       }
