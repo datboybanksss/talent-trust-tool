@@ -29,6 +29,7 @@ import AgentNotifications from "@/components/agent/AgentNotifications";
 import AgentCalendar from "@/components/agent/AgentCalendar";
 import AgreementTemplates from "@/components/agent/AgreementTemplates";
 import SharePortal from "@/components/agent/SharePortal";
+import AgentChatBot from "@/components/agent/AgentChatBot";
 import ConfidentialityGate from "@/components/agent/ConfidentialityGate";
 import * as XLSX from "xlsx";
 
@@ -556,6 +557,7 @@ const AgentDashboard = () => {
   const activationRate = invitations.length > 0 ? Math.round((activatedCount / invitations.length) * 100) : 0;
 
   return (
+    <>
     <SidebarProvider defaultOpen={false}>
       <div className="min-h-screen flex w-full bg-background">
         <AgentSidebar
@@ -1126,6 +1128,8 @@ const AgentDashboard = () => {
         </div>
       </div>
     </SidebarProvider>
+    <AgentChatBot />
+    </>
   );
 };
 
