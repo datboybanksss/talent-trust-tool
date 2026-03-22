@@ -18,7 +18,8 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Briefcase, UserPlus, Copy, CheckCircle2, Clock, Mail, LogOut, Shield,
   Users, TrendingUp, FileText, Calendar, ArrowUpRight, BarChart3, Eye,
-  Upload, X, Paperclip, Kanban, List, Plus, Trash2, FileSpreadsheet, AlertCircle
+  Upload, X, Paperclip, Kanban, List, Plus, Trash2, FileSpreadsheet, AlertCircle,
+  Handshake
 } from "lucide-react";
 import DealPipeline from "@/components/dashboard/DealPipeline";
 import ClientComparison from "@/components/dashboard/ClientComparison";
