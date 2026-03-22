@@ -86,7 +86,7 @@ const AgentDashboard = () => {
     company_name: "Roc Nation Sports SA",
   });
   const [loading, setLoading] = useState(false);
-  const [activeView, setActiveView] = useState<"clients" | "pipeline">("clients");
+  const [activeView, setActiveView] = useState<"clients" | "pipeline" | "compare">("clients");
 
   // Form state
   const [clientName, setClientName] = useState("");
