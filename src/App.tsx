@@ -36,6 +36,7 @@ import RoyaltyTracker from "./pages/RoyaltyTracker";
 import CreativePortfolio from "./pages/CreativePortfolio";
 import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/AdminDashboard";
+import Pricing from "./pages/Pricing";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +49,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Landing />} />
+            <Route path="/pricing" element={<Pricing />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/agent-register" element={<AgentRegister />} />
             <Route path="/agent-dashboard" element={<ProtectedRoute><AgentDashboard /></ProtectedRoute>} />

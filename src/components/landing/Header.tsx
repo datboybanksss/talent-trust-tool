@@ -132,6 +132,9 @@ const Header = () => {
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center gap-3">
             <Button variant="ghost" className="text-foreground hover:bg-secondary" asChild>
+              <Link to="/pricing">Pricing</Link>
+            </Button>
+            <Button variant="ghost" className="text-foreground hover:bg-secondary" asChild>
               <Link to="/auth">Sign In</Link>
             </Button>
             <Button variant="hero" asChild>
