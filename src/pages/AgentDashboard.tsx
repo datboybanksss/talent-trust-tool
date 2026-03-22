@@ -19,7 +19,7 @@ import {
   Briefcase, UserPlus, Copy, CheckCircle2, Clock, Mail, LogOut, Shield,
   Users, TrendingUp, FileText, Calendar, ArrowUpRight, BarChart3, Eye,
   Upload, X, Paperclip, Kanban, List, Plus, Trash2, FileSpreadsheet, AlertCircle,
-  Handshake
+  Handshake, Download
 } from "lucide-react";
 import DealPipeline from "@/components/dashboard/DealPipeline";
 import ClientComparison from "@/components/dashboard/ClientComparison";
@@ -92,6 +92,10 @@ const AgentDashboard = () => {
   });
   const [loading, setLoading] = useState(false);
   const [activeView, setActiveView] = useState<"clients" | "pipeline" | "compare">("clients");
+  const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
+  const [bulkPreview, setBulkPreview] = useState<{ name: string; email: string; phone: string; type: string; sport: string; team: string; marketValue: string; valid: boolean; error?: string }[]>([]);
+  const [bulkImporting, setBulkImporting] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState(0);
 
   // Form state — basic
   const [clientName, setClientName] = useState("");
@@ -360,6 +364,111 @@ const AgentDashboard = () => {
     const ws = XLSX.utils.aoa_to_sheet(wsData);
     XLSX.utils.book_append_sheet(wb, ws, "Client Data");
     XLSX.writeFile(wb, "LegacyBuilder_Client_Template.xlsx");
+  };
+
+  const downloadBulkTemplate = () => {
+    const wb = XLSX.utils.book_new();
+    const wsData = [
+      ["Name", "Email", "Phone", "Type", "Sport/Discipline", "Team/Agency", "Market Value", "Location", "Nationality"],
+      ["Siya Kolisi", "siya@example.com", "+27 81 234 5678", "athlete", "Rugby", "Springboks", "R45,000,000", "Cape Town", "South African"],
+      ["Tyla Seethal", "tyla@example.com", "+27 84 567 8901", "artist", "Recording Artist", "Epic Records", "R85,000,000", "Johannesburg", "South African"],
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    ws["!cols"] = [{ wch: 20 }, { wch: 25 }, { wch: 18 }, { wch: 10 }, { wch: 18 }, { wch: 18 }, { wch: 15 }, { wch: 15 }, { wch: 15 }];
+    XLSX.utils.book_append_sheet(wb, ws, "Clients");
+    XLSX.writeFile(wb, "LegacyBuilder_Bulk_Import_Template.xlsx");
+  };
+
+  const handleBulkFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const data = new Uint8Array(evt.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: "array" });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows: Record<string, string>[] = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+        if (rows.length === 0) {
+          toast({ title: "Empty File", description: "The spreadsheet has no data rows.", variant: "destructive" });
+          return;
+        }
+
+        const parsed = rows.map((row) => {
+          const k: Record<string, string> = {};
+          Object.keys(row).forEach((key) => { k[key.toLowerCase().trim()] = String(row[key]).trim(); });
+          const name = k["name"] || k["client name"] || k["full name"] || "";
+          const email = k["email"] || k["client email"] || "";
+          const phone = k["phone"] || k["client phone"] || "";
+          const type = (k["type"] || k["client type"] || "athlete").toLowerCase();
+          const sport = k["sport"] || k["discipline"] || k["sport/discipline"] || "";
+          const team = k["team"] || k["agency"] || k["team/agency"] || "";
+          const marketValue = k["market value"] || k["value"] || "";
+
+          let valid = true;
+          let error: string | undefined;
+          if (!name) { valid = false; error = "Missing name"; }
+          else if (!email) { valid = false; error = "Missing email"; }
+          else if (!email.includes("@")) { valid = false; error = "Invalid email"; }
+          else if (!["athlete", "artist"].includes(type)) { valid = false; error = "Type must be athlete or artist"; }
+
+          return { name, email, phone, type, sport, team, marketValue, valid, error };
+        });
+
+        setBulkPreview(parsed);
+        setBulkDialogOpen(true);
+        toast({ title: "File Loaded", description: `${parsed.length} client${parsed.length > 1 ? "s" : ""} found. Review before importing.` });
+      } catch {
+        toast({ title: "Parse Error", description: "Could not read the file. Use .xlsx or .csv format.", variant: "destructive" });
+      }
+    };
+    reader.readAsArrayBuffer(file);
+    e.target.value = "";
+  };
+
+  const handleBulkImport = async () => {
+    const validClients = bulkPreview.filter((c) => c.valid);
+    if (validClients.length === 0) return;
+    setBulkImporting(true);
+    setBulkProgress(0);
+
+    let successCount = 0;
+    for (let i = 0; i < validClients.length; i++) {
+      const c = validClients[i];
+      if (user) {
+        const { error } = await supabase.from("client_invitations").insert({
+          agent_id: user.id,
+          client_name: c.name,
+          client_email: c.email,
+          client_phone: c.phone || null,
+          client_type: c.type,
+          pre_populated_data: JSON.parse(JSON.stringify({
+            profile: { sport_or_discipline: c.sport, team_or_agency: c.team, market_value: c.marketValue },
+          })),
+        });
+        if (!error) successCount++;
+      }
+
+      // Also add to local state
+      const newInv: Invitation = {
+        id: `bulk_${Date.now()}_${i}`,
+        client_name: c.name,
+        client_email: c.email,
+        client_phone: c.phone || null,
+        client_type: c.type,
+        status: "pending",
+        invitation_token: `tok_bulk_${Date.now()}_${i}`,
+        created_at: new Date().toISOString(),
+      };
+      setInvitations((prev) => [newInv, ...prev]);
+      setBulkProgress(Math.round(((i + 1) / validClients.length) * 100));
+    }
+
+    setBulkImporting(false);
+    setBulkDialogOpen(false);
+    setBulkPreview([]);
+    toast({ title: "Bulk Import Complete", description: `${successCount} of ${validClients.length} clients imported successfully.` });
+    fetchInvitations();
   };
 
   const handleSignOut = async () => {
@@ -846,9 +955,14 @@ const AgentDashboard = () => {
                   <Button variant="outline" className="w-full justify-start text-sm" onClick={() => setDialogOpen(true)}>
                     <UserPlus className="w-4 h-4 mr-2 text-primary" /> Add New Client
                   </Button>
-                  <Button variant="outline" className="w-full justify-start text-sm" disabled>
-                    <FileText className="w-4 h-4 mr-2 text-primary" /> Bulk Import Clients
-                  </Button>
+                  <div className="relative">
+                    <input type="file" accept=".xlsx,.xls,.csv" onChange={handleBulkFileSelect} className="hidden" id="bulk-import-input" />
+                    <label htmlFor="bulk-import-input" className="w-full">
+                      <Button variant="outline" className="w-full justify-start text-sm" asChild>
+                        <span><FileSpreadsheet className="w-4 h-4 mr-2 text-primary" /> Bulk Import Clients</span>
+                      </Button>
+                    </label>
+                  </div>
                   <Button variant="outline" className="w-full justify-start text-sm" disabled>
                     <Mail className="w-4 h-4 mr-2 text-primary" /> Resend All Pending
                   </Button>
@@ -886,6 +1000,96 @@ const AgentDashboard = () => {
         </>
         )}
       </div>
+
+      {/* Bulk Import Dialog */}
+      <Dialog open={bulkDialogOpen} onOpenChange={setBulkDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[85vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileSpreadsheet className="w-5 h-5 text-primary" />
+              Bulk Client Import
+            </DialogTitle>
+            <DialogDescription>
+              Review the {bulkPreview.length} client{bulkPreview.length !== 1 ? "s" : ""} found in your spreadsheet. Fix any errors before importing.
+            </DialogDescription>
+          </DialogHeader>
+
+          {bulkImporting && (
+            <div className="space-y-2">
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Importing clients...</span>
+                <span>{bulkProgress}%</span>
+              </div>
+              <Progress value={bulkProgress} className="h-2" />
+            </div>
+          )}
+
+          <ScrollArea className="max-h-[50vh]">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-8">#</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead className="hidden md:table-cell">Sport/Discipline</TableHead>
+                  <TableHead className="w-20">Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {bulkPreview.map((client, idx) => (
+                  <TableRow key={idx} className={!client.valid ? "bg-destructive/5" : ""}>
+                    <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
+                    <TableCell className="font-medium text-sm">{client.name || "—"}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{client.email || "—"}</TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className="text-[10px] capitalize">{client.type}</Badge>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell text-xs text-muted-foreground">{client.sport || "—"}</TableCell>
+                    <TableCell>
+                      {client.valid ? (
+                        <Badge variant="outline" className="text-[10px] text-green-600 border-green-200 bg-green-500/10">
+                          <CheckCircle2 className="w-3 h-3 mr-1" /> Valid
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-[10px] text-red-600 border-red-200 bg-red-500/10">
+                          <AlertCircle className="w-3 h-3 mr-1" /> {client.error}
+                        </Badge>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ScrollArea>
+
+          <div className="border-t border-border pt-3 space-y-3">
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex gap-3">
+                <span className="text-green-600 font-medium">{bulkPreview.filter((c) => c.valid).length} valid</span>
+                {bulkPreview.some((c) => !c.valid) && (
+                  <span className="text-red-600 font-medium">{bulkPreview.filter((c) => !c.valid).length} errors</span>
+                )}
+              </div>
+              <Button variant="ghost" size="sm" onClick={downloadBulkTemplate}>
+                <Download className="w-3.5 h-3.5 mr-1" /> Download Template
+              </Button>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" className="flex-1" onClick={() => { setBulkDialogOpen(false); setBulkPreview([]); }} disabled={bulkImporting}>
+                Cancel
+              </Button>
+              <Button
+                className="flex-1 bg-primary text-primary-foreground"
+                onClick={handleBulkImport}
+                disabled={bulkImporting || bulkPreview.filter((c) => c.valid).length === 0}
+              >
+                {bulkImporting ? `Importing... ${bulkProgress}%` : `Import ${bulkPreview.filter((c) => c.valid).length} Client${bulkPreview.filter((c) => c.valid).length !== 1 ? "s" : ""}`}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
