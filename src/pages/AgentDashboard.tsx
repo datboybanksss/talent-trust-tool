@@ -293,7 +293,7 @@ const AgentDashboard = () => {
         client_email: clientEmail,
         client_phone: clientPhone || null,
         client_type: clientType,
-        pre_populated_data: {
+        pre_populated_data: JSON.parse(JSON.stringify({
           notes,
           documents: documentsMeta,
           profile: {
@@ -307,7 +307,7 @@ const AgentDashboard = () => {
             social_handle: socialHandle,
           },
           deals: preDeals,
-        },
+        })),
       });
 
       if (error) {
