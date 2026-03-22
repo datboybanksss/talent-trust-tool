@@ -20,7 +20,7 @@ import {
   Briefcase, UserPlus, Copy, CheckCircle2, Clock, Mail, LogOut, Shield,
   Users, TrendingUp, FileText, Calendar, ArrowUpRight, BarChart3, Eye,
   Upload, X, Paperclip, Kanban, List, Plus, Trash2, FileSpreadsheet, AlertCircle,
-  Handshake, Download, Menu
+  Handshake, Download, Menu, User
 } from "lucide-react";
 import DealPipeline from "@/components/dashboard/DealPipeline";
 import ClientComparison from "@/components/dashboard/ClientComparison";
