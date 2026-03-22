@@ -372,6 +372,30 @@ const ServiceCard = ({ icon: Icon, title, description }: ServiceCardProps) => (
   </div>
 );
 
+const SnapshotStat = ({ value, label }: { value: string; label: string }) => (
+  <div className="text-center p-5 rounded-2xl bg-card border border-border/50">
+    <p className="text-2xl md:text-3xl font-display font-bold text-gold mb-1">{value}</p>
+    <p className="text-xs text-muted-foreground uppercase tracking-wider">{label}</p>
+  </div>
+);
+
+interface FeatureSnapshotCardProps {
+  icon: React.ElementType;
+  title: string;
+  description: string;
+  accent: string;
+}
+
+const FeatureSnapshotCard = ({ icon: Icon, title, description, accent }: FeatureSnapshotCardProps) => (
+  <div className="group p-5 rounded-2xl bg-card border border-border/50 hover:border-gold/30 transition-all duration-300 hover:shadow-gold">
+    <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${accent} flex items-center justify-center mb-3`}>
+      <Icon className="w-5 h-5 text-gold" />
+    </div>
+    <h3 className="text-base font-display font-semibold text-foreground mb-1.5">{title}</h3>
+    <p className="text-muted-foreground text-sm leading-relaxed">{description}</p>
+  </div>
+);
+
 interface ListItemProps {
   title: string;
   href: string;
