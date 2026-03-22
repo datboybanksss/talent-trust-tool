@@ -76,6 +76,7 @@ const App = () => (
             <Route path="/dashboard/royalties" element={<ProtectedRoute><RoyaltyTracker /></ProtectedRoute>} />
             <Route path="/dashboard/creative-portfolio" element={<ProtectedRoute><CreativePortfolio /></ProtectedRoute>} />
             <Route path="/client-type" element={<ClientType />} />
+            <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
