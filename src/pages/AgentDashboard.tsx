@@ -1000,6 +1000,96 @@ const AgentDashboard = () => {
         </>
         )}
       </div>
+
+      {/* Bulk Import Dialog */}
+      <Dialog open={bulkDialogOpen} onOpenChange={setBulkDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[85vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileSpreadsheet className="w-5 h-5 text-primary" />
+              Bulk Client Import
+            </DialogTitle>
+            <DialogDescription>
+              Review the {bulkPreview.length} client{bulkPreview.length !== 1 ? "s" : ""} found in your spreadsheet. Fix any errors before importing.
+            </DialogDescription>
+          </DialogHeader>
+
+          {bulkImporting && (
+            <div className="space-y-2">
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Importing clients...</span>
+                <span>{bulkProgress}%</span>
+              </div>
+              <Progress value={bulkProgress} className="h-2" />
+            </div>
+          )}
+
+          <ScrollArea className="max-h-[50vh]">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-8">#</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead className="hidden md:table-cell">Sport/Discipline</TableHead>
+                  <TableHead className="w-20">Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {bulkPreview.map((client, idx) => (
+                  <TableRow key={idx} className={!client.valid ? "bg-destructive/5" : ""}>
+                    <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
+                    <TableCell className="font-medium text-sm">{client.name || "—"}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{client.email || "—"}</TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className="text-[10px] capitalize">{client.type}</Badge>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell text-xs text-muted-foreground">{client.sport || "—"}</TableCell>
+                    <TableCell>
+                      {client.valid ? (
+                        <Badge variant="outline" className="text-[10px] text-green-600 border-green-200 bg-green-500/10">
+                          <CheckCircle2 className="w-3 h-3 mr-1" /> Valid
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-[10px] text-red-600 border-red-200 bg-red-500/10">
+                          <AlertCircle className="w-3 h-3 mr-1" /> {client.error}
+                        </Badge>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </ScrollArea>
+
+          <div className="border-t border-border pt-3 space-y-3">
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex gap-3">
+                <span className="text-green-600 font-medium">{bulkPreview.filter((c) => c.valid).length} valid</span>
+                {bulkPreview.some((c) => !c.valid) && (
+                  <span className="text-red-600 font-medium">{bulkPreview.filter((c) => !c.valid).length} errors</span>
+                )}
+              </div>
+              <Button variant="ghost" size="sm" onClick={downloadBulkTemplate}>
+                <Download className="w-3.5 h-3.5 mr-1" /> Download Template
+              </Button>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" className="flex-1" onClick={() => { setBulkDialogOpen(false); setBulkPreview([]); }} disabled={bulkImporting}>
+                Cancel
+              </Button>
+              <Button
+                className="flex-1 bg-primary text-primary-foreground"
+                onClick={handleBulkImport}
+                disabled={bulkImporting || bulkPreview.filter((c) => c.valid).length === 0}
+              >
+                {bulkImporting ? `Importing... ${bulkProgress}%` : `Import ${bulkPreview.filter((c) => c.valid).length} Client${bulkPreview.filter((c) => c.valid).length !== 1 ? "s" : ""}`}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
