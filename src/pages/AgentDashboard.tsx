@@ -1127,6 +1127,8 @@ const AgentDashboard = () => {
         </div>
       </div>
     </SidebarProvider>
+    <AgentChatBot />
+    </>
   );
 };
 
