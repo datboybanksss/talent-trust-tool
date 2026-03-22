@@ -272,6 +272,7 @@ const AgentCalendar = () => {
                   <div className="space-y-2">
                     {selectedEvents.map((ev) => {
                       const config = eventTypeConfig[ev.type];
+                      const exportData = toExportData(ev);
                       return (
                         <div key={ev.id} className="flex items-start gap-2.5 p-2.5 rounded-lg bg-secondary/50">
                           <div className={`w-7 h-7 rounded-md flex items-center justify-center shrink-0 ${config.color}`}>
@@ -291,6 +292,36 @@ const AgentCalendar = () => {
                               )}
                             </div>
                           </div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0">
+                                <CalendarPlus className="w-3.5 h-3.5 text-muted-foreground" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48">
+                              <DropdownMenuLabel className="text-[10px]">Add to Calendar</DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem asChild>
+                                <a href={getGoogleCalendarUrl(exportData)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+                                  <ExternalLink className="w-3 h-3" /> Google Calendar
+                                </a>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem asChild>
+                                <a href={getOutlookCalendarUrl(exportData)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+                                  <ExternalLink className="w-3 h-3" /> Outlook Calendar
+                                </a>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem asChild>
+                                <a href={getYahooCalendarUrl(exportData)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+                                  <ExternalLink className="w-3 h-3" /> Yahoo Calendar
+                                </a>
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => downloadSingleICS(exportData)} className="flex items-center gap-2">
+                                <Download className="w-3 h-3" /> Apple Calendar (.ics)
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       );
                     })}
