@@ -310,11 +310,11 @@ const SharePortal = () => {
                     </TableCell>
                     <TableCell>
                       {member.status === "active" ? (
-                        <Badge className="bg-green-500/10 text-green-600 border-green-200 text-xs">
+                        <Badge variant="secondary" className="text-xs">
                           <CheckCircle2 className="w-3 h-3 mr-1" /> Active
                         </Badge>
                       ) : (
-                        <Badge className="bg-amber-500/10 text-amber-600 border-amber-200 text-xs">
+                        <Badge variant="outline" className="text-xs">
                           <Clock className="w-3 h-3 mr-1" /> Pending
                         </Badge>
                       )}
