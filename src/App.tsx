@@ -9,6 +9,7 @@ import Landing from "./pages/Landing";
 import AgentRegister from "./pages/AgentRegister";
 import AgentDashboard from "./pages/AgentDashboard";
 import AgentClientDetail from "./pages/AgentClientDetail";
+import AgentAthleteProfile from "./pages/AgentAthleteProfile";
 import ActivateProfile from "./pages/ActivateProfile";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
