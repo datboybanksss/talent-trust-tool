@@ -335,8 +335,7 @@ const AgentDashboard = () => {
       title: "Invitation Created",
       description: `Activation link ready for ${clientName}${docCount > 0 ? ` with ${docCount} document${docCount > 1 ? "s" : ""}` : ""}.`,
     });
-    setClientName(""); setClientEmail(""); setClientPhone(""); setClientType(""); setNotes("");
-    setUploadedFiles([]);
+    resetForm();
     setDialogOpen(false);
     fetchInvitations();
   };
