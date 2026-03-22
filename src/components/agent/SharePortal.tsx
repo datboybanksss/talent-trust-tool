@@ -361,6 +361,17 @@ const SharePortal = () => {
                       )}
                     </TableCell>
                     <TableCell>
+                      {member.confidentialityAcceptedAt ? (
+                        <Badge variant="secondary" className="text-xs">
+                          <CheckCircle2 className="w-3 h-3 mr-1" /> Accepted
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-xs">
+                          <Clock className="w-3 h-3 mr-1" /> Awaiting
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
                       <Button variant="ghost" size="icon" onClick={() => handleRevoke(member.id)}>
                         <Trash2 className="w-4 h-4 text-destructive" />
                       </Button>
