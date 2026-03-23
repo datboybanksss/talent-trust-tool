@@ -49,6 +49,7 @@ const ExecutiveOverview = () => {
           setClientType={setClientType}
           businessUnit={businessUnit}
           setBusinessUnit={setBusinessUnit}
+          onExportPdf={generateExecutiveOverviewPDF}
         />
 
         {/* KPIs */}
