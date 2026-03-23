@@ -659,7 +659,9 @@ const AgentDashboard = () => {
           </CardContent>
         </Card>
 
-        {activeView === "pipeline" ? (
+        {activeView === "executive" ? (
+          <ExecutiveOverviewInline />
+        ) : activeView === "pipeline" ? (
           <DealPipeline />
         ) : activeView === "compare" ? (
           <ClientComparison />
