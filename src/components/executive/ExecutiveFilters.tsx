@@ -9,6 +9,7 @@ interface ExecutiveFiltersProps {
   setClientType: (v: string) => void;
   businessUnit: string;
   setBusinessUnit: (v: string) => void;
+  onExportPdf?: () => void;
 }
 
 const ExecutiveFilters = ({
