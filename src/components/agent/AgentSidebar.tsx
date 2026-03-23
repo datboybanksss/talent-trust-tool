@@ -45,6 +45,7 @@ const mainNavItems = [
   { title: "Compare", icon: BarChart3, view: "compare" as const },
   { title: "Agreement Templates", icon: FileText, view: "templates" as const },
   { title: "Share Portal", icon: Share2, view: "share" as const },
+  { title: "Executive Overview", icon: Crown, view: "executive" as const },
 ];
 
 const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, setActiveView }: AgentSidebarProps) => {
