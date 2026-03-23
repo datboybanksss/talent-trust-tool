@@ -5,13 +5,17 @@ import { clientTypeValues, revenueStreams, CHART_COLORS } from "@/data/executive
 const fmt = (n: number) => `R${(n / 1_000_000).toFixed(1)}M`;
 const totalPortfolio = clientTypeValues.reduce((s, c) => s + c.value, 0);
 
-const BookValueSection = () => (
+interface BookValueSectionProps {
+  onSegmentClick?: (category: string, segment: string) => void;
+}
+
+const BookValueSection = ({ onSegmentClick }: BookValueSectionProps) => (
   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
     {/* By Client Type */}
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-base">Book Value by Client Type</CardTitle>
-        <p className="text-xs text-muted-foreground">Total portfolio: {fmt(totalPortfolio)}</p>
+        <p className="text-xs text-muted-foreground">Total portfolio: {fmt(totalPortfolio)} • Click a segment to drill down</p>
       </CardHeader>
       <CardContent className="h-[280px]">
         <ResponsiveContainer width="100%" height="100%">
@@ -28,9 +32,11 @@ const BookValueSection = () => (
               label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
               labelLine={false}
               fontSize={11}
+              className="cursor-pointer"
+              onClick={(data) => onSegmentClick?.("Client Type", data.name)}
             >
               {clientTypeValues.map((_, i) => (
-                <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} className="cursor-pointer hover:opacity-80 transition-opacity" />
               ))}
             </Pie>
             <Tooltip formatter={(v: number) => fmt(v)} />
@@ -43,6 +49,7 @@ const BookValueSection = () => (
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-base">Value by Revenue Stream</CardTitle>
+        <p className="text-xs text-muted-foreground">Click a bar to drill down</p>
       </CardHeader>
       <CardContent className="h-[280px]">
         <ResponsiveContainer width="100%" height="100%">
@@ -51,7 +58,13 @@ const BookValueSection = () => (
             <XAxis type="number" tickFormatter={(v) => fmt(v)} fontSize={11} />
             <YAxis type="category" dataKey="name" width={110} fontSize={11} />
             <Tooltip formatter={(v: number) => fmt(v)} />
-            <Bar dataKey="value" fill="hsl(43, 80%, 50%)" radius={[0, 4, 4, 0]} />
+            <Bar
+              dataKey="value"
+              fill="hsl(43, 80%, 50%)"
+              radius={[0, 4, 4, 0]}
+              className="cursor-pointer"
+              onClick={(data) => onSegmentClick?.("Revenue Stream", data.name)}
+            />
           </BarChart>
         </ResponsiveContainer>
       </CardContent>

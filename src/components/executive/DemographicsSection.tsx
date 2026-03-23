@@ -4,10 +4,25 @@ import { Badge } from "@/components/ui/badge";
 import { Accessibility } from "lucide-react";
 import { demographics, CHART_COLORS } from "@/data/executiveMockData";
 
-const MiniPie = ({ data, title }: { data: { name: string; value: number }[]; title: string }) => (
+interface DemographicsSectionProps {
+  onSegmentClick?: (category: string, segment: string) => void;
+}
+
+const MiniPie = ({
+  data,
+  title,
+  category,
+  onSegmentClick,
+}: {
+  data: { name: string; value: number }[];
+  title: string;
+  category: string;
+  onSegmentClick?: (category: string, segment: string) => void;
+}) => (
   <Card>
     <CardHeader className="pb-1">
       <CardTitle className="text-sm">{title}</CardTitle>
+      <p className="text-[10px] text-muted-foreground">Click to drill down</p>
     </CardHeader>
     <CardContent className="h-[200px]">
       <ResponsiveContainer width="100%" height="100%">
@@ -22,9 +37,11 @@ const MiniPie = ({ data, title }: { data: { name: string; value: number }[]; tit
             label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
             labelLine={false}
             fontSize={10}
+            className="cursor-pointer"
+            onClick={(d) => onSegmentClick?.(category, d.name)}
           >
             {data.map((_, i) => (
-              <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+              <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} className="cursor-pointer hover:opacity-80 transition-opacity" />
             ))}
           </Pie>
           <Tooltip />
@@ -34,12 +51,12 @@ const MiniPie = ({ data, title }: { data: { name: string; value: number }[]; tit
   </Card>
 );
 
-const DemographicsSection = () => (
+const DemographicsSection = ({ onSegmentClick }: DemographicsSectionProps) => (
   <div className="space-y-4">
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      <MiniPie data={demographics.clientType} title="Client Type" />
-      <MiniPie data={demographics.gender} title="Gender Split" />
-      <MiniPie data={demographics.geography} title="Geography" />
+      <MiniPie data={demographics.clientType} title="Client Type" category="Client Type" onSegmentClick={onSegmentClick} />
+      <MiniPie data={demographics.gender} title="Gender Split" category="Gender" onSegmentClick={onSegmentClick} />
+      <MiniPie data={demographics.geography} title="Geography" category="Geography" onSegmentClick={onSegmentClick} />
     </div>
 
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -47,6 +64,7 @@ const DemographicsSection = () => (
       <Card>
         <CardHeader className="pb-1">
           <CardTitle className="text-sm">Industry Breakdown</CardTitle>
+          <p className="text-[10px] text-muted-foreground">Click a bar to drill down</p>
         </CardHeader>
         <CardContent className="h-[220px]">
           <ResponsiveContainer width="100%" height="100%">
@@ -55,7 +73,14 @@ const DemographicsSection = () => (
               <XAxis type="number" fontSize={11} />
               <YAxis type="category" dataKey="name" width={80} fontSize={11} />
               <Tooltip />
-              <Bar dataKey="value" fill="hsl(200, 70%, 50%)" radius={[0, 4, 4, 0]} name="Clients" />
+              <Bar
+                dataKey="value"
+                fill="hsl(200, 70%, 50%)"
+                radius={[0, 4, 4, 0]}
+                name="Clients"
+                className="cursor-pointer"
+                onClick={(data) => onSegmentClick?.("Industry", data.name)}
+              />
             </BarChart>
           </ResponsiveContainer>
         </CardContent>
@@ -66,6 +91,7 @@ const DemographicsSection = () => (
         <Card>
           <CardHeader className="pb-1">
             <CardTitle className="text-sm">Age Band Distribution</CardTitle>
+            <p className="text-[10px] text-muted-foreground">Click a bar to drill down</p>
           </CardHeader>
           <CardContent className="h-[150px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -74,7 +100,14 @@ const DemographicsSection = () => (
                 <XAxis dataKey="name" fontSize={11} />
                 <YAxis fontSize={11} />
                 <Tooltip />
-                <Bar dataKey="value" fill="hsl(270, 55%, 55%)" radius={[4, 4, 0, 0]} name="Clients" />
+                <Bar
+                  dataKey="value"
+                  fill="hsl(270, 55%, 55%)"
+                  radius={[4, 4, 0, 0]}
+                  name="Clients"
+                  className="cursor-pointer"
+                  onClick={(data) => onSegmentClick?.("Age Band", data.name)}
+                />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
