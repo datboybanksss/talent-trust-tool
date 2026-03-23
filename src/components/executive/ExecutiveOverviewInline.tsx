@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ExecutiveKPICards from "@/components/executive/ExecutiveKPICards";
 import BookValueSection from "@/components/executive/BookValueSection";
