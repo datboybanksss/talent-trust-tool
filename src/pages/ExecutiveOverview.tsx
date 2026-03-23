@@ -17,26 +17,6 @@ const ExecutiveOverview = () => {
   const [clientType, setClientType] = useState("all");
   const [businessUnit, setBusinessUnit] = useState("all");
 
-  if (authLoading || roleLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-pulse text-muted-foreground">Loading...</div>
-      </div>
-    );
-  }
-
-  if (!user || !isAdmin) {
-    return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
-        <Lock className="w-12 h-12 text-muted-foreground" />
-        <h2 className="text-xl font-display font-bold">Executive Access Only</h2>
-        <p className="text-muted-foreground text-sm">This dashboard is restricted to authorised executives.</p>
-        <Button variant="outline" onClick={() => navigate("/dashboard")}>
-          Back to Dashboard
-        </Button>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background">
