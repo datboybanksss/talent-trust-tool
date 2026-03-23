@@ -54,7 +54,12 @@ const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, set
   const { signOut } = useAuth();
   const navigate = useNavigate();
 
-  const handleNavClick = (view: "clients" | "pipeline" | "compare" | "calendar" | "templates" | "share") => {
+  const handleNavClick = (view: typeof activeView) => {
+    if (view === "executive") {
+      navigate("/executive-overview");
+      if (isMobile) toggleSidebar();
+      return;
+    }
     setActiveView(view);
     if (isMobile) toggleSidebar();
   };
