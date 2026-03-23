@@ -26,6 +26,7 @@ import {
   Settings,
   FileText,
   Share2,
+  Crown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
