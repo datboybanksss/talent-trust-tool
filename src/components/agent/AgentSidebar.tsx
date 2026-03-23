@@ -39,13 +39,13 @@ interface AgentSidebarProps {
 }
 
 const mainNavItems = [
+  { title: "Executive Overview", icon: Crown, view: "executive" as const },
   { title: "Clients", icon: Users, view: "clients" as const },
-  { title: "Deal Pipeline", icon: Kanban, view: "pipeline" as const },
-  { title: "Calendar", icon: CalendarDays, view: "calendar" as const },
   { title: "Compare", icon: BarChart3, view: "compare" as const },
+  { title: "Calendar", icon: CalendarDays, view: "calendar" as const },
+  { title: "Deal Pipeline", icon: Kanban, view: "pipeline" as const },
   { title: "Agreement Templates", icon: FileText, view: "templates" as const },
   { title: "Share Portal", icon: Share2, view: "share" as const },
-  { title: "Executive Overview", icon: Crown, view: "executive" as const },
 ];
 
 const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, setActiveView }: AgentSidebarProps) => {
