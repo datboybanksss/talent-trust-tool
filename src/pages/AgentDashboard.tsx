@@ -32,6 +32,7 @@ import AgreementTemplates from "@/components/agent/AgreementTemplates";
 import SharePortal from "@/components/agent/SharePortal";
 import AgentChatBot from "@/components/agent/AgentChatBot";
 import ConfidentialityGate from "@/components/agent/ConfidentialityGate";
+import ExecutiveOverviewInline from "@/components/executive/ExecutiveOverviewInline";
 import * as XLSX from "xlsx";
 
 interface Invitation {
@@ -100,7 +101,7 @@ const AgentDashboard = () => {
     company_name: "Roc Nation Sports SA",
   });
   const [loading, setLoading] = useState(false);
-  const [activeView, setActiveView] = useState<"clients" | "pipeline" | "compare" | "calendar" | "templates" | "share" | "executive">("clients");
+  const [activeView, setActiveView] = useState<"clients" | "pipeline" | "compare" | "calendar" | "templates" | "share" | "executive">("executive");
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
   const [bulkPreview, setBulkPreview] = useState<{ name: string; email: string; phone: string; type: string; sport: string; team: string; marketValue: string; valid: boolean; error?: string }[]>([]);
   const [bulkImporting, setBulkImporting] = useState(false);
@@ -659,7 +660,9 @@ const AgentDashboard = () => {
           </CardContent>
         </Card>
 
-        {activeView === "pipeline" ? (
+        {activeView === "executive" ? (
+          <ExecutiveOverviewInline />
+        ) : activeView === "pipeline" ? (
           <DealPipeline />
         ) : activeView === "compare" ? (
           <ClientComparison />
