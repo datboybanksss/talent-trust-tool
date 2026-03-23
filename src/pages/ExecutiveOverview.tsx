@@ -67,7 +67,7 @@ const ExecutiveOverview = () => {
         />
 
         {/* KPIs */}
-        <ExecutiveKPICards />
+        <ExecutiveKPICards filters={filters} />
 
         {/* Tabbed Sections */}
         <Tabs defaultValue="book-value" className="space-y-4">
@@ -79,16 +79,16 @@ const ExecutiveOverview = () => {
           </TabsList>
 
           <TabsContent value="book-value">
-            <BookValueSection onSegmentClick={handleSegmentClick} />
+            <BookValueSection onSegmentClick={handleSegmentClick} filters={filters} />
           </TabsContent>
           <TabsContent value="revenue">
-            <RevenueAnalytics onSegmentClick={handleSegmentClick} />
+            <RevenueAnalytics onSegmentClick={handleSegmentClick} filters={filters} />
           </TabsContent>
           <TabsContent value="demographics">
-            <DemographicsSection onSegmentClick={handleSegmentClick} />
+            <DemographicsSection onSegmentClick={handleSegmentClick} filters={filters} />
           </TabsContent>
           <TabsContent value="overhead">
-            <OverheadSection onSegmentClick={handleSegmentClick} />
+            <OverheadSection onSegmentClick={handleSegmentClick} filters={filters} />
           </TabsContent>
         </Tabs>
       </div>
