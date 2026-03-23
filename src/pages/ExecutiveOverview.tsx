@@ -1,10 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
-import { useAdminRole } from "@/hooks/useAdminRole";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Crown, Lock } from "lucide-react";
+import { ArrowLeft, Crown } from "lucide-react";
 import ExecutiveKPICards from "@/components/executive/ExecutiveKPICards";
 import BookValueSection from "@/components/executive/BookValueSection";
 import RevenueAnalytics from "@/components/executive/RevenueAnalytics";
@@ -13,8 +11,6 @@ import OverheadSection from "@/components/executive/OverheadSection";
 import ExecutiveFilters from "@/components/executive/ExecutiveFilters";
 
 const ExecutiveOverview = () => {
-  const { user, loading: authLoading } = useAuth();
-  const { isAdmin, loading: roleLoading } = useAdminRole();
   const navigate = useNavigate();
 
   const [dateRange, setDateRange] = useState("ytd");
