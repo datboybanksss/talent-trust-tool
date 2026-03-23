@@ -9,12 +9,14 @@ interface ExecutiveFiltersProps {
   setClientType: (v: string) => void;
   businessUnit: string;
   setBusinessUnit: (v: string) => void;
+  onExportPdf?: () => void;
 }
 
 const ExecutiveFilters = ({
   dateRange, setDateRange,
   clientType, setClientType,
   businessUnit, setBusinessUnit,
+  onExportPdf,
 }: ExecutiveFiltersProps) => (
   <div className="flex flex-wrap items-center gap-3">
     <Filter className="w-4 h-4 text-muted-foreground" />
@@ -58,7 +60,7 @@ const ExecutiveFilters = ({
       </SelectContent>
     </Select>
 
-    <Button variant="outline" size="sm" className="h-8 text-xs ml-auto gap-1.5">
+    <Button variant="outline" size="sm" className="h-8 text-xs ml-auto gap-1.5" onClick={onExportPdf}>
       <Download className="w-3.5 h-3.5" />
       Export PDF
     </Button>
