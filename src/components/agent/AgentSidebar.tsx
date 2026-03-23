@@ -26,6 +26,7 @@ import {
   Settings,
   FileText,
   Share2,
+  Crown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -33,8 +34,8 @@ interface AgentSidebarProps {
   onNewClient: () => void;
   onBulkImport: () => void;
   agentProfile: { role: string; company_name: string } | null;
-  activeView: "clients" | "pipeline" | "compare" | "calendar" | "templates" | "share";
-  setActiveView: (view: "clients" | "pipeline" | "compare" | "calendar" | "templates" | "share") => void;
+  activeView: "clients" | "pipeline" | "compare" | "calendar" | "templates" | "share" | "executive";
+  setActiveView: (view: "clients" | "pipeline" | "compare" | "calendar" | "templates" | "share" | "executive") => void;
 }
 
 const mainNavItems = [
@@ -44,6 +45,7 @@ const mainNavItems = [
   { title: "Compare", icon: BarChart3, view: "compare" as const },
   { title: "Agreement Templates", icon: FileText, view: "templates" as const },
   { title: "Share Portal", icon: Share2, view: "share" as const },
+  { title: "Executive Overview", icon: Crown, view: "executive" as const },
 ];
 
 const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, setActiveView }: AgentSidebarProps) => {
@@ -52,7 +54,12 @@ const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, set
   const { signOut } = useAuth();
   const navigate = useNavigate();
 
-  const handleNavClick = (view: "clients" | "pipeline" | "compare" | "calendar" | "templates" | "share") => {
+  const handleNavClick = (view: typeof activeView) => {
+    if (view === "executive") {
+      navigate("/executive-overview");
+      if (isMobile) toggleSidebar();
+      return;
+    }
     setActiveView(view);
     if (isMobile) toggleSidebar();
   };
