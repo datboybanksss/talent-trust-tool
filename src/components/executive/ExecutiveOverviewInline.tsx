@@ -17,6 +17,8 @@ const ExecutiveOverviewInline = () => {
   const [businessUnit, setBusinessUnit] = useState("all");
   const [manager, setManager] = useState("all");
 
+  const filters = useMemo(() => ({ dateRange, clientType, businessUnit, manager }), [dateRange, clientType, businessUnit, manager]);
+
   const [drillFilter, setDrillFilter] = useState<DrillDownFilter | null>(null);
   const [drillOpen, setDrillOpen] = useState(false);
 
