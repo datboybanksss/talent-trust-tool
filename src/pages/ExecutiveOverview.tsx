@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,9 @@ import RevenueAnalytics from "@/components/executive/RevenueAnalytics";
 import DemographicsSection from "@/components/executive/DemographicsSection";
 import OverheadSection from "@/components/executive/OverheadSection";
 import ExecutiveFilters from "@/components/executive/ExecutiveFilters";
+import DrillDownSheet from "@/components/executive/DrillDownSheet";
 import { generateExecutiveOverviewPDF } from "@/utils/executiveOverviewPdf";
+import { DrillDownFilter } from "@/data/executiveDrillDownData";
 
 const ExecutiveOverview = () => {
   const navigate = useNavigate();
@@ -18,6 +20,13 @@ const ExecutiveOverview = () => {
   const [clientType, setClientType] = useState("all");
   const [businessUnit, setBusinessUnit] = useState("all");
 
+  const [drillFilter, setDrillFilter] = useState<DrillDownFilter | null>(null);
+  const [drillOpen, setDrillOpen] = useState(false);
+
+  const handleSegmentClick = useCallback((category: string, segment: string) => {
+    setDrillFilter({ category, segment });
+    setDrillOpen(true);
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -65,19 +74,22 @@ const ExecutiveOverview = () => {
           </TabsList>
 
           <TabsContent value="book-value">
-            <BookValueSection />
+            <BookValueSection onSegmentClick={handleSegmentClick} />
           </TabsContent>
           <TabsContent value="revenue">
-            <RevenueAnalytics />
+            <RevenueAnalytics onSegmentClick={handleSegmentClick} />
           </TabsContent>
           <TabsContent value="demographics">
-            <DemographicsSection />
+            <DemographicsSection onSegmentClick={handleSegmentClick} />
           </TabsContent>
           <TabsContent value="overhead">
-            <OverheadSection />
+            <OverheadSection onSegmentClick={handleSegmentClick} />
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Drill-Down Sheet */}
+      <DrillDownSheet filter={drillFilter} open={drillOpen} onOpenChange={setDrillOpen} />
     </div>
   );
 };

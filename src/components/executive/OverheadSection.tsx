@@ -12,13 +12,17 @@ const fixedVarData = [
   { name: "Variable", value: overheadData.variable },
 ];
 
-const OverheadSection = () => (
+interface OverheadSectionProps {
+  onSegmentClick?: (category: string, segment: string) => void;
+}
+
+const OverheadSection = ({ onSegmentClick }: OverheadSectionProps) => (
   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
     {/* Fixed vs Variable */}
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-base">Fixed vs Variable</CardTitle>
-        <p className="text-xs text-muted-foreground">Total: {fmt(totalOverhead)}</p>
+        <p className="text-xs text-muted-foreground">Total: {fmt(totalOverhead)} • Click to drill down</p>
       </CardHeader>
       <CardContent className="h-[240px]">
         <ResponsiveContainer width="100%" height="100%">
@@ -34,9 +38,11 @@ const OverheadSection = () => (
               paddingAngle={3}
               label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
               fontSize={12}
+              className="cursor-pointer"
+              onClick={(data) => onSegmentClick?.("Fixed vs Variable", data.name)}
             >
-              <Cell fill="hsl(200, 70%, 50%)" />
-              <Cell fill="hsl(25, 75%, 55%)" />
+              <Cell fill="hsl(200, 70%, 50%)" className="cursor-pointer hover:opacity-80 transition-opacity" />
+              <Cell fill="hsl(25, 75%, 55%)" className="cursor-pointer hover:opacity-80 transition-opacity" />
             </Pie>
             <Tooltip formatter={(v: number) => fmt(v)} />
           </PieChart>
@@ -48,6 +54,7 @@ const OverheadSection = () => (
     <Card className="lg:col-span-1">
       <CardHeader className="pb-2">
         <CardTitle className="text-base">Costs by Category</CardTitle>
+        <p className="text-xs text-muted-foreground">Click a bar to drill down</p>
       </CardHeader>
       <CardContent className="h-[240px]">
         <ResponsiveContainer width="100%" height="100%">
@@ -56,7 +63,13 @@ const OverheadSection = () => (
             <XAxis type="number" tickFormatter={(v) => fmt(v)} fontSize={11} />
             <YAxis type="category" dataKey="name" width={90} fontSize={11} />
             <Tooltip formatter={(v: number) => fmt(v)} />
-            <Bar dataKey="value" fill="hsl(340, 65%, 50%)" radius={[0, 4, 4, 0]} />
+            <Bar
+              dataKey="value"
+              fill="hsl(340, 65%, 50%)"
+              radius={[0, 4, 4, 0]}
+              className="cursor-pointer"
+              onClick={(data) => onSegmentClick?.("Cost Category", data.name)}
+            />
           </BarChart>
         </ResponsiveContainer>
       </CardContent>

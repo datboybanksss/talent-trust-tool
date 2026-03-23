@@ -9,7 +9,11 @@ import { monthlyRevenue, revenueStreams, topClients, CHART_COLORS } from "@/data
 
 const fmt = (n: number) => `R${(n / 1_000_000).toFixed(1)}M`;
 
-const RevenueAnalytics = () => (
+interface RevenueAnalyticsProps {
+  onSegmentClick?: (category: string, segment: string) => void;
+}
+
+const RevenueAnalytics = ({ onSegmentClick }: RevenueAnalyticsProps) => (
   <div className="space-y-6">
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Trend Line */}
@@ -36,6 +40,7 @@ const RevenueAnalytics = () => (
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Revenue by Stream</CardTitle>
+          <p className="text-xs text-muted-foreground">Click a segment to drill down</p>
         </CardHeader>
         <CardContent className="h-[280px]">
           <ResponsiveContainer width="100%" height="100%">
@@ -50,9 +55,11 @@ const RevenueAnalytics = () => (
                 label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                 labelLine={false}
                 fontSize={11}
+                className="cursor-pointer"
+                onClick={(data) => onSegmentClick?.("Revenue Stream", data.name)}
               >
                 {revenueStreams.map((_, i) => (
-                  <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                  <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} className="cursor-pointer hover:opacity-80 transition-opacity" />
                 ))}
               </Pie>
               <Tooltip formatter={(v: number) => fmt(v)} />
