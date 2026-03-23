@@ -19,6 +19,7 @@ const ExecutiveOverview = () => {
   const [dateRange, setDateRange] = useState("ytd");
   const [clientType, setClientType] = useState("all");
   const [businessUnit, setBusinessUnit] = useState("all");
+  const [manager, setManager] = useState("all");
 
   const [drillFilter, setDrillFilter] = useState<DrillDownFilter | null>(null);
   const [drillOpen, setDrillOpen] = useState(false);

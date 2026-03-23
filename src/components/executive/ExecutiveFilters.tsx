@@ -9,13 +9,25 @@ interface ExecutiveFiltersProps {
   setClientType: (v: string) => void;
   businessUnit: string;
   setBusinessUnit: (v: string) => void;
+  manager: string;
+  setManager: (v: string) => void;
   onExportPdf?: () => void;
 }
+
+export const MANAGERS = [
+  { id: "all", name: "All Managers" },
+  { id: "thabo-mbeki", name: "Thabo Mbeki" },
+  { id: "lindiwe-nkosi", name: "Lindiwe Nkosi" },
+  { id: "sipho-dlamini", name: "Sipho Dlamini" },
+  { id: "nomsa-khumalo", name: "Nomsa Khumalo" },
+  { id: "bongani-zulu", name: "Bongani Zulu" },
+];
 
 const ExecutiveFilters = ({
   dateRange, setDateRange,
   clientType, setClientType,
   businessUnit, setBusinessUnit,
+  manager, setManager,
   onExportPdf,
 }: ExecutiveFiltersProps) => (
   <div className="flex flex-wrap items-center gap-3">
@@ -57,6 +69,17 @@ const ExecutiveFilters = ({
         <SelectItem value="sports">Sports Management</SelectItem>
         <SelectItem value="entertainment">Entertainment</SelectItem>
         <SelectItem value="brand">Brand Partnerships</SelectItem>
+      </SelectContent>
+    </Select>
+
+    <Select value={manager} onValueChange={setManager}>
+      <SelectTrigger className="w-[160px] h-8 text-xs">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {MANAGERS.map((m) => (
+          <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+        ))}
       </SelectContent>
     </Select>
 
