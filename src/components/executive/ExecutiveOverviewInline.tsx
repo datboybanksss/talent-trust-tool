@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ExecutiveKPICards from "@/components/executive/ExecutiveKPICards";
 import BookValueSection from "@/components/executive/BookValueSection";
@@ -16,6 +16,8 @@ const ExecutiveOverviewInline = () => {
   const [clientType, setClientType] = useState("all");
   const [businessUnit, setBusinessUnit] = useState("all");
   const [manager, setManager] = useState("all");
+
+  const filters = useMemo(() => ({ dateRange, clientType, businessUnit, manager }), [dateRange, clientType, businessUnit, manager]);
 
   const [drillFilter, setDrillFilter] = useState<DrillDownFilter | null>(null);
   const [drillOpen, setDrillOpen] = useState(false);
@@ -50,7 +52,7 @@ const ExecutiveOverviewInline = () => {
       />
 
       {/* KPIs */}
-      <ExecutiveKPICards />
+      <ExecutiveKPICards filters={filters} />
 
       {/* Tabbed Sections */}
       <Tabs defaultValue="book-value" className="space-y-4">
@@ -62,16 +64,16 @@ const ExecutiveOverviewInline = () => {
         </TabsList>
 
         <TabsContent value="book-value">
-          <BookValueSection onSegmentClick={handleSegmentClick} />
+          <BookValueSection onSegmentClick={handleSegmentClick} filters={filters} />
         </TabsContent>
         <TabsContent value="revenue">
-          <RevenueAnalytics onSegmentClick={handleSegmentClick} />
+          <RevenueAnalytics onSegmentClick={handleSegmentClick} filters={filters} />
         </TabsContent>
         <TabsContent value="demographics">
-          <DemographicsSection onSegmentClick={handleSegmentClick} />
+          <DemographicsSection onSegmentClick={handleSegmentClick} filters={filters} />
         </TabsContent>
         <TabsContent value="overhead">
-          <OverheadSection onSegmentClick={handleSegmentClick} />
+          <OverheadSection onSegmentClick={handleSegmentClick} filters={filters} />
         </TabsContent>
       </Tabs>
 
