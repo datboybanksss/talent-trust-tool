@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate, Link } from "react-router-dom";
 import {
   Shield, Users, Megaphone, Search, Plus, Trash2, Eye,
-  ArrowLeft, UserCheck, Clock, AlertTriangle, Info, CheckCircle2
+  ArrowLeft, UserCheck, Clock, AlertTriangle, Info, CheckCircle2, Crown
 } from "lucide-react";
 
 interface UserProfile {
@@ -156,6 +156,12 @@ const AdminDashboard = () => {
               </div>
             </div>
           </div>
+          <Button variant="outline" size="sm" className="gap-2" asChild>
+            <Link to="/executive-overview">
+              <Crown className="w-4 h-4" />
+              Executive Overview
+            </Link>
+          </Button>
         </div>
       </header>
 

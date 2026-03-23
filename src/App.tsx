@@ -36,6 +36,7 @@ import RoyaltyTracker from "./pages/RoyaltyTracker";
 import CreativePortfolio from "./pages/CreativePortfolio";
 import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/AdminDashboard";
+import ExecutiveOverview from "./pages/ExecutiveOverview";
 import Pricing from "./pages/Pricing";
 import Contact from "./pages/Contact";
 
@@ -81,6 +82,7 @@ const App = () => (
             <Route path="/dashboard/creative-portfolio" element={<ProtectedRoute><CreativePortfolio /></ProtectedRoute>} />
             <Route path="/client-type" element={<ClientType />} />
             <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+            <Route path="/executive-overview" element={<ProtectedRoute><ExecutiveOverview /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
