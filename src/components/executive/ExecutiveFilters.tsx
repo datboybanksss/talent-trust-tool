@@ -16,6 +16,7 @@ const ExecutiveFilters = ({
   dateRange, setDateRange,
   clientType, setClientType,
   businessUnit, setBusinessUnit,
+  onExportPdf,
 }: ExecutiveFiltersProps) => (
   <div className="flex flex-wrap items-center gap-3">
     <Filter className="w-4 h-4 text-muted-foreground" />
