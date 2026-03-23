@@ -156,6 +156,12 @@ const AdminDashboard = () => {
               </div>
             </div>
           </div>
+          <Button variant="outline" size="sm" className="gap-2" asChild>
+            <Link to="/executive-overview">
+              <Crown className="w-4 h-4" />
+              Executive Overview
+            </Link>
+          </Button>
         </div>
       </header>
 
