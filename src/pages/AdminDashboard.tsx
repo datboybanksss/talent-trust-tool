@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate, Link } from "react-router-dom";
 import {
   Shield, Users, Megaphone, Search, Plus, Trash2, Eye,
-  ArrowLeft, UserCheck, Clock, AlertTriangle, Info, CheckCircle2
+  ArrowLeft, UserCheck, Clock, AlertTriangle, Info, CheckCircle2, Crown
 } from "lucide-react";
 
 interface UserProfile {
