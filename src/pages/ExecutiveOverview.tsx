@@ -9,6 +9,7 @@ import RevenueAnalytics from "@/components/executive/RevenueAnalytics";
 import DemographicsSection from "@/components/executive/DemographicsSection";
 import OverheadSection from "@/components/executive/OverheadSection";
 import ExecutiveFilters from "@/components/executive/ExecutiveFilters";
+import { generateExecutiveOverviewPDF } from "@/utils/executiveOverviewPdf";
 
 const ExecutiveOverview = () => {
   const navigate = useNavigate();
