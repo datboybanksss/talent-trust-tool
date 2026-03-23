@@ -36,6 +36,7 @@ import RoyaltyTracker from "./pages/RoyaltyTracker";
 import CreativePortfolio from "./pages/CreativePortfolio";
 import NotFound from "./pages/NotFound";
 import AdminDashboard from "./pages/AdminDashboard";
+import ExecutiveOverview from "./pages/ExecutiveOverview";
 import Pricing from "./pages/Pricing";
 import Contact from "./pages/Contact";
 
