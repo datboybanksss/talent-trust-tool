@@ -32,6 +32,7 @@ import AgreementTemplates from "@/components/agent/AgreementTemplates";
 import SharePortal from "@/components/agent/SharePortal";
 import AgentChatBot from "@/components/agent/AgentChatBot";
 import ConfidentialityGate from "@/components/agent/ConfidentialityGate";
+import ExecutiveOverviewInline from "@/components/executive/ExecutiveOverviewInline";
 import * as XLSX from "xlsx";
 
 interface Invitation {
