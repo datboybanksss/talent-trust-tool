@@ -118,44 +118,45 @@
 @layer utilities {
   .text-gradient-gold {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(43 80% 55%) 0%, hsl(43 85% 45%) 100%);
+    background-image: linear-gradient(135deg, hsl(38 70% 55%) 0%, hsl(38 75% 42%) 100%);
+  }
+
+  .text-gradient-forest {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, hsl(145 30% 28%) 0%, hsl(145 35% 18%) 100%);
   }
 
   .bg-gradient-hero {
-    background: var(--gradient-hero);
+    background: linear-gradient(135deg, hsl(145 30% 20%) 0%, hsl(145 35% 14%) 100%);
   }
 
   .bg-gradient-gold {
-    background: var(--gradient-gold);
+    background: linear-gradient(135deg, hsl(38 70% 50%) 0%, hsl(38 75% 40%) 100%);
   }
 
   .bg-gradient-premium {
-    background: var(--gradient-premium);
+    background: linear-gradient(135deg, hsl(145 30% 22%) 0%, hsl(38 70% 50%) 100%);
   }
 
   .bg-gradient-card {
-    background: var(--gradient-card);
+    background: linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(40 20% 97%) 100%);
   }
 
   .shadow-soft {
     box-shadow: var(--shadow-soft);
   }
 
-  .shadow-medium {
-    box-shadow: var(--shadow-medium);
-  }
-
   .shadow-gold {
     box-shadow: var(--shadow-gold);
   }
 
-  .shadow-glow {
-    box-shadow: var(--shadow-glow);
+  .shadow-forest {
+    box-shadow: var(--shadow-forest);
   }
 
   .border-gradient-gold {
     border: 1px solid transparent;
-    background: linear-gradient(var(--gradient-card), var(--gradient-card)) padding-box,
-                linear-gradient(135deg, hsl(43 80% 50% / 0.3), hsl(43 80% 50% / 0.1)) border-box;
+    background: linear-gradient(hsl(0 0% 100%), hsl(40 20% 97%)) padding-box,
+                linear-gradient(135deg, hsl(38 70% 50% / 0.3), hsl(38 70% 50% / 0.1)) border-box;
   }
 }
