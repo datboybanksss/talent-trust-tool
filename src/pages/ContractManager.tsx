@@ -11,9 +11,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, FileText, Trash2, Edit2, Calendar, DollarSign, Upload, Download, X, Paperclip, Loader2 } from "lucide-react";
+import { Plus, FileText, Trash2, Edit2, Calendar, DollarSign, Upload, Download, X, Paperclip, Loader2, FileDown } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { generateContractsPDF } from "@/utils/documentPdfExports";
 
 interface Contract {
   id: string;
@@ -222,6 +223,11 @@ const ContractManager = () => {
 
   return (
     <DashboardLayout title="Contract Manager 🏆" subtitle="Track and manage all your athletic contracts">
+      <div className="flex justify-end mb-4">
+        <Button variant="outline" onClick={() => { generateContractsPDF(); toast({ title: "PDF downloaded" }); }}>
+          <FileDown className="w-4 h-4 mr-2" /> Export PDF
+        </Button>
+      </div>
       {/* Summary Cards */}
       <div className="grid sm:grid-cols-3 gap-4 mb-8">
         <Card className="p-5">

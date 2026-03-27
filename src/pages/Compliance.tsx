@@ -7,9 +7,12 @@ import {
   Clock,
   Calendar,
   ArrowRight,
-  Filter
+  Filter,
+  FileDown
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "@/hooks/use-toast";
+import { generateCompliancePDF } from "@/utils/documentPdfExports";
 
 const Compliance = () => {
   return (
@@ -17,6 +20,11 @@ const Compliance = () => {
       title="My Compliance Reminders" 
       subtitle="Track and manage all statutory compliance requirements"
     >
+      <div className="flex justify-end mb-4">
+        <Button variant="outline" onClick={() => { generateCompliancePDF(); toast({ title: "PDF downloaded" }); }}>
+          <FileDown className="w-4 h-4 mr-2" /> Export PDF
+        </Button>
+      </div>
       {/* Stats */}
       <div className="grid sm:grid-cols-4 gap-4 mb-8">
         <ComplianceStatCard
