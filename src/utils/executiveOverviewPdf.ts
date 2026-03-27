@@ -249,8 +249,66 @@ export const generateExecutiveOverviewPDF = () => {
   y = (doc as any).lastAutoTable.finalY + 12;
 
   // ── 3. Monthly Revenue vs Costs ─────────────
-  checkPage(80);
+  checkPage(130);
   sectionTitle("Monthly Revenue vs Costs");
+
+  // Vertical bar chart: Revenue (green) vs Costs (gold) per month
+  {
+    const chartX = 25;
+    const chartW = pw - 50;
+    const chartH = 70;
+    const chartTop = y;
+    const chartBottom = y + chartH;
+    const maxVal = Math.max(...monthlyRevenue.map(m => m.revenue)) * 1.1;
+    const barGroupW = chartW / monthlyRevenue.length;
+    const barW = barGroupW * 0.35;
+
+    // Y-axis grid lines & labels
+    doc.setDrawColor(230, 230, 230);
+    doc.setLineWidth(0.3);
+    for (let i = 0; i <= 4; i++) {
+      const gy = chartBottom - (chartH * i) / 4;
+      doc.line(chartX, gy, chartX + chartW, gy);
+      doc.setFontSize(7);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(...muted);
+      doc.text(fmt((maxVal * i) / 4), chartX - 2, gy + 1, { align: "right" });
+    }
+
+    monthlyRevenue.forEach((m, i) => {
+      const gx = chartX + i * barGroupW + barGroupW * 0.1;
+      const revH = (m.revenue / maxVal) * chartH;
+      const costH = (m.costs / maxVal) * chartH;
+
+      // Revenue bar (forest green)
+      doc.setFillColor(...forestGreen);
+      doc.rect(gx, chartBottom - revH, barW, revH, "F");
+
+      // Cost bar (gold)
+      doc.setFillColor(...gold);
+      doc.rect(gx + barW + 1, chartBottom - costH, barW, costH, "F");
+
+      // Month label
+      doc.setFontSize(7);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(...dark);
+      doc.text(m.month, gx + barW, chartBottom + 6, { align: "center" });
+    });
+
+    // Legend
+    const legY = chartBottom + 12;
+    doc.setFillColor(...forestGreen);
+    doc.rect(chartX, legY, 8, 5, "F");
+    doc.setFontSize(8);
+    doc.setTextColor(...dark);
+    doc.text("Revenue", chartX + 11, legY + 4);
+
+    doc.setFillColor(...gold);
+    doc.rect(chartX + 45, legY, 8, 5, "F");
+    doc.text("Costs", chartX + 56, legY + 4);
+
+    y = legY + 14;
+  }
 
   autoTable(doc, {
     startY: y,
