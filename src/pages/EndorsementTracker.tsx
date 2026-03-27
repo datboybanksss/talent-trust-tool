@@ -10,9 +10,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Trash2, Edit2, Trophy, DollarSign, Handshake, TrendingUp } from "lucide-react";
+import { Plus, Trash2, Edit2, Trophy, DollarSign, Handshake, TrendingUp, FileDown } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { generateEndorsementsPDF } from "@/utils/documentPdfExports";
 
 interface Endorsement {
   id: string;
@@ -162,6 +163,11 @@ const EndorsementTracker = () => {
 
   return (
     <DashboardLayout title="Endorsement Tracker 🤝" subtitle="Monitor your brand deals, sponsorships, and partnerships">
+      <div className="flex justify-end mb-4">
+        <Button variant="outline" onClick={() => { generateEndorsementsPDF(); toast({ title: "PDF downloaded" }); }}>
+          <FileDown className="w-4 h-4 mr-2" /> Export PDF
+        </Button>
+      </div>
       {/* Summary Cards */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <Card className="p-5">

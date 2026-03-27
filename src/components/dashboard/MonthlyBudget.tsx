@@ -30,6 +30,8 @@ import {
   Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { generateBudgetPDF } from "@/utils/documentPdfExports";
+import { FileDown } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -210,6 +212,9 @@ const MonthlyBudget = () => {
     <div className="space-y-6">
       {/* Edit Toggle */}
       <div className="flex items-center justify-end gap-2">
+        <Button variant="outline" size="sm" onClick={() => { generateBudgetPDF(); toast({ title: "PDF downloaded" }); }} className="gap-2">
+          <FileDown className="w-4 h-4" /> Export PDF
+        </Button>
         {isEditing ? (
           <>
             <Button variant="outline" size="sm" onClick={cancelEditing} className="gap-2">
