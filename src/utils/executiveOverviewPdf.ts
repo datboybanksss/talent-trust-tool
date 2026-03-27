@@ -16,6 +16,107 @@ const fmt = (n: number) =>
 
 const pct = (n: number) => `${n}%`;
 
+const CHART_PALETTE: [number, number, number][] = [
+  [196, 155, 45], [34, 68, 34], [70, 130, 180], [178, 102, 60],
+  [100, 149, 120], [139, 90, 140], [200, 120, 60], [80, 80, 80],
+];
+
+// ─── Chart helpers ────────────────────────────────────────────
+
+function drawDonutChart(
+  doc: jsPDF, cx: number, cy: number, outerR: number, innerR: number,
+  data: { name: string; value: number }[], centerLabel?: string,
+  opts?: { legendX?: number; legendY?: number }
+) {
+  const total = data.reduce((s, d) => s + d.value, 0);
+  if (total === 0) return;
+  let startAngle = -Math.PI / 2;
+  const dark: [number, number, number] = [30, 30, 30];
+
+  data.forEach((item, i) => {
+    const sliceAngle = (item.value / total) * 2 * Math.PI;
+    const color = CHART_PALETTE[i % CHART_PALETTE.length];
+    doc.setFillColor(...color);
+    const steps = Math.max(20, Math.ceil(sliceAngle * 30));
+    const outerPts: [number, number][] = [];
+    const innerPts: [number, number][] = [];
+    for (let s = 0; s <= steps; s++) {
+      const angle = startAngle + (sliceAngle * s) / steps;
+      outerPts.push([cx + outerR * Math.cos(angle), cy + outerR * Math.sin(angle)]);
+      innerPts.push([cx + innerR * Math.cos(angle), cy + innerR * Math.sin(angle)]);
+    }
+    innerPts.reverse();
+    const allPts = [...outerPts, ...innerPts];
+    for (let s = 1; s < allPts.length - 1; s++) {
+      doc.triangle(allPts[0][0], allPts[0][1], allPts[s][0], allPts[s][1], allPts[s + 1][0], allPts[s + 1][1], "F");
+    }
+    startAngle += sliceAngle;
+  });
+
+  if (centerLabel) {
+    doc.setFillColor(255, 255, 255);
+    doc.circle(cx, cy, innerR - 1, "F");
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(...dark);
+    doc.text(centerLabel, cx, cy, { align: "center", baseline: "middle" });
+  }
+
+  const lx = opts?.legendX ?? cx + outerR + 12;
+  let ly = opts?.legendY ?? cy - outerR + 4;
+  data.forEach((item, i) => {
+    const color = CHART_PALETTE[i % CHART_PALETTE.length];
+    doc.setFillColor(...color);
+    doc.rect(lx, ly - 3, 6, 6, "F");
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...dark);
+    doc.text(`${item.name} – ${fmt(item.value)}`, lx + 9, ly + 1);
+    ly += 10;
+  });
+}
+
+function drawHorizontalBarChart(
+  doc: jsPDF, x: number, y: number, width: number,
+  data: { name: string; value: number }[],
+  opts?: { barHeight?: number; gap?: number; maxVal?: number }
+) {
+  const barH = opts?.barHeight ?? 10;
+  const gap = opts?.gap ?? 5;
+  const maxVal = opts?.maxVal ?? Math.max(...data.map(d => d.value));
+  const dark: [number, number, number] = [30, 30, 30];
+  const white: [number, number, number] = [255, 255, 255];
+  if (maxVal === 0) return y;
+
+  data.forEach((item, i) => {
+    const barWidth = (item.value / maxVal) * (width - 55);
+    const by = y + i * (barH + gap);
+    const color = CHART_PALETTE[i % CHART_PALETTE.length];
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...dark);
+    doc.text(item.name, x, by + barH / 2 + 1, { baseline: "middle" });
+    doc.setFillColor(240, 240, 240);
+    doc.roundedRect(x + 52, by, width - 55, barH, 2, 2, "F");
+    if (barWidth > 0) {
+      doc.setFillColor(...color);
+      doc.roundedRect(x + 52, by, Math.max(barWidth, 4), barH, 2, 2, "F");
+    }
+    doc.setFontSize(7);
+    doc.setFont("helvetica", "bold");
+    if (barWidth > 30) {
+      doc.setTextColor(...white);
+      doc.text(fmt(item.value), x + 52 + barWidth - 3, by + barH / 2 + 1, { align: "right", baseline: "middle" });
+    } else {
+      doc.setTextColor(...dark);
+      doc.text(fmt(item.value), x + 52 + barWidth + 3, by + barH / 2 + 1, { baseline: "middle" });
+    }
+  });
+  return y + data.length * (barH + gap);
+}
+
+// ─── Main export ──────────────────────────────────────────────
+
 export const generateExecutiveOverviewPDF = () => {
   const doc = new jsPDF();
   const pw = doc.internal.pageSize.getWidth();
@@ -27,12 +128,10 @@ export const generateExecutiveOverviewPDF = () => {
   const muted: [number, number, number] = [120, 120, 120];
   const white: [number, number, number] = [255, 255, 255];
   const lightBg: [number, number, number] = [250, 248, 240];
+  const forestGreen: [number, number, number] = [34, 68, 34];
 
   const checkPage = (need: number) => {
-    if (y + need > ph - 20) {
-      doc.addPage();
-      y = 20;
-    }
+    if (y + need > ph - 20) { doc.addPage(); y = 20; }
   };
 
   const sectionTitle = (title: string) => {
@@ -47,22 +146,24 @@ export const generateExecutiveOverviewPDF = () => {
   };
 
   // ── Header ──────────────────────────────────
+  doc.setFillColor(...forestGreen);
+  doc.rect(0, 0, pw, 42, "F");
   doc.setFillColor(...gold);
-  doc.rect(0, 0, pw, 45, "F");
+  doc.rect(0, 42, pw, 4, "F");
 
   doc.setTextColor(...white);
   doc.setFontSize(24);
   doc.setFont("helvetica", "bold");
-  doc.text("Executive Overview", 20, 22);
+  doc.text("Executive Overview", 20, 20);
 
   doc.setFontSize(11);
   doc.setFont("helvetica", "normal");
-  doc.text("Board-Ready Performance Snapshot", 20, 32);
-  doc.text(format(new Date(), "MMMM d, yyyy"), pw - 20, 32, { align: "right" });
+  doc.text("Board-Ready Performance Snapshot", 20, 30);
+  doc.text(format(new Date(), "MMMM d, yyyy"), pw - 20, 30, { align: "right" });
 
   doc.setFontSize(9);
-  doc.text("CONFIDENTIAL", 20, 40);
-  doc.text("LegacyBuilder", pw - 20, 40, { align: "right" });
+  doc.text("CONFIDENTIAL", 20, 38);
+  doc.text("LegacyBuilder", pw - 20, 38, { align: "right" });
 
   y = 58;
   doc.setTextColor(...dark);
@@ -83,7 +184,6 @@ export const generateExecutiveOverviewPDF = () => {
   doc.setTextColor(...dark);
   doc.text(fmt(totalPortfolio), 22, y + 19);
 
-  // KPI chips across the top
   const kpiItems = [
     { label: "Revenue Growth", val: `+${kpis.revenueGrowth}%` },
     { label: "Retention", val: pct(kpis.clientRetention) },
@@ -106,18 +206,17 @@ export const generateExecutiveOverviewPDF = () => {
 
   y += 34;
 
-  // ── 1. Book Value by Client Type ────────────
+  // ── 1. Book Value – Donut + Table ───────────
   sectionTitle("Book Value by Client Type");
+
+  const clientData = clientTypeValues.map(c => ({ name: c.name, value: c.value }));
+  drawDonutChart(doc, 55, y + 28, 26, 13, clientData, fmt(totalPortfolio), { legendX: 92, legendY: y + 5 });
+  y += 65;
 
   autoTable(doc, {
     startY: y,
     head: [["Client Type", "Value (ZAR)", "Clients", "% of Portfolio"]],
-    body: clientTypeValues.map((c) => [
-      c.name,
-      fmt(c.value),
-      `${c.count}`,
-      `${((c.value / totalPortfolio) * 100).toFixed(1)}%`,
-    ]),
+    body: clientTypeValues.map((c) => [c.name, fmt(c.value), `${c.count}`, `${((c.value / totalPortfolio) * 100).toFixed(1)}%`]),
     foot: [["Total", fmt(totalPortfolio), `${clientTypeValues.reduce((s, c) => s + c.count, 0)}`, "100%"]],
     theme: "grid",
     headStyles: { fillColor: gold, textColor: white, fontStyle: "bold", fontSize: 9 },
@@ -127,18 +226,19 @@ export const generateExecutiveOverviewPDF = () => {
   });
   y = (doc as any).lastAutoTable.finalY + 12;
 
-  // ── 2. Revenue by Stream ────────────────────
+  // ── 2. Revenue – Bar Chart + Table ──────────
+  checkPage(100);
   sectionTitle("Revenue by Stream");
 
   const totalRev = revenueStreams.reduce((s, r) => s + r.value, 0);
+  const revData = revenueStreams.map(r => ({ name: r.name, value: r.value }));
+  y = drawHorizontalBarChart(doc, 15, y, 180, revData);
+  y += 10;
+
   autoTable(doc, {
     startY: y,
     head: [["Revenue Stream", "Value (ZAR)", "% of Revenue"]],
-    body: revenueStreams.map((r) => [
-      r.name,
-      fmt(r.value),
-      `${((r.value / totalRev) * 100).toFixed(1)}%`,
-    ]),
+    body: revenueStreams.map((r) => [r.name, fmt(r.value), `${((r.value / totalRev) * 100).toFixed(1)}%`]),
     foot: [["Total", fmt(totalRev), "100%"]],
     theme: "grid",
     headStyles: { fillColor: gold, textColor: white, fontStyle: "bold", fontSize: 9 },
@@ -149,6 +249,7 @@ export const generateExecutiveOverviewPDF = () => {
   y = (doc as any).lastAutoTable.finalY + 12;
 
   // ── 3. Monthly Revenue vs Costs ─────────────
+  checkPage(80);
   sectionTitle("Monthly Revenue vs Costs");
 
   autoTable(doc, {
@@ -156,13 +257,7 @@ export const generateExecutiveOverviewPDF = () => {
     head: [["Month", "Revenue", "Costs", "Margin", "Margin %"]],
     body: monthlyRevenue.map((m) => {
       const margin = m.revenue - m.costs;
-      return [
-        m.month,
-        fmt(m.revenue),
-        fmt(m.costs),
-        fmt(margin),
-        `${((margin / m.revenue) * 100).toFixed(0)}%`,
-      ];
+      return [m.month, fmt(m.revenue), fmt(m.costs), fmt(margin), `${((margin / m.revenue) * 100).toFixed(0)}%`];
     }),
     foot: (() => {
       const tRev = monthlyRevenue.reduce((s, m) => s + m.revenue, 0);
@@ -178,19 +273,18 @@ export const generateExecutiveOverviewPDF = () => {
   });
   y = (doc as any).lastAutoTable.finalY + 12;
 
-  // ── 4. Top Clients ──────────────────────────
+  // ── 4. Top Clients – Bar Chart ──────────────
+  checkPage(120);
   sectionTitle("Top Clients by Revenue Contribution");
+
+  const topData = topClients.map(c => ({ name: c.name, value: c.revenue }));
+  y = drawHorizontalBarChart(doc, 15, y, 180, topData);
+  y += 8;
 
   autoTable(doc, {
     startY: y,
     head: [["#", "Client", "Type", "Sector", "Revenue"]],
-    body: topClients.map((c, i) => [
-      `${i + 1}`,
-      c.name,
-      c.type,
-      c.sport || c.genre || c.industry || "-",
-      fmt(c.revenue),
-    ]),
+    body: topClients.map((c, i) => [`${i + 1}`, c.name, c.type, c.sport || c.genre || c.industry || "-", fmt(c.revenue)]),
     theme: "grid",
     headStyles: { fillColor: gold, textColor: white, fontStyle: "bold", fontSize: 9 },
     styles: { fontSize: 9, cellPadding: 4 },
@@ -198,8 +292,18 @@ export const generateExecutiveOverviewPDF = () => {
   });
   y = (doc as any).lastAutoTable.finalY + 12;
 
-  // ── 5. Client Demographics ──────────────────
+  // ── 5. Demographics – Donut Charts ──────────
+  checkPage(80);
   sectionTitle("Client Demographics");
+
+  // Gender donut
+  const genderData = demographics.gender.map(d => ({ name: d.name, value: d.value }));
+  drawDonutChart(doc, 45, y + 25, 22, 11, genderData, `${demographics.gender.reduce((s, d) => s + d.value, 0)}`, { legendX: 75, legendY: y + 8 });
+
+  // Geography donut
+  const geoData = demographics.geography.map(d => ({ name: d.name, value: d.value }));
+  drawDonutChart(doc, 155, y + 25, 22, 11, geoData, undefined, { legendX: 115, legendY: y + 55 });
+  y += 55;
 
   const demoRows = [
     ...demographics.clientType.map((d) => ["Client Type", d.name, `${d.value}`]),
@@ -210,6 +314,7 @@ export const generateExecutiveOverviewPDF = () => {
     ["Accessibility", "Para-Athletes", `${demographics.paraAthletes}`],
   ];
 
+  checkPage(80);
   autoTable(doc, {
     startY: y,
     head: [["Category", "Segment", "Count"]],
@@ -219,7 +324,6 @@ export const generateExecutiveOverviewPDF = () => {
     styles: { fontSize: 9, cellPadding: 3 },
     margin: { left: 15, right: 15 },
     didParseCell: (data) => {
-      // Group shading for alternating categories
       if (data.section === "body" && data.column.index === 0) {
         data.cell.styles.fontStyle = "bold";
       }
@@ -227,7 +331,8 @@ export const generateExecutiveOverviewPDF = () => {
   });
   y = (doc as any).lastAutoTable.finalY + 12;
 
-  // ── 6. Overhead & Costs ─────────────────────
+  // ── 6. Overhead – Donut + Table ─────────────
+  checkPage(100);
   sectionTitle("Overhead & Cost Overview");
 
   const totalOverhead = overheadData.fixed + overheadData.variable;
@@ -238,19 +343,18 @@ export const generateExecutiveOverviewPDF = () => {
   doc.setTextColor(...dark);
   doc.text(
     `Total Overhead: ${fmt(totalOverhead)}  •  Fixed: ${fmt(overheadData.fixed)}  •  Variable: ${fmt(overheadData.variable)}  •  ${overheadPct}% of Revenue`,
-    24,
-    y
+    24, y
   );
-  y += 8;
+  y += 10;
+
+  const ohData = overheadData.categories.map(c => ({ name: c.name, value: c.value }));
+  drawDonutChart(doc, 55, y + 25, 24, 12, ohData, fmt(totalOverhead), { legendX: 90, legendY: y + 2 });
+  y += 60;
 
   autoTable(doc, {
     startY: y,
     head: [["Cost Category", "Value (ZAR)", "% of Overhead"]],
-    body: overheadData.categories.map((c) => [
-      c.name,
-      fmt(c.value),
-      `${((c.value / totalOverhead) * 100).toFixed(1)}%`,
-    ]),
+    body: overheadData.categories.map((c) => [c.name, fmt(c.value), `${((c.value / totalOverhead) * 100).toFixed(1)}%`]),
     foot: [["Total", fmt(totalOverhead), "100%"]],
     theme: "grid",
     headStyles: { fillColor: gold, textColor: white, fontStyle: "bold", fontSize: 9 },
@@ -261,6 +365,7 @@ export const generateExecutiveOverviewPDF = () => {
   y = (doc as any).lastAutoTable.finalY + 12;
 
   // ── 7. Executive KPI Summary ────────────────
+  checkPage(60);
   sectionTitle("Executive KPI Summary");
 
   autoTable(doc, {
@@ -277,10 +382,7 @@ export const generateExecutiveOverviewPDF = () => {
     ],
     theme: "striped",
     styles: { fontSize: 10, cellPadding: 5 },
-    columnStyles: {
-      0: { fontStyle: "bold", cellWidth: 80 },
-      1: { halign: "right" },
-    },
+    columnStyles: { 0: { fontStyle: "bold", cellWidth: 80 }, 1: { halign: "right" } },
     margin: { left: 15, right: 15 },
   });
 
