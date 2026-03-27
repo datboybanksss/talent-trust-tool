@@ -15,13 +15,251 @@ const white: [number, number, number] = [255, 255, 255];
 const lightBg: [number, number, number] = [250, 248, 240];
 const forestGreen: [number, number, number] = [34, 68, 34];
 
+const CHART_PALETTE: [number, number, number][] = [
+  [196, 155, 45],  // gold
+  [34, 68, 34],    // forest green
+  [70, 130, 180],  // steel blue
+  [178, 102, 60],  // copper
+  [100, 149, 120], // sage
+  [139, 90, 140],  // muted purple
+  [200, 120, 60],  // amber
+  [80, 80, 80],    // charcoal
+];
+
+// ─── Chart Drawing Helpers ────────────────────────────────────
+
+function drawPieChart(
+  doc: jsPDF,
+  cx: number, cy: number, radius: number,
+  data: { name: string; value: number }[],
+  opts?: { showLabels?: boolean; legendX?: number; legendY?: number }
+) {
+  const total = data.reduce((s, d) => s + d.value, 0);
+  if (total === 0) return;
+
+  let startAngle = -Math.PI / 2;
+
+  data.forEach((item, i) => {
+    const sliceAngle = (item.value / total) * 2 * Math.PI;
+    const color = CHART_PALETTE[i % CHART_PALETTE.length];
+
+    // Draw filled arc using small triangle segments
+    doc.setFillColor(...color);
+    doc.setDrawColor(255, 255, 255);
+    doc.setLineWidth(0.5);
+
+    const steps = Math.max(20, Math.ceil(sliceAngle * 30));
+    const points: [number, number][] = [[cx, cy]];
+    for (let s = 0; s <= steps; s++) {
+      const angle = startAngle + (sliceAngle * s) / steps;
+      points.push([cx + radius * Math.cos(angle), cy + radius * Math.sin(angle)]);
+    }
+
+    // Draw as filled polygon using triangle fan
+    for (let s = 1; s < points.length - 1; s++) {
+      doc.triangle(
+        points[0][0], points[0][1],
+        points[s][0], points[s][1],
+        points[s + 1][0], points[s + 1][1],
+        "F"
+      );
+    }
+
+    // Percentage label on slice
+    if (opts?.showLabels !== false && sliceAngle > 0.25) {
+      const midAngle = startAngle + sliceAngle / 2;
+      const labelR = radius * 0.65;
+      const lx = cx + labelR * Math.cos(midAngle);
+      const ly = cy + labelR * Math.sin(midAngle);
+      doc.setFontSize(7);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(255, 255, 255);
+      const pctText = `${((item.value / total) * 100).toFixed(0)}%`;
+      doc.text(pctText, lx, ly, { align: "center", baseline: "middle" });
+    }
+
+    startAngle += sliceAngle;
+  });
+
+  // Draw legend
+  const lx = opts?.legendX ?? cx + radius + 12;
+  let ly = opts?.legendY ?? cy - radius + 4;
+  data.forEach((item, i) => {
+    const color = CHART_PALETTE[i % CHART_PALETTE.length];
+    doc.setFillColor(...color);
+    doc.rect(lx, ly - 3, 6, 6, "F");
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...dark);
+    const pct = `${((item.value / total) * 100).toFixed(1)}%`;
+    doc.text(`${item.name} (${pct})`, lx + 9, ly + 1);
+    ly += 10;
+  });
+}
+
+function drawHorizontalBarChart(
+  doc: jsPDF,
+  x: number, y: number, width: number,
+  data: { name: string; value: number }[],
+  opts?: { barHeight?: number; gap?: number; showValues?: boolean; maxVal?: number }
+) {
+  const barH = opts?.barHeight ?? 10;
+  const gap = opts?.gap ?? 5;
+  const maxVal = opts?.maxVal ?? Math.max(...data.map(d => d.value));
+  if (maxVal === 0) return y;
+
+  data.forEach((item, i) => {
+    const barWidth = (item.value / maxVal) * (width - 55);
+    const by = y + i * (barH + gap);
+    const color = CHART_PALETTE[i % CHART_PALETTE.length];
+
+    // Label
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...dark);
+    doc.text(item.name, x, by + barH / 2 + 1, { baseline: "middle" });
+
+    // Bar background
+    doc.setFillColor(240, 240, 240);
+    doc.roundedRect(x + 52, by, width - 55, barH, 2, 2, "F");
+
+    // Bar fill
+    if (barWidth > 0) {
+      doc.setFillColor(...color);
+      doc.roundedRect(x + 52, by, Math.max(barWidth, 4), barH, 2, 2, "F");
+    }
+
+    // Value text
+    if (opts?.showValues !== false) {
+      doc.setFontSize(7);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(...white);
+      if (barWidth > 30) {
+        doc.text(fmt(item.value), x + 52 + barWidth - 3, by + barH / 2 + 1, { align: "right", baseline: "middle" });
+      } else {
+        doc.setTextColor(...dark);
+        doc.text(fmt(item.value), x + 52 + barWidth + 3, by + barH / 2 + 1, { baseline: "middle" });
+      }
+    }
+  });
+
+  return y + data.length * (barH + gap);
+}
+
+function drawStackedBar(
+  doc: jsPDF,
+  x: number, y: number, width: number, height: number,
+  segments: { name: string; value: number }[]
+) {
+  const total = segments.reduce((s, d) => s + d.value, 0);
+  if (total === 0) return;
+
+  let currentX = x;
+  segments.forEach((seg, i) => {
+    const segWidth = (seg.value / total) * width;
+    const color = CHART_PALETTE[i % CHART_PALETTE.length];
+    doc.setFillColor(...color);
+    doc.rect(currentX, y, segWidth, height, "F");
+
+    if (segWidth > 20) {
+      doc.setFontSize(7);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(255, 255, 255);
+      doc.text(`${((seg.value / total) * 100).toFixed(0)}%`, currentX + segWidth / 2, y + height / 2 + 1, { align: "center", baseline: "middle" });
+    }
+    currentX += segWidth;
+  });
+
+  // Legend below
+  let lx = x;
+  const ly = y + height + 6;
+  segments.forEach((seg, i) => {
+    const color = CHART_PALETTE[i % CHART_PALETTE.length];
+    doc.setFillColor(...color);
+    doc.rect(lx, ly, 5, 5, "F");
+    doc.setFontSize(7);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...dark);
+    doc.text(seg.name, lx + 7, ly + 4);
+    lx += doc.getTextWidth(seg.name) + 14;
+  });
+}
+
+function drawDonutChart(
+  doc: jsPDF,
+  cx: number, cy: number, outerR: number, innerR: number,
+  data: { name: string; value: number }[],
+  centerLabel?: string,
+  opts?: { legendX?: number; legendY?: number }
+) {
+  const total = data.reduce((s, d) => s + d.value, 0);
+  if (total === 0) return;
+
+  let startAngle = -Math.PI / 2;
+
+  data.forEach((item, i) => {
+    const sliceAngle = (item.value / total) * 2 * Math.PI;
+    const color = CHART_PALETTE[i % CHART_PALETTE.length];
+    doc.setFillColor(...color);
+
+    // Draw ring segment as polygon
+    const steps = Math.max(20, Math.ceil(sliceAngle * 30));
+    const outerPts: [number, number][] = [];
+    const innerPts: [number, number][] = [];
+    for (let s = 0; s <= steps; s++) {
+      const angle = startAngle + (sliceAngle * s) / steps;
+      outerPts.push([cx + outerR * Math.cos(angle), cy + outerR * Math.sin(angle)]);
+      innerPts.push([cx + innerR * Math.cos(angle), cy + innerR * Math.sin(angle)]);
+    }
+    innerPts.reverse();
+    const allPts = [...outerPts, ...innerPts];
+
+    // Fill using triangle fan from first point
+    for (let s = 1; s < allPts.length - 1; s++) {
+      doc.triangle(
+        allPts[0][0], allPts[0][1],
+        allPts[s][0], allPts[s][1],
+        allPts[s + 1][0], allPts[s + 1][1],
+        "F"
+      );
+    }
+
+    startAngle += sliceAngle;
+  });
+
+  // Center label
+  if (centerLabel) {
+    doc.setFillColor(255, 255, 255);
+    doc.circle(cx, cy, innerR - 1, "F");
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(...dark);
+    doc.text(centerLabel, cx, cy, { align: "center", baseline: "middle" });
+  }
+
+  // Legend
+  const lx = opts?.legendX ?? cx + outerR + 12;
+  let ly = opts?.legendY ?? cy - outerR + 4;
+  data.forEach((item, i) => {
+    const color = CHART_PALETTE[i % CHART_PALETTE.length];
+    doc.setFillColor(...color);
+    doc.rect(lx, ly - 3, 6, 6, "F");
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...dark);
+    doc.text(`${item.name} – ${fmt(item.value)}`, lx + 9, ly + 1);
+    ly += 10;
+  });
+}
+
+// ─── Shared Helpers ───────────────────────────────────────────
+
 function pdfHeader(doc: jsPDF, title: string, subtitle: string) {
   const pw = doc.internal.pageSize.getWidth();
   doc.setFillColor(...forestGreen);
   doc.rect(0, 0, pw, 40, "F");
   doc.setFillColor(...gold);
   doc.rect(0, 40, pw, 4, "F");
-
   doc.setTextColor(...white);
   doc.setFontSize(22);
   doc.setFont("helvetica", "bold");
@@ -57,6 +295,12 @@ function sectionTitle(doc: jsPDF, title: string, y: number): number {
   doc.setTextColor(...dark);
   doc.text(title, 24, y + 10);
   return y + 20;
+}
+
+function checkPage(doc: jsPDF, y: number, need: number): number {
+  const ph = doc.internal.pageSize.getHeight();
+  if (y + need > ph - 20) { doc.addPage(); return 20; }
+  return y;
 }
 
 // ─── Mock data ────────────────────────────────────────────────
@@ -121,16 +365,19 @@ const mockCompliance = [
   { title: "BBBEE Certificate Renewal", category: "DTI", due: "Apr 30, 2026", status: "Upcoming", priority: "Low" },
 ];
 
-// ─── Export Functions ─────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// EXPORT FUNCTIONS
+// ═══════════════════════════════════════════════════════════════
 
 export const generateContractsPDF = () => {
   const doc = new jsPDF();
   pdfHeader(doc, "Contract Portfolio Report", "Active contracts and agreements overview");
   let y = 54;
 
-  // Summary stats
   const totalValue = mockContracts.reduce((s, c) => s + c.value, 0);
   const active = mockContracts.filter(c => c.status === "Active").length;
+
+  // ── Summary KPIs ──
   y = sectionTitle(doc, "Portfolio Summary", y);
   autoTable(doc, {
     startY: y,
@@ -145,9 +392,25 @@ export const generateContractsPDF = () => {
     columnStyles: { 0: { fontStyle: "bold", cellWidth: 80 }, 1: { halign: "right" } },
     margin: { left: 15, right: 15 },
   });
-  y = (doc as any).lastAutoTable.finalY + 12;
+  y = (doc as any).lastAutoTable.finalY + 14;
 
-  // Contract details table
+  // ── Pie Chart: Value by Contract Type ──
+  y = checkPage(doc, y, 85);
+  y = sectionTitle(doc, "Value by Contract Type", y);
+  const byType = mockContracts.reduce((acc, c) => { acc[c.type] = (acc[c.type] || 0) + c.value; return acc; }, {} as Record<string, number>);
+  const typeData = Object.entries(byType).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]).map(([name, value]) => ({ name, value }));
+  drawDonutChart(doc, 60, y + 30, 28, 14, typeData, fmt(totalValue), { legendX: 100, legendY: y + 8 });
+  y += 72;
+
+  // ── Status Stacked Bar ──
+  y = checkPage(doc, y, 40);
+  y = sectionTitle(doc, "Contract Status Distribution", y);
+  const statusCounts = mockContracts.reduce((acc, c) => { acc[c.status] = (acc[c.status] || 0) + 1; return acc; }, {} as Record<string, number>);
+  drawStackedBar(doc, 15, y, 180, 14, Object.entries(statusCounts).map(([name, value]) => ({ name, value })));
+  y += 34;
+
+  // ── Contract Details Table ──
+  y = checkPage(doc, y, 50);
   y = sectionTitle(doc, "Contract Details", y);
   autoTable(doc, {
     startY: y,
@@ -160,20 +423,10 @@ export const generateContractsPDF = () => {
   });
   y = (doc as any).lastAutoTable.finalY + 12;
 
-  // Value by type
-  y = sectionTitle(doc, "Value by Contract Type", y);
-  const byType = mockContracts.reduce((acc, c) => { acc[c.type] = (acc[c.type] || 0) + c.value; return acc; }, {} as Record<string, number>);
-  autoTable(doc, {
-    startY: y,
-    head: [["Contract Type", "Total Value", "% of Portfolio"]],
-    body: Object.entries(byType).sort((a, b) => b[1] - a[1]).map(([type, val]) => [type, fmtFull(val), `${((val / totalValue) * 100).toFixed(1)}%`]),
-    foot: [["Total", fmtFull(totalValue), "100%"]],
-    theme: "grid",
-    headStyles: { fillColor: gold, textColor: white, fontStyle: "bold", fontSize: 9 },
-    footStyles: { fillColor: lightBg, textColor: dark, fontStyle: "bold", fontSize: 9 },
-    styles: { fontSize: 9, cellPadding: 4 },
-    margin: { left: 15, right: 15 },
-  });
+  // ── Bar Chart: Value by Type ──
+  y = checkPage(doc, y, 80);
+  y = sectionTitle(doc, "Portfolio Value Breakdown", y);
+  drawHorizontalBarChart(doc, 15, y, 180, typeData);
 
   pdfFooter(doc, "Contract Portfolio");
   doc.save(`Contract_Portfolio_${format(new Date(), "yyyy-MM-dd")}.pdf`);
@@ -187,6 +440,7 @@ export const generateEndorsementsPDF = () => {
   const totalValue = mockEndorsements.reduce((s, e) => s + e.value, 0);
   const active = mockEndorsements.filter(e => e.status === "Active").length;
 
+  // ── Summary ──
   y = sectionTitle(doc, "Portfolio Summary", y);
   autoTable(doc, {
     startY: y,
@@ -201,8 +455,32 @@ export const generateEndorsementsPDF = () => {
     columnStyles: { 0: { fontStyle: "bold", cellWidth: 80 }, 1: { halign: "right" } },
     margin: { left: 15, right: 15 },
   });
-  y = (doc as any).lastAutoTable.finalY + 12;
+  y = (doc as any).lastAutoTable.finalY + 14;
 
+  // ── Donut: Value by Deal Type ──
+  y = checkPage(doc, y, 85);
+  y = sectionTitle(doc, "Value by Deal Type", y);
+  const byType = mockEndorsements.reduce((acc, e) => { acc[e.type] = (acc[e.type] || 0) + e.value; return acc; }, {} as Record<string, number>);
+  const typeData = Object.entries(byType).sort((a, b) => b[1] - a[1]).map(([name, value]) => ({ name, value }));
+  drawDonutChart(doc, 60, y + 30, 28, 14, typeData, fmt(totalValue), { legendX: 100, legendY: y + 8 });
+  y += 72;
+
+  // ── Bar Chart: Brand Values ──
+  y = checkPage(doc, y, 90);
+  y = sectionTitle(doc, "Value by Brand", y);
+  const brandData = mockEndorsements.map(e => ({ name: e.brand.substring(0, 18), value: e.value })).sort((a, b) => b.value - a.value);
+  y = drawHorizontalBarChart(doc, 15, y, 180, brandData);
+  y += 10;
+
+  // ── Status Distribution ──
+  y = checkPage(doc, y, 40);
+  y = sectionTitle(doc, "Status Distribution", y);
+  const statusCounts = mockEndorsements.reduce((acc, e) => { acc[e.status] = (acc[e.status] || 0) + 1; return acc; }, {} as Record<string, number>);
+  drawStackedBar(doc, 15, y, 180, 14, Object.entries(statusCounts).map(([name, value]) => ({ name, value })));
+  y += 34;
+
+  // ── Details Table ──
+  y = checkPage(doc, y, 50);
   y = sectionTitle(doc, "Endorsement Details", y);
   autoTable(doc, {
     startY: y,
@@ -211,21 +489,6 @@ export const generateEndorsementsPDF = () => {
     theme: "grid",
     headStyles: { fillColor: gold, textColor: white, fontStyle: "bold", fontSize: 8 },
     styles: { fontSize: 8, cellPadding: 3 },
-    margin: { left: 15, right: 15 },
-  });
-  y = (doc as any).lastAutoTable.finalY + 12;
-
-  y = sectionTitle(doc, "Value by Deal Type", y);
-  const byType = mockEndorsements.reduce((acc, e) => { acc[e.type] = (acc[e.type] || 0) + e.value; return acc; }, {} as Record<string, number>);
-  autoTable(doc, {
-    startY: y,
-    head: [["Deal Type", "Total Value", "% of Portfolio"]],
-    body: Object.entries(byType).sort((a, b) => b[1] - a[1]).map(([type, val]) => [type, fmtFull(val), `${((val / totalValue) * 100).toFixed(1)}%`]),
-    foot: [["Total", fmtFull(totalValue), "100%"]],
-    theme: "grid",
-    headStyles: { fillColor: gold, textColor: white, fontStyle: "bold", fontSize: 9 },
-    footStyles: { fillColor: lightBg, textColor: dark, fontStyle: "bold", fontSize: 9 },
-    styles: { fontSize: 9, cellPadding: 4 },
     margin: { left: 15, right: 15 },
   });
 
@@ -242,6 +505,7 @@ export const generateRoyaltiesPDF = () => {
   const received = mockRoyalties.filter(r => r.status === "Received").reduce((s, r) => s + r.amount, 0);
   const pending = totalAmount - received;
 
+  // ── Summary ──
   y = sectionTitle(doc, "Income Summary", y);
   autoTable(doc, {
     startY: y,
@@ -256,8 +520,34 @@ export const generateRoyaltiesPDF = () => {
     columnStyles: { 0: { fontStyle: "bold", cellWidth: 80 }, 1: { halign: "right" } },
     margin: { left: 15, right: 15 },
   });
-  y = (doc as any).lastAutoTable.finalY + 12;
+  y = (doc as any).lastAutoTable.finalY + 14;
 
+  // ── Donut: Income by Source Type ──
+  y = checkPage(doc, y, 85);
+  y = sectionTitle(doc, "Income by Source Type", y);
+  const byType = mockRoyalties.reduce((acc, r) => { acc[r.type] = (acc[r.type] || 0) + r.amount; return acc; }, {} as Record<string, number>);
+  const typeData = Object.entries(byType).sort((a, b) => b[1] - a[1]).map(([name, value]) => ({ name, value }));
+  drawDonutChart(doc, 60, y + 30, 28, 14, typeData, fmt(totalAmount), { legendX: 100, legendY: y + 5 });
+  y += 72;
+
+  // ── Bar Chart: By Source ──
+  y = checkPage(doc, y, 130);
+  y = sectionTitle(doc, "Earnings by Source", y);
+  const sourceData = mockRoyalties.map(r => ({ name: r.source.substring(0, 18), value: r.amount })).sort((a, b) => b.value - a.value);
+  y = drawHorizontalBarChart(doc, 15, y, 180, sourceData);
+  y += 10;
+
+  // ── Received vs Pending Stacked Bar ──
+  y = checkPage(doc, y, 40);
+  y = sectionTitle(doc, "Received vs Pending", y);
+  drawStackedBar(doc, 15, y, 180, 14, [
+    { name: "Received", value: received },
+    { name: "Pending/Processing", value: pending },
+  ]);
+  y += 34;
+
+  // ── Details Table ──
+  y = checkPage(doc, y, 50);
   y = sectionTitle(doc, "Royalty Details", y);
   autoTable(doc, {
     startY: y,
@@ -265,21 +555,6 @@ export const generateRoyaltiesPDF = () => {
     body: mockRoyalties.map(r => [r.source, r.type, r.period, fmtFull(r.amount), r.status]),
     theme: "grid",
     headStyles: { fillColor: gold, textColor: white, fontStyle: "bold", fontSize: 9 },
-    styles: { fontSize: 9, cellPadding: 4 },
-    margin: { left: 15, right: 15 },
-  });
-  y = (doc as any).lastAutoTable.finalY + 12;
-
-  y = sectionTitle(doc, "Income by Source Type", y);
-  const byType = mockRoyalties.reduce((acc, r) => { acc[r.type] = (acc[r.type] || 0) + r.amount; return acc; }, {} as Record<string, number>);
-  autoTable(doc, {
-    startY: y,
-    head: [["Source Type", "Total Earned", "% of Total"]],
-    body: Object.entries(byType).sort((a, b) => b[1] - a[1]).map(([type, val]) => [type, fmtFull(val), `${((val / totalAmount) * 100).toFixed(1)}%`]),
-    foot: [["Total", fmtFull(totalAmount), "100%"]],
-    theme: "grid",
-    headStyles: { fillColor: gold, textColor: white, fontStyle: "bold", fontSize: 9 },
-    footStyles: { fillColor: lightBg, textColor: dark, fontStyle: "bold", fontSize: 9 },
     styles: { fontSize: 9, cellPadding: 4 },
     margin: { left: 15, right: 15 },
   });
@@ -298,6 +573,7 @@ export const generateBudgetPDF = () => {
   const totalSpent = categories.reduce((s, c) => s + c.spent, 0);
   const surplus = income - totalSpent;
 
+  // ── Overview KPIs ──
   y = sectionTitle(doc, "Budget Overview", y);
   autoTable(doc, {
     startY: y,
@@ -313,8 +589,37 @@ export const generateBudgetPDF = () => {
     columnStyles: { 0: { fontStyle: "bold", cellWidth: 80 }, 1: { halign: "right" } },
     margin: { left: 15, right: 15 },
   });
-  y = (doc as any).lastAutoTable.finalY + 12;
+  y = (doc as any).lastAutoTable.finalY + 14;
 
+  // ── Donut: Spending by Type ──
+  y = checkPage(doc, y, 85);
+  y = sectionTitle(doc, "Spending by Category Type", y);
+  const types = ["Essential", "Lifestyle", "Savings"];
+  const typeSpending = types.map(t => ({
+    name: t,
+    value: categories.filter(c => c.type === t).reduce((s, c) => s + c.spent, 0),
+  }));
+  drawDonutChart(doc, 60, y + 30, 28, 14, typeSpending, fmt(totalSpent), { legendX: 100, legendY: y + 12 });
+  y += 72;
+
+  // ── Income Allocation Stacked Bar ──
+  y = checkPage(doc, y, 40);
+  y = sectionTitle(doc, "Income Allocation", y);
+  const unallocated = income - totalBudgeted;
+  const allocData = [...typeSpending.map(t => ({ name: t.name, value: categories.filter(c => c.type === t.name).reduce((s, c) => s + c.budgeted, 0) }))];
+  if (unallocated > 0) allocData.push({ name: "Unallocated", value: unallocated });
+  drawStackedBar(doc, 15, y, 180, 14, allocData);
+  y += 36;
+
+  // ── Bar Chart: Top Spending Categories ──
+  y = checkPage(doc, y, 100);
+  y = sectionTitle(doc, "Top Spending Categories", y);
+  const topCats = [...categories].sort((a, b) => b.spent - a.spent).slice(0, 8).map(c => ({ name: c.name.substring(0, 18), value: c.spent }));
+  y = drawHorizontalBarChart(doc, 15, y, 180, topCats);
+  y += 12;
+
+  // ── Full Category Table ──
+  y = checkPage(doc, y, 50);
   y = sectionTitle(doc, "Category Breakdown", y);
   autoTable(doc, {
     startY: y,
@@ -336,26 +641,6 @@ export const generateBudgetPDF = () => {
       }
     },
   });
-  y = (doc as any).lastAutoTable.finalY + 12;
-
-  // Summary by type
-  y = sectionTitle(doc, "Spending by Category Type", y);
-  const types = ["Essential", "Lifestyle", "Savings"];
-  const byType = types.map(t => {
-    const items = categories.filter(c => c.type === t);
-    const b = items.reduce((s, c) => s + c.budgeted, 0);
-    const sp = items.reduce((s, c) => s + c.spent, 0);
-    return [t, `${items.length}`, fmtFull(b), fmtFull(sp), `${((sp / income) * 100).toFixed(1)}%`];
-  });
-  autoTable(doc, {
-    startY: y,
-    head: [["Type", "Items", "Budgeted", "Spent", "% of Income"]],
-    body: byType,
-    theme: "grid",
-    headStyles: { fillColor: gold, textColor: white, fontStyle: "bold", fontSize: 9 },
-    styles: { fontSize: 9, cellPadding: 4 },
-    margin: { left: 15, right: 15 },
-  });
 
   pdfFooter(doc, "Monthly Budget");
   doc.save(`Monthly_Budget_${format(new Date(), "yyyy-MM-dd")}.pdf`);
@@ -371,6 +656,7 @@ export const generateCompliancePDF = () => {
   const upcoming = mockCompliance.filter(c => c.status === "Upcoming").length;
   const completed = mockCompliance.filter(c => c.status === "Completed").length;
 
+  // ── Summary KPIs ──
   y = sectionTitle(doc, "Compliance Summary", y);
   autoTable(doc, {
     startY: y,
@@ -386,8 +672,37 @@ export const generateCompliancePDF = () => {
     columnStyles: { 0: { fontStyle: "bold", cellWidth: 80 }, 1: { halign: "right" } },
     margin: { left: 15, right: 15 },
   });
-  y = (doc as any).lastAutoTable.finalY + 12;
+  y = (doc as any).lastAutoTable.finalY + 14;
 
+  // ── Pie Chart: Status Distribution ──
+  y = checkPage(doc, y, 85);
+  y = sectionTitle(doc, "Status Distribution", y);
+  const statusData = [
+    { name: "Overdue", value: overdue },
+    { name: "Due Soon", value: dueSoon },
+    { name: "Upcoming", value: upcoming },
+    { name: "Completed", value: completed },
+  ].filter(d => d.value > 0);
+  drawPieChart(doc, 60, y + 30, 28, statusData, { legendX: 100, legendY: y + 10 });
+  y += 72;
+
+  // ── Bar Chart: Tasks by Category ──
+  y = checkPage(doc, y, 70);
+  y = sectionTitle(doc, "Tasks by Regulatory Body", y);
+  const byCat = mockCompliance.reduce((acc, c) => { acc[c.category] = (acc[c.category] || 0) + 1; return acc; }, {} as Record<string, number>);
+  const catData = Object.entries(byCat).sort((a, b) => b[1] - a[1]).map(([name, value]) => ({ name, value }));
+  y = drawHorizontalBarChart(doc, 15, y, 180, catData);
+  y += 12;
+
+  // ── Priority Stacked Bar ──
+  y = checkPage(doc, y, 40);
+  y = sectionTitle(doc, "Priority Distribution", y);
+  const byPriority = mockCompliance.reduce((acc, c) => { acc[c.priority] = (acc[c.priority] || 0) + 1; return acc; }, {} as Record<string, number>);
+  drawStackedBar(doc, 15, y, 180, 14, Object.entries(byPriority).map(([name, value]) => ({ name, value })));
+  y += 36;
+
+  // ── Details Table ──
+  y = checkPage(doc, y, 50);
   y = sectionTitle(doc, "Task Details", y);
   autoTable(doc, {
     startY: y,
@@ -405,19 +720,6 @@ export const generateCompliancePDF = () => {
         else if (status === "Completed") data.cell.styles.textColor = [40, 160, 60];
       }
     },
-  });
-  y = (doc as any).lastAutoTable.finalY + 12;
-
-  y = sectionTitle(doc, "Tasks by Category", y);
-  const byCat = mockCompliance.reduce((acc, c) => { acc[c.category] = (acc[c.category] || 0) + 1; return acc; }, {} as Record<string, number>);
-  autoTable(doc, {
-    startY: y,
-    head: [["Category", "Tasks", "% of Total"]],
-    body: Object.entries(byCat).sort((a, b) => b[1] - a[1]).map(([cat, count]) => [cat, `${count}`, `${((count / mockCompliance.length) * 100).toFixed(0)}%`]),
-    theme: "grid",
-    headStyles: { fillColor: gold, textColor: white, fontStyle: "bold", fontSize: 9 },
-    styles: { fontSize: 9, cellPadding: 4 },
-    margin: { left: 15, right: 15 },
   });
 
   pdfFooter(doc, "Compliance Status");
