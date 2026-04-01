@@ -510,7 +510,7 @@ export const generateContractTimelinePDF = (contracts: Contract[], userName = "C
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(8);
   doc.text("CONFIDENTIAL \u2014 LegacyBuilder", 15, pH - 5);
-  doc.save(`ContractTimeline_${userName.replace(/\s+/g, "_")}_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+  saveAs(doc.output("blob"), `ContractTimeline_${userName.replace(/\s+/g, "_")}_${format(new Date(), "yyyy-MM-dd")}.pdf`);
 };
 
 export const generateLifeFilePDF = (
