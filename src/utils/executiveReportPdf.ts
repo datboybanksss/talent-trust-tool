@@ -455,7 +455,7 @@ export const generateAssetBreakdownPDF = (assets: AssetSummary[], userName = "Cl
   doc.text("CONFIDENTIAL \u2014 LegacyBuilder", 15, pH - 5);
   doc.text(format(new Date(), "yyyy-MM-dd"), pageWidth - 15, pH - 5, { align: "right" });
 
-  doc.save(`AssetBreakdown_${userName.replace(/\s+/g, "_")}_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+  saveAs(doc.output("blob"), `AssetBreakdown_${userName.replace(/\s+/g, "_")}_${format(new Date(), "yyyy-MM-dd")}.pdf`);
 };
 
 export const generateContractTimelinePDF = (contracts: Contract[], userName = "Client") => {
