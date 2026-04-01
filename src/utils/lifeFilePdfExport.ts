@@ -2,6 +2,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Beneficiary, EmergencyContact, LifeFileDocument, DOCUMENT_TYPES } from "@/types/lifeFile";
 import { format } from "date-fns";
+import { saveAs } from "file-saver";
 
 interface LifeFileExportData {
   beneficiaries: Beneficiary[];

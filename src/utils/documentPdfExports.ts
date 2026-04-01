@@ -1,6 +1,7 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
+import { saveAs } from "file-saver";
 
 const fmt = (n: number) =>
   n >= 1_000_000 ? `R${(n / 1_000_000).toFixed(1)}M` : n >= 1_000 ? `R${(n / 1_000).toFixed(0)}K` : `R${n.toFixed(0)}`;
