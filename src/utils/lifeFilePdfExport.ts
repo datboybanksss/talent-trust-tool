@@ -2,6 +2,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Beneficiary, EmergencyContact, LifeFileDocument, DOCUMENT_TYPES } from "@/types/lifeFile";
 import { format } from "date-fns";
+import { saveAs } from "file-saver";
 
 interface LifeFileExportData {
   beneficiaries: Beneficiary[];
@@ -242,5 +243,5 @@ export const generateLifeFilePDF = ({
 
   // Save the PDF
   const fileName = `LifeFile_${userName.replace(/\s+/g, "_")}_${format(new Date(), "yyyy-MM-dd")}.pdf`;
-  doc.save(fileName);
+  saveAs(doc.output("blob"), fileName);
 };

@@ -1,6 +1,7 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
+import { saveAs } from "file-saver";
 import {
   kpis,
   clientTypeValues,
@@ -455,5 +456,5 @@ export const generateExecutiveOverviewPDF = () => {
   }
 
   const fileName = `Executive_Overview_${format(new Date(), "yyyy-MM-dd")}.pdf`;
-  doc.save(fileName);
+  saveAs(doc.output("blob"), fileName);
 };

@@ -1,6 +1,7 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
+import { saveAs } from "file-saver";
 
 const fmt = (n: number) =>
   n >= 1_000_000 ? `R${(n / 1_000_000).toFixed(1)}M` : n >= 1_000 ? `R${(n / 1_000).toFixed(0)}K` : `R${n.toFixed(0)}`;
@@ -429,7 +430,7 @@ export const generateContractsPDF = () => {
   drawHorizontalBarChart(doc, 15, y, 180, typeData);
 
   pdfFooter(doc, "Contract Portfolio");
-  doc.save(`Contract_Portfolio_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+  saveAs(doc.output("blob"), `Contract_Portfolio_${format(new Date(), "yyyy-MM-dd")}.pdf`);
 };
 
 export const generateEndorsementsPDF = () => {
@@ -493,7 +494,7 @@ export const generateEndorsementsPDF = () => {
   });
 
   pdfFooter(doc, "Endorsement Portfolio");
-  doc.save(`Endorsement_Portfolio_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+  saveAs(doc.output("blob"), `Endorsement_Portfolio_${format(new Date(), "yyyy-MM-dd")}.pdf`);
 };
 
 export const generateRoyaltiesPDF = () => {
@@ -560,7 +561,7 @@ export const generateRoyaltiesPDF = () => {
   });
 
   pdfFooter(doc, "Royalty Income");
-  doc.save(`Royalty_Report_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+  saveAs(doc.output("blob"), `Royalty_Report_${format(new Date(), "yyyy-MM-dd")}.pdf`);
 };
 
 export const generateBudgetPDF = () => {
@@ -643,7 +644,7 @@ export const generateBudgetPDF = () => {
   });
 
   pdfFooter(doc, "Monthly Budget");
-  doc.save(`Monthly_Budget_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+  saveAs(doc.output("blob"), `Monthly_Budget_${format(new Date(), "yyyy-MM-dd")}.pdf`);
 };
 
 export const generateCompliancePDF = () => {
@@ -723,5 +724,5 @@ export const generateCompliancePDF = () => {
   });
 
   pdfFooter(doc, "Compliance Status");
-  doc.save(`Compliance_Report_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+  saveAs(doc.output("blob"), `Compliance_Report_${format(new Date(), "yyyy-MM-dd")}.pdf`);
 };

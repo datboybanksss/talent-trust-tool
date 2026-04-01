@@ -1,6 +1,7 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
+import { saveAs } from "file-saver";
 
 interface AssetSummary {
   title: string;
@@ -397,7 +398,7 @@ export const generateExecutiveReportPDF = (data: ExecutiveReportData) => {
   }
 
   const fileName = `ExecutiveReport_${(data.userName || "Client").replace(/\s+/g, "_")}_${format(new Date(), "yyyy-MM-dd")}.pdf`;
-  doc.save(fileName);
+  saveAs(doc.output("blob"), fileName);
 };
 
 /* ── Individual section exports ── */
@@ -454,7 +455,7 @@ export const generateAssetBreakdownPDF = (assets: AssetSummary[], userName = "Cl
   doc.text("CONFIDENTIAL \u2014 LegacyBuilder", 15, pH - 5);
   doc.text(format(new Date(), "yyyy-MM-dd"), pageWidth - 15, pH - 5, { align: "right" });
 
-  doc.save(`AssetBreakdown_${userName.replace(/\s+/g, "_")}_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+  saveAs(doc.output("blob"), `AssetBreakdown_${userName.replace(/\s+/g, "_")}_${format(new Date(), "yyyy-MM-dd")}.pdf`);
 };
 
 export const generateContractTimelinePDF = (contracts: Contract[], userName = "Client") => {
@@ -509,7 +510,7 @@ export const generateContractTimelinePDF = (contracts: Contract[], userName = "C
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(8);
   doc.text("CONFIDENTIAL \u2014 LegacyBuilder", 15, pH - 5);
-  doc.save(`ContractTimeline_${userName.replace(/\s+/g, "_")}_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+  saveAs(doc.output("blob"), `ContractTimeline_${userName.replace(/\s+/g, "_")}_${format(new Date(), "yyyy-MM-dd")}.pdf`);
 };
 
 export const generateLifeFilePDF = (
@@ -581,7 +582,7 @@ export const generateLifeFilePDF = (
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(8);
   doc.text("CONFIDENTIAL \u2014 LegacyBuilder", 15, pH - 5);
-  doc.save(`LifeFile_${userName.replace(/\s+/g, "_")}_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+  saveAs(doc.output("blob"), `LifeFile_${userName.replace(/\s+/g, "_")}_${format(new Date(), "yyyy-MM-dd")}.pdf`);
 };
 
 export const generateAdvisorSummaryPDF = (
@@ -644,5 +645,5 @@ export const generateAdvisorSummaryPDF = (
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(8);
   doc.text("CONFIDENTIAL \u2014 LegacyBuilder", 15, pH - 5);
-  doc.save(`AdvisorSummary_${userName.replace(/\s+/g, "_")}_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+  saveAs(doc.output("blob"), `AdvisorSummary_${userName.replace(/\s+/g, "_")}_${format(new Date(), "yyyy-MM-dd")}.pdf`);
 };
