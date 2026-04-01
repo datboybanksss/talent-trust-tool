@@ -153,6 +153,12 @@ const Profile = () => {
       </div>
 
       {/* Asset Summary Cards */}
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-lg font-semibold text-foreground">Asset Breakdown</h2>
+        <Button variant="ghost" size="sm" className="gap-1.5 text-xs text-muted-foreground hover:text-foreground" onClick={() => { generateAssetBreakdownPDF(assetCards); toast({ title: "Downloaded", description: "Asset Breakdown PDF generated." }); }}>
+          <Download className="w-3.5 h-3.5" /> Download PDF
+        </Button>
+      </div>
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {(isAthlete ? athleteAssets : isArtist ? artistAssets : defaultAssets).map((asset, i) => (
           <AssetSummaryCard key={i} {...asset} />
@@ -161,8 +167,18 @@ const Profile = () => {
 
       {/* Main Grid */}
       <div className="grid lg:grid-cols-2 xl:grid-cols-3 gap-8">
-        <ContractExpiryTimeline contracts={contracts} />
-        <LifeFile items={lifeFileItems} beneficiaries={4} emergencyContacts={3} />
+        <div className="relative">
+          <Button variant="ghost" size="sm" className="absolute top-4 right-4 gap-1.5 text-xs text-muted-foreground hover:text-foreground z-10" onClick={() => { generateContractTimelinePDF(contracts); toast({ title: "Downloaded", description: "Contract Timeline PDF generated." }); }}>
+            <Download className="w-3.5 h-3.5" /> PDF
+          </Button>
+          <ContractExpiryTimeline contracts={contracts} />
+        </div>
+        <div className="relative">
+          <Button variant="ghost" size="sm" className="absolute top-4 right-4 gap-1.5 text-xs text-muted-foreground hover:text-foreground z-10" onClick={() => { generateLifeFilePDF(lifeFileItems, 4, 3); toast({ title: "Downloaded", description: "Life File PDF generated." }); }}>
+            <Download className="w-3.5 h-3.5" /> PDF
+          </Button>
+          <LifeFile items={lifeFileItems} beneficiaries={4} emergencyContacts={3} />
+        </div>
         <QuickStats stats={stats} />
       </div>
 
