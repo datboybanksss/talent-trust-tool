@@ -398,7 +398,7 @@ export const generateExecutiveReportPDF = (data: ExecutiveReportData) => {
   }
 
   const fileName = `ExecutiveReport_${(data.userName || "Client").replace(/\s+/g, "_")}_${format(new Date(), "yyyy-MM-dd")}.pdf`;
-  doc.save(fileName);
+  saveAs(doc.output("blob"), fileName);
 };
 
 /* ── Individual section exports ── */
