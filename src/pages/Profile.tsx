@@ -7,7 +7,7 @@ import ContractExpiryTimeline from "@/components/dashboard/profile/ContractExpir
 import QuickStats from "@/components/dashboard/profile/QuickStats";
 import LifeFile from "@/components/dashboard/profile/LifeFile";
 import { Button } from "@/components/ui/button";
-import { generateExecutiveReportPDF } from "@/utils/executiveReportPdf";
+import { generateExecutiveReportPDF, generateAssetBreakdownPDF, generateContractTimelinePDF, generateLifeFilePDF, generateAdvisorSummaryPDF } from "@/utils/executiveReportPdf";
 import { 
   Building2, 
   Landmark, 
