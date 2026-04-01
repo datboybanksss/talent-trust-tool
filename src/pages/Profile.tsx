@@ -183,7 +183,22 @@ const Profile = () => {
       </div>
 
       {/* Additional Info Row */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
+      <div className="flex items-center justify-between mt-8 mb-3">
+        <h2 className="text-lg font-semibold text-foreground">Overview & Advisors</h2>
+        <Button variant="ghost" size="sm" className="gap-1.5 text-xs text-muted-foreground hover:text-foreground" onClick={() => {
+          generateAdvisorSummaryPDF(
+            { count: 4, types: advisorLabel },
+            24,
+            3,
+            { date: "Feb 15", description: isAthlete ? "Contract Renewal Due" : isArtist ? "Royalty Filing Due" : "Annual Return Due" },
+            stats.map(s => ({ label: s.label, value: s.value }))
+          );
+          toast({ title: "Downloaded", description: "Advisor Summary PDF generated." });
+        }}>
+          <Download className="w-3.5 h-3.5" /> Download PDF
+        </Button>
+      </div>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-card rounded-2xl border border-border p-5 shadow-soft">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-xl bg-info/20 flex items-center justify-center">
