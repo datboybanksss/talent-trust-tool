@@ -51,26 +51,30 @@ const Profile = () => {
 
   const handleGenerateReport = () => {
     try {
-    generateExecutiveReportPDF({
-      userName: "Client",
-      totalPortfolioValue: "R 4,250,000",
-      quarterlyChange: "+12.5%",
-      companiesCount: 3,
-      contractsCount: 8,
-      complianceScore: undefined,
-      assets: assetCards,
-      complianceItems: [],
-      contracts: isAthlete ? athleteContracts : isArtist ? artistContracts : defaultContracts,
-      quickStats: (isAthlete ? athleteQuickStats : isArtist ? artistQuickStats : defaultQuickStats).map(s => ({ label: s.label, value: s.value })),
-      lifeFileItems: lifeFileItems.map(i => ({ name: i.name, status: i.status, lastUpdated: i.lastUpdated })),
-      beneficiariesCount: 4,
-      emergencyContactsCount: 3,
-      advisors: { count: 4, types: isAthlete ? "Lawyer, Agent, Financial Advisor, Sports Doctor" : isArtist ? "Lawyer, Manager, Accountant, Publicist" : "Lawyer, Accountant, Agent, Financial Advisor" },
-      documentsStored: 24,
-      nextDeadline: { date: "Feb 15", description: "Annual Return Due" },
-      insurancePolicies: 3,
-    });
-    toast({ title: "Executive Report Generated", description: "Your PDF report has been downloaded." });
+      generateExecutiveReportPDF({
+        userName: "Client",
+        totalPortfolioValue: "R 4,250,000",
+        quarterlyChange: "+12.5%",
+        companiesCount: 3,
+        contractsCount: 8,
+        complianceScore: undefined,
+        assets: assetCards,
+        complianceItems: [],
+        contracts: isAthlete ? athleteContracts : isArtist ? artistContracts : defaultContracts,
+        quickStats: (isAthlete ? athleteQuickStats : isArtist ? artistQuickStats : defaultQuickStats).map(s => ({ label: s.label, value: s.value })),
+        lifeFileItems: lifeFileItems.map(i => ({ name: i.name, status: i.status, lastUpdated: i.lastUpdated })),
+        beneficiariesCount: 4,
+        emergencyContactsCount: 3,
+        advisors: { count: 4, types: isAthlete ? "Lawyer, Agent, Financial Advisor, Sports Doctor" : isArtist ? "Lawyer, Manager, Accountant, Publicist" : "Lawyer, Accountant, Agent, Financial Advisor" },
+        documentsStored: 24,
+        nextDeadline: { date: "Feb 15", description: "Annual Return Due" },
+        insurancePolicies: 3,
+      });
+      toast({ title: "Executive Report Generated", description: "Your PDF report has been downloaded." });
+    } catch (err) {
+      console.error("PDF generation failed:", err);
+      toast({ title: "Error", description: "Failed to generate PDF. Check console for details.", variant: "destructive" });
+    }
   };
 
   const contracts = isAthlete ? athleteContracts : isArtist ? artistContracts : defaultContracts;
