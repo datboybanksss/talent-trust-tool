@@ -456,5 +456,5 @@ export const generateExecutiveOverviewPDF = () => {
   }
 
   const fileName = `Executive_Overview_${format(new Date(), "yyyy-MM-dd")}.pdf`;
-  doc.save(fileName);
+  saveAs(doc.output("blob"), fileName);
 };

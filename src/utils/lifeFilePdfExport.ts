@@ -243,5 +243,5 @@ export const generateLifeFilePDF = ({
 
   // Save the PDF
   const fileName = `LifeFile_${userName.replace(/\s+/g, "_")}_${format(new Date(), "yyyy-MM-dd")}.pdf`;
-  doc.save(fileName);
+  saveAs(doc.output("blob"), fileName);
 };
