@@ -50,6 +50,7 @@ const Profile = () => {
   };
 
   const handleGenerateReport = () => {
+    try {
     generateExecutiveReportPDF({
       userName: "Client",
       totalPortfolioValue: "R 4,250,000",
