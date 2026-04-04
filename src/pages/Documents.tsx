@@ -16,6 +16,8 @@ import {
   ChevronDown,
   PackageCheck,
   Archive,
+  FolderInput,
+  FolderSync,
 } from "lucide-react";
 import { useState, useCallback, useMemo } from "react";
 import { cn } from "@/lib/utils";
