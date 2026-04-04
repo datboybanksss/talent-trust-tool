@@ -798,9 +798,10 @@ interface DocumentRowProps {
   collateMode: boolean;
   selected: boolean;
   onToggle: () => void;
+  onMoveRequest: (id: string) => void;
 }
 
-const DocumentRow = ({ document, collateMode, selected, onToggle }: DocumentRowProps) => {
+const DocumentRow = ({ document, collateMode, selected, onToggle, onMoveRequest }: DocumentRowProps) => {
   const getIcon = () => {
     switch (document.type) {
       case "pdf": return <FileText className="w-5 h-5 text-destructive" />;
@@ -834,6 +835,7 @@ const DocumentRow = ({ document, collateMode, selected, onToggle }: DocumentRowP
         <span className="text-sm text-muted-foreground">{document.size}</span>
       </div>
       <div className={cn("flex items-center justify-end gap-1", !collateMode && "col-span-2")}>
+        <button title="Move to folder" onClick={() => onMoveRequest(document.id)} className="p-2 hover:bg-secondary rounded-lg transition-colors"><FolderInput className="w-4 h-4 text-muted-foreground" /></button>
         <button className="p-2 hover:bg-secondary rounded-lg transition-colors"><Eye className="w-4 h-4 text-muted-foreground" /></button>
         <button className="p-2 hover:bg-secondary rounded-lg transition-colors"><Download className="w-4 h-4 text-muted-foreground" /></button>
         <button className="p-2 hover:bg-secondary rounded-lg transition-colors"><Trash2 className="w-4 h-4 text-muted-foreground" /></button>
@@ -841,5 +843,3 @@ const DocumentRow = ({ document, collateMode, selected, onToggle }: DocumentRowP
     </div>
   );
 };
-
-export default Documents;
