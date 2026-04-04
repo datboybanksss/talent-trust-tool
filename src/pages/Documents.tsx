@@ -792,7 +792,7 @@ const Documents = () => {
                       <Select value={uploadForm.category} onValueChange={(v) => setUploadForm((p) => ({ ...p, category: v }))}>
                         <SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger>
                         <SelectContent>
-                          {DOCUMENT_CATEGORIES.map((cat) => (
+                          {allCategories.map((cat) => (
                             <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
                           ))}
                         </SelectContent>
