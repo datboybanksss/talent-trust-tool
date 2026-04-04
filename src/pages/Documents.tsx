@@ -19,7 +19,7 @@ import {
   FolderInput,
   FolderSync,
 } from "lucide-react";
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { cn } from "@/lib/utils";
 import {
   Dialog,
