@@ -328,7 +328,7 @@ interface DocumentItem {
   size: string;
 }
 
-const documents: DocumentItem[] = [
+const initialDocuments: DocumentItem[] = [
   // Personal ID
   { id: "1", name: "Passport - John Doe.pdf", type: "pdf", category: "passport", date: "Mar 1, 2026", size: "1.8 MB" },
   { id: "2", name: "Passport - Jane Doe (Spouse).pdf", type: "pdf", category: "passport", date: "Mar 1, 2026", size: "1.7 MB" },
