@@ -444,9 +444,24 @@ const Documents = () => {
   // Batch assign state
   const [batchCategory, setBatchCategory] = useState("");
 
-  const countForFolder = useCallback((folderId: string) => {
-    return docs.filter((d) => matchesFolder(d, folderId)).length;
-  }, [docs]);
+  // Custom folders state
+  const [customFolders, setCustomFolders] = useState<FolderDef[]>([]);
+  const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
+  const [newFolderName, setNewFolderName] = useState("");
+
+  // Rename folder state
+  const [renamingFolderId, setRenamingFolderId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
+  const [folderNameOverrides, setFolderNameOverrides] = useState<Record<string, string>>({});
+
+  // All folders including custom ones
+  const allBaseFolders = useMemo(() => [...baseFolders, ...customFolders], [customFolders]);
+
+  // All categories including custom
+  const allCategories = useMemo(() => {
+    const custom = customFolders.map((f) => ({ value: f.id, label: f.name }));
+    return [...DOCUMENT_CATEGORIES, ...custom];
+  }, [customFolders]);
 
   const toggleFolder = (id: string) => setExpandedFolders((p) => ({ ...p, [id]: !p[id] }));
 
