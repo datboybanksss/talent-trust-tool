@@ -878,9 +878,10 @@ interface DocumentRowProps {
   selected: boolean;
   onToggle: () => void;
   onMoveRequest: (id: string) => void;
+  onDragStart?: (e: React.DragEvent) => void;
 }
 
-const DocumentRow = ({ document, collateMode, selected, onToggle, onMoveRequest }: DocumentRowProps) => {
+const DocumentRow = ({ document, collateMode, selected, onToggle, onMoveRequest, onDragStart }: DocumentRowProps) => {
   const getIcon = () => {
     switch (document.type) {
       case "pdf": return <FileText className="w-5 h-5 text-destructive" />;
@@ -892,11 +893,15 @@ const DocumentRow = ({ document, collateMode, selected, onToggle, onMoveRequest 
   const catLabel = DOCUMENT_CATEGORIES.find((c) => c.value === document.category)?.label || document.category;
 
   return (
-    <div className={cn(
-      "grid gap-4 px-6 py-4 items-center hover:bg-secondary/50 transition-colors",
-      collateMode ? "grid-cols-[32px_1fr_160px_120px_80px_100px]" : "grid-cols-12",
-      selected && "bg-gold/5"
-    )}>
+    <div
+      draggable
+      onDragStart={onDragStart}
+      className={cn(
+        "grid gap-4 px-6 py-4 items-center hover:bg-secondary/50 transition-colors cursor-grab active:cursor-grabbing",
+        collateMode ? "grid-cols-[32px_1fr_160px_120px_80px_100px]" : "grid-cols-12",
+        selected && "bg-gold/5"
+      )}
+    >
       {collateMode && (
         <Checkbox checked={selected} onCheckedChange={onToggle} />
       )}
