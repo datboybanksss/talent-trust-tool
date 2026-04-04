@@ -39,7 +39,7 @@ import { toast } from "@/hooks/use-toast";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { saveAs } from "file-saver";
-import JSZip from "jszip";
+import * as JSZip from "jszip";
 
 type ProfileType = "athlete" | "artist";
 
