@@ -611,9 +611,13 @@ const Documents = () => {
                       if (folder.hasSubfolders) toggleFolder(folder.id);
                       setSelectedFolder(folder.id);
                     }}
+                    onDragOver={(e) => handleFolderDragOver(e, folder.id)}
+                    onDragLeave={handleFolderDragLeave}
+                    onDrop={(e) => handleFolderDrop(e, folder.id)}
                     className={cn(
                       "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors",
-                      selectedFolder === folder.id ? "bg-primary text-primary-foreground" : "hover:bg-secondary text-foreground"
+                      selectedFolder === folder.id ? "bg-primary text-primary-foreground" : "hover:bg-secondary text-foreground",
+                      dragOverFolder === folder.id && "ring-2 ring-gold bg-gold/10"
                     )}
                   >
                     {folder.hasSubfolders ? (isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />) : <FolderLock className="w-4 h-4" />}
@@ -627,9 +631,13 @@ const Documents = () => {
                         <button
                           key={sf.id}
                           onClick={() => setSelectedFolder(sf.id)}
+                          onDragOver={(e) => handleFolderDragOver(e, sf.id)}
+                          onDragLeave={handleFolderDragLeave}
+                          onDrop={(e) => handleFolderDrop(e, sf.id)}
                           className={cn(
                             "w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left transition-colors text-xs",
-                            selectedFolder === sf.id ? "bg-gold/20 text-gold" : "hover:bg-secondary text-muted-foreground hover:text-foreground"
+                            selectedFolder === sf.id ? "bg-gold/20 text-gold" : "hover:bg-secondary text-muted-foreground hover:text-foreground",
+                            dragOverFolder === sf.id && "ring-2 ring-gold bg-gold/10"
                           )}
                         >
                           <FolderLock className="w-3 h-3" />
