@@ -391,13 +391,21 @@ const documents: DocumentItem[] = [
 /*  HELPERS                                                           */
 /* ------------------------------------------------------------------ */
 
-const FINANCE_CATS = ["finance_banking", "finance_investments", "finance_pension", "finance_insurance", "finance_stocks", "finance_crypto"];
-const CONTRACT_CATS = ["contracts", "endorsement", "sponsorship", "team-contracts", "agent-agreements", "appearance-fees", "image-rights", "merchandise", "broadcasting", "recording", "publishing", "licensing", "gallery", "royalty", "collaboration", "sync-licensing", "distribution", "performance"];
+// Build a map of parent folder → all child category IDs
+const PARENT_CAT_MAP: Record<string, string[]> = {};
+for (const [parentId, subs] of Object.entries(SUBFOLDER_MAP)) {
+  PARENT_CAT_MAP[parentId] = subs.map((s) => s.id);
+}
+// Contracts also include profile-specific folders
+const ALL_CONTRACT_CATS = [
+  ...athleteContractFolders.map((f) => f.id),
+  ...artistContractFolders.map((f) => f.id),
+];
+PARENT_CAT_MAP["contracts"] = [...new Set([...(PARENT_CAT_MAP["contracts"] || []), ...ALL_CONTRACT_CATS])];
 
 function matchesFolder(doc: DocumentItem, folderId: string): boolean {
   if (folderId === "all") return true;
-  if (folderId === "finance") return FINANCE_CATS.includes(doc.category);
-  if (folderId === "contracts") return CONTRACT_CATS.includes(doc.category);
+  if (PARENT_CAT_MAP[folderId]) return PARENT_CAT_MAP[folderId].includes(doc.category);
   return doc.category === folderId;
 }
 
