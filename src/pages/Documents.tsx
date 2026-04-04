@@ -18,6 +18,9 @@ import {
   Archive,
   FolderInput,
   FolderSync,
+  FolderPlus,
+  Pencil,
+  Check,
 } from "lucide-react";
 import { useState, useCallback, useMemo, useRef } from "react";
 import { cn } from "@/lib/utils";
