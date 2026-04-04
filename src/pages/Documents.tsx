@@ -411,10 +411,6 @@ function matchesFolder(doc: DocumentItem, folderId: string): boolean {
   return doc.category === folderId;
 }
 
-function countForFolder(folderId: string): number {
-  return documents.filter((d) => matchesFolder(d, folderId)).length;
-}
-
 /* ------------------------------------------------------------------ */
 /*  COMPONENT                                                         */
 /* ------------------------------------------------------------------ */
