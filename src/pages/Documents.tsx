@@ -528,9 +528,9 @@ const Documents = () => {
               const fCount = countForFolder(folder.id);
               const isExpanded = !!expandedFolders[folder.id];
               const subfolders =
-                folder.id === "finance" ? financeSubfolders :
-                folder.id === "contracts" ? (profileType === "athlete" ? athleteContractFolders : artistContractFolders) :
-                null;
+                folder.id === "contracts"
+                  ? (profileType === "athlete" ? athleteContractFolders : artistContractFolders)
+                  : SUBFOLDER_MAP[folder.id] || null;
 
               return (
                 <div key={folder.id}>
