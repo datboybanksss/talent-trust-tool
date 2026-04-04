@@ -761,6 +761,7 @@ const Documents = () => {
                   collateMode={collateMode}
                   selected={selectedDocIds.has(doc.id)}
                   onToggle={() => toggleDocSelect(doc.id)}
+                  onMoveRequest={(id) => { setMoveDocId(id); setMoveTarget(""); }}
                 />
               ))}
             </div>
