@@ -18,6 +18,9 @@ import {
   Archive,
   FolderInput,
   FolderSync,
+  FolderPlus,
+  Pencil,
+  Check,
 } from "lucide-react";
 import { useState, useCallback, useMemo, useRef } from "react";
 import { cn } from "@/lib/utils";
@@ -441,9 +444,60 @@ const Documents = () => {
   // Batch assign state
   const [batchCategory, setBatchCategory] = useState("");
 
+  // Custom folders state
+  const [customFolders, setCustomFolders] = useState<FolderDef[]>([]);
+  const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
+  const [newFolderName, setNewFolderName] = useState("");
+
+  // Rename folder state
+  const [renamingFolderId, setRenamingFolderId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
+  const [folderNameOverrides, setFolderNameOverrides] = useState<Record<string, string>>({});
+
+  // All folders including custom ones
+  const allBaseFolders = useMemo(() => [...baseFolders, ...customFolders], [customFolders]);
+
+  // All categories including custom
+  const allCategories = useMemo(() => {
+    const custom = customFolders.map((f) => ({ value: f.id, label: f.name }));
+    return [...DOCUMENT_CATEGORIES, ...custom];
+  }, [customFolders]);
+
   const countForFolder = useCallback((folderId: string) => {
     return docs.filter((d) => matchesFolder(d, folderId)).length;
   }, [docs]);
+
+  const getFolderDisplayName = useCallback((folder: FolderDef) => {
+    return folderNameOverrides[folder.id] || folder.name;
+  }, [folderNameOverrides]);
+
+  const handleCreateFolder = () => {
+    const name = newFolderName.trim();
+    if (!name) return;
+    const id = "custom_" + name.toLowerCase().replace(/\s+/g, "_") + "_" + Date.now();
+    setCustomFolders((prev) => [...prev, { id, name, count: 0 }]);
+    setNewFolderName("");
+    setIsCreateFolderOpen(false);
+    toast({ title: "Folder created", description: `"${name}" added to your folders` });
+  };
+
+  const startRename = (folderId: string, currentName: string) => {
+    setRenamingFolderId(folderId);
+    setRenameValue(currentName);
+  };
+
+  const commitRename = () => {
+    if (!renamingFolderId || !renameValue.trim()) { setRenamingFolderId(null); return; }
+    const isCustom = customFolders.some((f) => f.id === renamingFolderId);
+    if (isCustom) {
+      setCustomFolders((prev) => prev.map((f) => f.id === renamingFolderId ? { ...f, name: renameValue.trim() } : f));
+    } else {
+      setFolderNameOverrides((prev) => ({ ...prev, [renamingFolderId]: renameValue.trim() }));
+    }
+    toast({ title: "Folder renamed", description: `Renamed to "${renameValue.trim()}"` });
+    setRenamingFolderId(null);
+    setRenameValue("");
+  };
 
   const toggleFolder = (id: string) => setExpandedFolders((p) => ({ ...p, [id]: !p[id] }));
 
@@ -583,6 +637,9 @@ const Documents = () => {
         <div className="bg-card rounded-2xl border border-border p-4 shadow-soft h-fit">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-foreground">Folders</h3>
+            <Button variant="ghost" size="icon" className="h-7 w-7" title="Create folder" onClick={() => setIsCreateFolderOpen(true)}>
+              <FolderPlus className="w-4 h-4" />
+            </Button>
           </div>
 
           {/* Profile Toggle */}
@@ -596,34 +653,61 @@ const Documents = () => {
           </div>
 
           <div className="space-y-1 max-h-[55vh] overflow-y-auto pr-1">
-            {baseFolders.map((folder) => {
+            {allBaseFolders.map((folder) => {
               const fCount = countForFolder(folder.id);
               const isExpanded = !!expandedFolders[folder.id];
               const subfolders =
                 folder.id === "contracts"
                   ? (profileType === "athlete" ? athleteContractFolders : artistContractFolders)
                   : SUBFOLDER_MAP[folder.id] || null;
+              const displayName = getFolderDisplayName(folder);
+              const isRenaming = renamingFolderId === folder.id;
 
               return (
-                <div key={folder.id}>
-                  <button
-                    onClick={() => {
-                      if (folder.hasSubfolders) toggleFolder(folder.id);
-                      setSelectedFolder(folder.id);
-                    }}
-                    onDragOver={(e) => handleFolderDragOver(e, folder.id)}
-                    onDragLeave={handleFolderDragLeave}
-                    onDrop={(e) => handleFolderDrop(e, folder.id)}
-                    className={cn(
-                      "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors",
-                      selectedFolder === folder.id ? "bg-primary text-primary-foreground" : "hover:bg-secondary text-foreground",
-                      dragOverFolder === folder.id && "ring-2 ring-gold bg-gold/10"
-                    )}
-                  >
-                    {folder.hasSubfolders ? (isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />) : <FolderLock className="w-4 h-4" />}
-                    <span className="flex-1 text-sm">{folder.name}</span>
-                    <span className={cn("text-xs px-2 py-0.5 rounded-full", selectedFolder === folder.id ? "bg-primary-foreground/20" : "bg-secondary")}>{fCount}</span>
-                  </button>
+                <div key={folder.id} className="group/folder">
+                  {isRenaming ? (
+                    <div className="flex items-center gap-1 px-2 py-1">
+                      <input
+                        autoFocus
+                        value={renameValue}
+                        onChange={(e) => setRenameValue(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter") commitRename(); if (e.key === "Escape") setRenamingFolderId(null); }}
+                        className="flex-1 text-sm bg-secondary rounded px-2 py-1 border border-border focus:outline-none focus:ring-1 focus:ring-primary"
+                      />
+                      <button onClick={commitRename} className="p-1 hover:bg-secondary rounded"><Check className="w-3.5 h-3.5 text-primary" /></button>
+                      <button onClick={() => setRenamingFolderId(null)} className="p-1 hover:bg-secondary rounded"><X className="w-3.5 h-3.5 text-muted-foreground" /></button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center">
+                      <button
+                        onClick={() => {
+                          if (folder.hasSubfolders) toggleFolder(folder.id);
+                          setSelectedFolder(folder.id);
+                        }}
+                        onDragOver={(e) => handleFolderDragOver(e, folder.id)}
+                        onDragLeave={handleFolderDragLeave}
+                        onDrop={(e) => handleFolderDrop(e, folder.id)}
+                        className={cn(
+                          "flex-1 flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors",
+                          selectedFolder === folder.id ? "bg-primary text-primary-foreground" : "hover:bg-secondary text-foreground",
+                          dragOverFolder === folder.id && "ring-2 ring-gold bg-gold/10"
+                        )}
+                      >
+                        {folder.hasSubfolders ? (isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />) : <FolderLock className="w-4 h-4" />}
+                        <span className="flex-1 text-sm truncate">{displayName}</span>
+                        <span className={cn("text-xs px-2 py-0.5 rounded-full", selectedFolder === folder.id ? "bg-primary-foreground/20" : "bg-secondary")}>{fCount}</span>
+                      </button>
+                      {folder.id !== "all" && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); startRename(folder.id, displayName); }}
+                          className="p-1 rounded opacity-0 group-hover/folder:opacity-100 hover:bg-secondary transition-opacity"
+                          title="Rename folder"
+                        >
+                          <Pencil className="w-3 h-3 text-muted-foreground" />
+                        </button>
+                      )}
+                    </div>
+                  )}
 
                   {folder.hasSubfolders && isExpanded && subfolders && (
                     <div className="ml-4 mt-1 space-y-1 border-l-2 border-border pl-2">
@@ -708,7 +792,7 @@ const Documents = () => {
                       <Select value={uploadForm.category} onValueChange={(v) => setUploadForm((p) => ({ ...p, category: v }))}>
                         <SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger>
                         <SelectContent>
-                          {DOCUMENT_CATEGORIES.map((cat) => (
+                          {allCategories.map((cat) => (
                             <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
                           ))}
                         </SelectContent>
@@ -775,7 +859,7 @@ const Documents = () => {
                       <SelectValue placeholder="Choose category…" />
                     </SelectTrigger>
                     <SelectContent>
-                      {DOCUMENT_CATEGORIES.map((cat) => (
+                      {allCategories.map((cat) => (
                         <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
                       ))}
                     </SelectContent>
@@ -813,6 +897,7 @@ const Documents = () => {
                   onToggle={() => toggleDocSelect(doc.id)}
                   onMoveRequest={(id) => { setMoveDocId(id); setMoveTarget(""); }}
                   onDragStart={(e) => handleDocDragStart(e, doc.id)}
+                  catLabel={allCategories.find((c) => c.value === doc.category)?.label || doc.category}
                 />
               ))}
             </div>
@@ -852,7 +937,7 @@ const Documents = () => {
               <Select value={moveTarget} onValueChange={setMoveTarget}>
                 <SelectTrigger><SelectValue placeholder="Select destination category" /></SelectTrigger>
                 <SelectContent>
-                  {DOCUMENT_CATEGORIES.map((cat) => (
+                  {allCategories.map((cat) => (
                     <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
                   ))}
                 </SelectContent>
@@ -860,6 +945,28 @@ const Documents = () => {
             </div>
             <Button onClick={handleMoveDoc} variant="gold" className="w-full" disabled={!moveTarget}>
               <FolderInput className="w-4 h-4" /> Move Document
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      {/* Create Folder Dialog */}
+      <Dialog open={isCreateFolderOpen} onOpenChange={setIsCreateFolderOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><FolderPlus className="w-5 h-5 text-gold" /> Create Custom Folder</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Folder Name</Label>
+              <Input
+                placeholder="e.g. Travel, Legal, Estate…"
+                value={newFolderName}
+                onChange={(e) => setNewFolderName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") handleCreateFolder(); }}
+              />
+            </div>
+            <Button onClick={handleCreateFolder} variant="gold" className="w-full" disabled={!newFolderName.trim()}>
+              <FolderPlus className="w-4 h-4" /> Create Folder
             </Button>
           </div>
         </DialogContent>
@@ -879,9 +986,10 @@ interface DocumentRowProps {
   onToggle: () => void;
   onMoveRequest: (id: string) => void;
   onDragStart?: (e: React.DragEvent) => void;
+  catLabel: string;
 }
 
-const DocumentRow = ({ document, collateMode, selected, onToggle, onMoveRequest, onDragStart }: DocumentRowProps) => {
+const DocumentRow = ({ document, collateMode, selected, onToggle, onMoveRequest, onDragStart, catLabel }: DocumentRowProps) => {
   const getIcon = () => {
     switch (document.type) {
       case "pdf": return <FileText className="w-5 h-5 text-destructive" />;
@@ -890,7 +998,6 @@ const DocumentRow = ({ document, collateMode, selected, onToggle, onMoveRequest,
     }
   };
 
-  const catLabel = DOCUMENT_CATEGORIES.find((c) => c.value === document.category)?.label || document.category;
 
   return (
     <div
