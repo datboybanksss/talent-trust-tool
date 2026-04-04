@@ -434,6 +434,10 @@ const Documents = () => {
   const [moveDocId, setMoveDocId] = useState<string | null>(null);
   const [moveTarget, setMoveTarget] = useState("");
 
+  // Drag-and-drop state
+  const [dragOverFolder, setDragOverFolder] = useState<string | null>(null);
+  const dragDocId = useRef<string | null>(null);
+
   // Batch assign state
   const [batchCategory, setBatchCategory] = useState("");
 
