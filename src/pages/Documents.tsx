@@ -871,3 +871,5 @@ const DocumentRow = ({ document, collateMode, selected, onToggle, onMoveRequest 
     </div>
   );
 };
+
+export default Documents;
