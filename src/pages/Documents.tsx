@@ -416,6 +416,7 @@ function matchesFolder(doc: DocumentItem, folderId: string): boolean {
 /* ------------------------------------------------------------------ */
 
 const Documents = () => {
+  const [docs, setDocs] = useState<DocumentItem[]>(initialDocuments);
   const [selectedFolder, setSelectedFolder] = useState("all");
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -429,16 +430,27 @@ const Documents = () => {
   const [selectedDocIds, setSelectedDocIds] = useState<Set<string>>(new Set());
   const [collatePreset, setCollatePreset] = useState("");
 
+  // Move single doc state
+  const [moveDocId, setMoveDocId] = useState<string | null>(null);
+  const [moveTarget, setMoveTarget] = useState("");
+
+  // Batch assign state
+  const [batchCategory, setBatchCategory] = useState("");
+
+  const countForFolder = useCallback((folderId: string) => {
+    return docs.filter((d) => matchesFolder(d, folderId)).length;
+  }, [docs]);
+
   const toggleFolder = (id: string) => setExpandedFolders((p) => ({ ...p, [id]: !p[id] }));
 
   const filteredDocs = useMemo(() => {
-    let list = documents.filter((d) => matchesFolder(d, selectedFolder));
+    let list = docs.filter((d) => matchesFolder(d, selectedFolder));
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       list = list.filter((d) => d.name.toLowerCase().includes(q) || d.category.toLowerCase().includes(q));
     }
     return list;
-  }, [selectedFolder, searchQuery]);
+  }, [selectedFolder, searchQuery, docs]);
 
   /* Upload handlers */
   const handleDragOver = useCallback((e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }, []);
@@ -476,7 +488,7 @@ const Documents = () => {
     const preset = COLLATE_PRESETS.find((p) => p.label === presetLabel);
     if (!preset) return;
     const ids = new Set<string>();
-    documents.forEach((d) => { if (preset.requiredCategories.includes(d.category)) ids.add(d.id); });
+    docs.forEach((d) => { if (preset.requiredCategories.includes(d.category)) ids.add(d.id); });
     setSelectedDocIds(ids);
     toast({ title: `Preset applied: ${presetLabel}`, description: `${ids.size} documents selected` });
   };
@@ -484,7 +496,7 @@ const Documents = () => {
   const handleDownloadZip = async () => {
     if (selectedDocIds.size === 0) { toast({ title: "No documents selected", variant: "destructive" }); return; }
     const zip = new JSZip();
-    const selected = documents.filter((d) => selectedDocIds.has(d.id));
+    const selected = docs.filter((d) => selectedDocIds.has(d.id));
     // For demo, create placeholder text files since we don't have real file blobs
     selected.forEach((d) => {
       const catLabel = DOCUMENT_CATEGORIES.find((c) => c.value === d.category)?.label || d.category;
@@ -495,6 +507,26 @@ const Documents = () => {
     const presetSuffix = collatePreset ? `_${collatePreset.replace(/\s+/g, "_")}` : "";
     saveAs(blob, `LegacyBuilder_Documents${presetSuffix}.zip`);
     toast({ title: "ZIP downloaded", description: `${selected.length} documents collated` });
+  };
+
+  /* Move single document */
+  const handleMoveDoc = () => {
+    if (!moveDocId || !moveTarget) return;
+    setDocs((prev) => prev.map((d) => d.id === moveDocId ? { ...d, category: moveTarget } : d));
+    const catLabel = DOCUMENT_CATEGORIES.find((c) => c.value === moveTarget)?.label || moveTarget;
+    toast({ title: "Document moved", description: `Moved to "${catLabel}"` });
+    setMoveDocId(null);
+    setMoveTarget("");
+  };
+
+  /* Batch assign category */
+  const handleBatchAssign = () => {
+    if (selectedDocIds.size === 0 || !batchCategory) return;
+    setDocs((prev) => prev.map((d) => selectedDocIds.has(d.id) ? { ...d, category: batchCategory } : d));
+    const catLabel = DOCUMENT_CATEGORIES.find((c) => c.value === batchCategory)?.label || batchCategory;
+    toast({ title: "Category updated", description: `${selectedDocIds.size} document(s) moved to "${catLabel}"` });
+    setBatchCategory("");
+    setSelectedDocIds(new Set());
   };
 
   /* ---------------------------------------------------------------- */
