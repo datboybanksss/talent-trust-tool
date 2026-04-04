@@ -56,75 +56,218 @@ interface FolderDef {
 }
 
 const DOCUMENT_CATEGORIES = [
+  // Personal ID
   { value: "passport", label: "Passport" },
   { value: "id_document", label: "Identity Document" },
-  { value: "marriage", label: "Marriage / Divorce" },
-  { value: "children", label: "Children Information" },
-  { value: "academic", label: "Academic Qualifications" },
-  { value: "finance_banking", label: "Finance – Banking" },
-  { value: "finance_investments", label: "Finance – Investments" },
-  { value: "finance_pension", label: "Finance – Pension / Retirement" },
-  { value: "finance_insurance", label: "Finance – Insurance" },
-  { value: "finance_stocks", label: "Finance – Stocks & Shares" },
-  { value: "finance_crypto", label: "Finance – Cryptocurrency" },
-  { value: "contracts", label: "Contracts" },
-  { value: "vehicles", label: "Vehicles" },
-  { value: "property", label: "Property / Real Estate" },
-  { value: "medical", label: "Medical Records" },
-  { value: "tax", label: "Tax Documents" },
-  { value: "company", label: "Company Documents" },
-  { value: "compliance", label: "Compliance" },
+  { value: "birth_certificate", label: "Birth Certificate" },
+  // Marriage & Family
+  { value: "marriage_certificate", label: "Marriage Certificate" },
+  { value: "marriage_agreement", label: "Antenuptial / Marriage Agreement" },
+  { value: "divorce_decree", label: "Divorce Decree" },
+  { value: "maintenance_order", label: "Maintenance Order" },
+  // Children
+  { value: "child_birth_cert", label: "Child Birth Certificate" },
+  { value: "child_school", label: "School Enrolment / Reports" },
+  { value: "child_medical", label: "Child Medical Records" },
+  { value: "child_passport", label: "Child Passport" },
+  { value: "child_custody", label: "Custody Agreement" },
+  // Academic
+  { value: "degree", label: "Degree / Diploma" },
+  { value: "matric", label: "Matric Certificate" },
+  { value: "professional_cert", label: "Professional Certification" },
+  { value: "training_cert", label: "Training / Course Certificate" },
+  // Finance – Banking
+  { value: "finance_banking", label: "Bank Statement / Account" },
+  { value: "finance_credit", label: "Credit Card / Loan Agreement" },
+  // Finance – Investments
+  { value: "finance_investments", label: "Investment Portfolio" },
+  { value: "finance_stocks", label: "Stocks & Shares" },
+  { value: "finance_crypto", label: "Cryptocurrency" },
+  // Finance – Pension & Retirement
+  { value: "finance_pension", label: "Pension / Retirement Fund" },
+  { value: "finance_ra", label: "Retirement Annuity" },
+  // Finance – Insurance
+  { value: "finance_life_insurance", label: "Life Insurance" },
+  { value: "finance_medical_aid", label: "Medical Aid / Health Insurance" },
+  { value: "finance_short_term", label: "Short-Term Insurance" },
+  { value: "finance_disability", label: "Disability / Income Protection" },
+  // Health & Medical
+  { value: "medical_records", label: "Medical Records" },
+  { value: "medical_prescription", label: "Prescriptions" },
+  { value: "medical_specialist", label: "Specialist Reports" },
+  { value: "medical_dental", label: "Dental Records" },
+  { value: "medical_mental", label: "Mental Health Records" },
+  // Housing & Property
+  { value: "title_deed", label: "Title Deed" },
+  { value: "lease_agreement", label: "Lease / Rental Agreement" },
+  { value: "bond_statement", label: "Bond / Mortgage Statement" },
+  { value: "rates_account", label: "Rates & Utilities Account" },
+  { value: "homeowners_insurance", label: "Homeowners Insurance" },
+  // Vehicles
+  { value: "vehicle_registration", label: "Vehicle Registration" },
+  { value: "vehicle_license", label: "Vehicle License Disc" },
+  { value: "vehicle_insurance", label: "Vehicle Insurance" },
+  { value: "vehicle_finance", label: "Vehicle Finance Agreement" },
+  { value: "drivers_license", label: "Driver's License" },
+  // Work & Employment
+  { value: "employment_contract", label: "Employment Contract" },
+  { value: "payslip", label: "Payslip" },
+  { value: "letter_of_appointment", label: "Letter of Appointment" },
+  { value: "work_permit", label: "Work Permit / Visa" },
+  { value: "nda", label: "NDA / Confidentiality Agreement" },
+  { value: "reference_letter", label: "Reference Letter" },
+  // Contracts (general + sport/art specific)
+  { value: "contracts", label: "General Contracts" },
+  { value: "endorsement", label: "Endorsement Contract" },
+  { value: "sponsorship", label: "Sponsorship Agreement" },
+  { value: "team_contract", label: "Team Contract" },
+  { value: "agent_agreement", label: "Agent / Manager Agreement" },
+  { value: "image_rights", label: "Image Rights" },
+  { value: "recording", label: "Recording Contract" },
+  { value: "publishing", label: "Publishing Deal" },
+  { value: "royalty_agreement", label: "Royalty Agreement" },
+  { value: "distribution", label: "Distribution Deal" },
+  { value: "performance_contract", label: "Performance Contract" },
+  // Tax
+  { value: "tax_return", label: "Tax Return / ITR12" },
+  { value: "irp5", label: "IRP5 / IT3(a)" },
+  { value: "tax_clearance", label: "Tax Clearance Certificate" },
+  { value: "vat_return", label: "VAT Return" },
+  // Company
+  { value: "cipc_registration", label: "CIPC Registration" },
+  { value: "moi", label: "Memorandum of Incorporation" },
+  { value: "director_resolution", label: "Director Resolution" },
+  { value: "company_financials", label: "Company Financial Statements" },
+  // Compliance
+  { value: "fica", label: "FICA Documents" },
+  { value: "bbbee", label: "B-BBEE Certificate" },
+  { value: "compliance_other", label: "Other Compliance" },
+  // Other
   { value: "personal_other", label: "Other Personal" },
 ];
 
+/* ---- LIFE-CATEGORY FOLDERS ---- */
+
 const baseFolders: FolderDef[] = [
   { id: "all", name: "All Documents", count: 0 },
-  { id: "passport", name: "Passports", count: 0 },
-  { id: "id_document", name: "Identity Documents", count: 0 },
-  { id: "marriage", name: "Marriage / Divorce", count: 0 },
-  { id: "children", name: "Children Information", count: 0 },
-  { id: "academic", name: "Academic Qualifications", count: 0 },
+  { id: "personal_id", name: "Personal ID", count: 0, hasSubfolders: true },
+  { id: "marriage_family", name: "Marriage & Family", count: 0, hasSubfolders: true },
+  { id: "children", name: "Children", count: 0, hasSubfolders: true },
+  { id: "academic", name: "Academic & Qualifications", count: 0, hasSubfolders: true },
   { id: "finance", name: "Finance", count: 0, hasSubfolders: true },
+  { id: "health", name: "Health & Medical", count: 0, hasSubfolders: true },
+  { id: "housing", name: "Housing & Property", count: 0, hasSubfolders: true },
+  { id: "vehicles", name: "Vehicles", count: 0, hasSubfolders: true },
+  { id: "work", name: "Work & Employment", count: 0, hasSubfolders: true },
   { id: "contracts", name: "Contracts", count: 0, hasSubfolders: true },
-  { id: "vehicles", name: "Vehicles", count: 0 },
-  { id: "property", name: "Property / Real Estate", count: 0 },
-  { id: "medical", name: "Medical Records", count: 0 },
-  { id: "tax", name: "Tax Documents", count: 0 },
-  { id: "company", name: "Company Documents", count: 0 },
-  { id: "compliance", name: "Compliance", count: 0 },
-  { id: "personal_other", name: "Other Personal", count: 0 },
+  { id: "tax", name: "Tax", count: 0, hasSubfolders: true },
+  { id: "company", name: "Company", count: 0, hasSubfolders: true },
+  { id: "compliance", name: "Compliance", count: 0, hasSubfolders: true },
+  { id: "personal_other", name: "Other", count: 0 },
 ];
 
-const financeSubfolders = [
-  { id: "finance_banking", name: "Banking", count: 0 },
-  { id: "finance_investments", name: "Investments", count: 0 },
-  { id: "finance_pension", name: "Pension / Retirement", count: 0 },
-  { id: "finance_insurance", name: "Insurance", count: 0 },
-  { id: "finance_stocks", name: "Stocks & Shares", count: 0 },
-  { id: "finance_crypto", name: "Cryptocurrency", count: 0 },
-];
+const SUBFOLDER_MAP: Record<string, FolderDef[]> = {
+  personal_id: [
+    { id: "passport", name: "Passports", count: 0 },
+    { id: "id_document", name: "Identity Documents", count: 0 },
+    { id: "birth_certificate", name: "Birth Certificates", count: 0 },
+  ],
+  marriage_family: [
+    { id: "marriage_certificate", name: "Marriage Certificate", count: 0 },
+    { id: "marriage_agreement", name: "Antenuptial / Marriage Agreement", count: 0 },
+    { id: "divorce_decree", name: "Divorce Decree", count: 0 },
+    { id: "maintenance_order", name: "Maintenance Order", count: 0 },
+  ],
+  children: [
+    { id: "child_birth_cert", name: "Birth Certificates", count: 0 },
+    { id: "child_passport", name: "Passports", count: 0 },
+    { id: "child_school", name: "School / Reports", count: 0 },
+    { id: "child_medical", name: "Medical Records", count: 0 },
+    { id: "child_custody", name: "Custody Agreement", count: 0 },
+  ],
+  academic: [
+    { id: "degree", name: "Degrees / Diplomas", count: 0 },
+    { id: "matric", name: "Matric Certificate", count: 0 },
+    { id: "professional_cert", name: "Professional Certifications", count: 0 },
+    { id: "training_cert", name: "Training / Courses", count: 0 },
+  ],
+  finance: [
+    { id: "finance_banking", name: "Banking", count: 0 },
+    { id: "finance_credit", name: "Credit / Loans", count: 0 },
+    { id: "finance_investments", name: "Investments", count: 0 },
+    { id: "finance_stocks", name: "Stocks & Shares", count: 0 },
+    { id: "finance_crypto", name: "Cryptocurrency", count: 0 },
+    { id: "finance_pension", name: "Pension / Retirement", count: 0 },
+    { id: "finance_ra", name: "Retirement Annuity", count: 0 },
+    { id: "finance_life_insurance", name: "Life Insurance", count: 0 },
+    { id: "finance_medical_aid", name: "Medical Aid / Health Ins.", count: 0 },
+    { id: "finance_short_term", name: "Short-Term Insurance", count: 0 },
+    { id: "finance_disability", name: "Disability / Income Prot.", count: 0 },
+  ],
+  health: [
+    { id: "medical_records", name: "Medical Records", count: 0 },
+    { id: "medical_prescription", name: "Prescriptions", count: 0 },
+    { id: "medical_specialist", name: "Specialist Reports", count: 0 },
+    { id: "medical_dental", name: "Dental Records", count: 0 },
+    { id: "medical_mental", name: "Mental Health", count: 0 },
+  ],
+  housing: [
+    { id: "title_deed", name: "Title Deeds", count: 0 },
+    { id: "lease_agreement", name: "Lease / Rental", count: 0 },
+    { id: "bond_statement", name: "Bond / Mortgage", count: 0 },
+    { id: "rates_account", name: "Rates & Utilities", count: 0 },
+    { id: "homeowners_insurance", name: "Homeowners Insurance", count: 0 },
+  ],
+  vehicles: [
+    { id: "vehicle_registration", name: "Registration", count: 0 },
+    { id: "vehicle_license", name: "License Disc", count: 0 },
+    { id: "vehicle_insurance", name: "Insurance", count: 0 },
+    { id: "vehicle_finance", name: "Finance Agreement", count: 0 },
+    { id: "drivers_license", name: "Driver's License", count: 0 },
+  ],
+  work: [
+    { id: "employment_contract", name: "Employment Contracts", count: 0 },
+    { id: "payslip", name: "Payslips", count: 0 },
+    { id: "letter_of_appointment", name: "Appointment Letters", count: 0 },
+    { id: "work_permit", name: "Work Permits / Visas", count: 0 },
+    { id: "nda", name: "NDAs", count: 0 },
+    { id: "reference_letter", name: "Reference Letters", count: 0 },
+  ],
+  tax: [
+    { id: "tax_return", name: "Tax Returns", count: 0 },
+    { id: "irp5", name: "IRP5 / IT3(a)", count: 0 },
+    { id: "tax_clearance", name: "Tax Clearance", count: 0 },
+    { id: "vat_return", name: "VAT Returns", count: 0 },
+  ],
+  company: [
+    { id: "cipc_registration", name: "CIPC Registration", count: 0 },
+    { id: "moi", name: "Memorandum of Incorporation", count: 0 },
+    { id: "director_resolution", name: "Director Resolutions", count: 0 },
+    { id: "company_financials", name: "Financial Statements", count: 0 },
+  ],
+  compliance: [
+    { id: "fica", name: "FICA Documents", count: 0 },
+    { id: "bbbee", name: "B-BBEE Certificate", count: 0 },
+    { id: "compliance_other", name: "Other Compliance", count: 0 },
+  ],
+};
 
-const athleteContractFolders = [
+const athleteContractFolders: FolderDef[] = [
   { id: "endorsement", name: "Endorsement Contracts", count: 0 },
   { id: "sponsorship", name: "Sponsorship Agreements", count: 0 },
-  { id: "team-contracts", name: "Team Contracts", count: 0 },
-  { id: "agent-agreements", name: "Agent/Manager Agreements", count: 0 },
-  { id: "appearance-fees", name: "Appearance Fees", count: 0 },
-  { id: "image-rights", name: "Image Rights", count: 0 },
-  { id: "merchandise", name: "Merchandise Licensing", count: 0 },
-  { id: "broadcasting", name: "Broadcasting Rights", count: 0 },
+  { id: "team_contract", name: "Team Contracts", count: 0 },
+  { id: "agent_agreement", name: "Agent/Manager Agreements", count: 0 },
+  { id: "image_rights", name: "Image Rights", count: 0 },
+  { id: "contracts", name: "General Contracts", count: 0 },
 ];
 
-const artistContractFolders = [
+const artistContractFolders: FolderDef[] = [
   { id: "recording", name: "Recording Contracts", count: 0 },
   { id: "publishing", name: "Publishing Deals", count: 0 },
-  { id: "licensing", name: "Licensing Agreements", count: 0 },
-  { id: "gallery", name: "Gallery Representation", count: 0 },
-  { id: "royalty", name: "Royalty Agreements", count: 0 },
-  { id: "collaboration", name: "Collaboration Agreements", count: 0 },
-  { id: "sync-licensing", name: "Sync Licensing", count: 0 },
+  { id: "royalty_agreement", name: "Royalty Agreements", count: 0 },
   { id: "distribution", name: "Distribution Deals", count: 0 },
-  { id: "performance", name: "Performance Contracts", count: 0 },
+  { id: "performance_contract", name: "Performance Contracts", count: 0 },
+  { id: "contracts", name: "General Contracts", count: 0 },
 ];
 
 /* ------------------------------------------------------------------ */
