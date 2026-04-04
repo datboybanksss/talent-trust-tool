@@ -897,6 +897,7 @@ const Documents = () => {
                   onToggle={() => toggleDocSelect(doc.id)}
                   onMoveRequest={(id) => { setMoveDocId(id); setMoveTarget(""); }}
                   onDragStart={(e) => handleDocDragStart(e, doc.id)}
+                  catLabel={allCategories.find((c) => c.value === doc.category)?.label || doc.category}
                 />
               ))}
             </div>
