@@ -985,9 +985,10 @@ interface DocumentRowProps {
   onToggle: () => void;
   onMoveRequest: (id: string) => void;
   onDragStart?: (e: React.DragEvent) => void;
+  catLabel: string;
 }
 
-const DocumentRow = ({ document, collateMode, selected, onToggle, onMoveRequest, onDragStart }: DocumentRowProps) => {
+const DocumentRow = ({ document, collateMode, selected, onToggle, onMoveRequest, onDragStart, catLabel }: DocumentRowProps) => {
   const getIcon = () => {
     switch (document.type) {
       case "pdf": return <FileText className="w-5 h-5 text-destructive" />;
