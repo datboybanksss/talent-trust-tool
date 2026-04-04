@@ -997,7 +997,6 @@ const DocumentRow = ({ document, collateMode, selected, onToggle, onMoveRequest,
     }
   };
 
-  const catLabel = DOCUMENT_CATEGORIES.find((c) => c.value === document.category)?.label || document.category;
 
   return (
     <div
