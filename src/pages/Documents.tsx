@@ -56,75 +56,218 @@ interface FolderDef {
 }
 
 const DOCUMENT_CATEGORIES = [
+  // Personal ID
   { value: "passport", label: "Passport" },
   { value: "id_document", label: "Identity Document" },
-  { value: "marriage", label: "Marriage / Divorce" },
-  { value: "children", label: "Children Information" },
-  { value: "academic", label: "Academic Qualifications" },
-  { value: "finance_banking", label: "Finance – Banking" },
-  { value: "finance_investments", label: "Finance – Investments" },
-  { value: "finance_pension", label: "Finance – Pension / Retirement" },
-  { value: "finance_insurance", label: "Finance – Insurance" },
-  { value: "finance_stocks", label: "Finance – Stocks & Shares" },
-  { value: "finance_crypto", label: "Finance – Cryptocurrency" },
-  { value: "contracts", label: "Contracts" },
-  { value: "vehicles", label: "Vehicles" },
-  { value: "property", label: "Property / Real Estate" },
-  { value: "medical", label: "Medical Records" },
-  { value: "tax", label: "Tax Documents" },
-  { value: "company", label: "Company Documents" },
-  { value: "compliance", label: "Compliance" },
+  { value: "birth_certificate", label: "Birth Certificate" },
+  // Marriage & Family
+  { value: "marriage_certificate", label: "Marriage Certificate" },
+  { value: "marriage_agreement", label: "Antenuptial / Marriage Agreement" },
+  { value: "divorce_decree", label: "Divorce Decree" },
+  { value: "maintenance_order", label: "Maintenance Order" },
+  // Children
+  { value: "child_birth_cert", label: "Child Birth Certificate" },
+  { value: "child_school", label: "School Enrolment / Reports" },
+  { value: "child_medical", label: "Child Medical Records" },
+  { value: "child_passport", label: "Child Passport" },
+  { value: "child_custody", label: "Custody Agreement" },
+  // Academic
+  { value: "degree", label: "Degree / Diploma" },
+  { value: "matric", label: "Matric Certificate" },
+  { value: "professional_cert", label: "Professional Certification" },
+  { value: "training_cert", label: "Training / Course Certificate" },
+  // Finance – Banking
+  { value: "finance_banking", label: "Bank Statement / Account" },
+  { value: "finance_credit", label: "Credit Card / Loan Agreement" },
+  // Finance – Investments
+  { value: "finance_investments", label: "Investment Portfolio" },
+  { value: "finance_stocks", label: "Stocks & Shares" },
+  { value: "finance_crypto", label: "Cryptocurrency" },
+  // Finance – Pension & Retirement
+  { value: "finance_pension", label: "Pension / Retirement Fund" },
+  { value: "finance_ra", label: "Retirement Annuity" },
+  // Finance – Insurance
+  { value: "finance_life_insurance", label: "Life Insurance" },
+  { value: "finance_medical_aid", label: "Medical Aid / Health Insurance" },
+  { value: "finance_short_term", label: "Short-Term Insurance" },
+  { value: "finance_disability", label: "Disability / Income Protection" },
+  // Health & Medical
+  { value: "medical_records", label: "Medical Records" },
+  { value: "medical_prescription", label: "Prescriptions" },
+  { value: "medical_specialist", label: "Specialist Reports" },
+  { value: "medical_dental", label: "Dental Records" },
+  { value: "medical_mental", label: "Mental Health Records" },
+  // Housing & Property
+  { value: "title_deed", label: "Title Deed" },
+  { value: "lease_agreement", label: "Lease / Rental Agreement" },
+  { value: "bond_statement", label: "Bond / Mortgage Statement" },
+  { value: "rates_account", label: "Rates & Utilities Account" },
+  { value: "homeowners_insurance", label: "Homeowners Insurance" },
+  // Vehicles
+  { value: "vehicle_registration", label: "Vehicle Registration" },
+  { value: "vehicle_license", label: "Vehicle License Disc" },
+  { value: "vehicle_insurance", label: "Vehicle Insurance" },
+  { value: "vehicle_finance", label: "Vehicle Finance Agreement" },
+  { value: "drivers_license", label: "Driver's License" },
+  // Work & Employment
+  { value: "employment_contract", label: "Employment Contract" },
+  { value: "payslip", label: "Payslip" },
+  { value: "letter_of_appointment", label: "Letter of Appointment" },
+  { value: "work_permit", label: "Work Permit / Visa" },
+  { value: "nda", label: "NDA / Confidentiality Agreement" },
+  { value: "reference_letter", label: "Reference Letter" },
+  // Contracts (general + sport/art specific)
+  { value: "contracts", label: "General Contracts" },
+  { value: "endorsement", label: "Endorsement Contract" },
+  { value: "sponsorship", label: "Sponsorship Agreement" },
+  { value: "team_contract", label: "Team Contract" },
+  { value: "agent_agreement", label: "Agent / Manager Agreement" },
+  { value: "image_rights", label: "Image Rights" },
+  { value: "recording", label: "Recording Contract" },
+  { value: "publishing", label: "Publishing Deal" },
+  { value: "royalty_agreement", label: "Royalty Agreement" },
+  { value: "distribution", label: "Distribution Deal" },
+  { value: "performance_contract", label: "Performance Contract" },
+  // Tax
+  { value: "tax_return", label: "Tax Return / ITR12" },
+  { value: "irp5", label: "IRP5 / IT3(a)" },
+  { value: "tax_clearance", label: "Tax Clearance Certificate" },
+  { value: "vat_return", label: "VAT Return" },
+  // Company
+  { value: "cipc_registration", label: "CIPC Registration" },
+  { value: "moi", label: "Memorandum of Incorporation" },
+  { value: "director_resolution", label: "Director Resolution" },
+  { value: "company_financials", label: "Company Financial Statements" },
+  // Compliance
+  { value: "fica", label: "FICA Documents" },
+  { value: "bbbee", label: "B-BBEE Certificate" },
+  { value: "compliance_other", label: "Other Compliance" },
+  // Other
   { value: "personal_other", label: "Other Personal" },
 ];
 
+/* ---- LIFE-CATEGORY FOLDERS ---- */
+
 const baseFolders: FolderDef[] = [
   { id: "all", name: "All Documents", count: 0 },
-  { id: "passport", name: "Passports", count: 0 },
-  { id: "id_document", name: "Identity Documents", count: 0 },
-  { id: "marriage", name: "Marriage / Divorce", count: 0 },
-  { id: "children", name: "Children Information", count: 0 },
-  { id: "academic", name: "Academic Qualifications", count: 0 },
+  { id: "personal_id", name: "Personal ID", count: 0, hasSubfolders: true },
+  { id: "marriage_family", name: "Marriage & Family", count: 0, hasSubfolders: true },
+  { id: "children", name: "Children", count: 0, hasSubfolders: true },
+  { id: "academic", name: "Academic & Qualifications", count: 0, hasSubfolders: true },
   { id: "finance", name: "Finance", count: 0, hasSubfolders: true },
+  { id: "health", name: "Health & Medical", count: 0, hasSubfolders: true },
+  { id: "housing", name: "Housing & Property", count: 0, hasSubfolders: true },
+  { id: "vehicles", name: "Vehicles", count: 0, hasSubfolders: true },
+  { id: "work", name: "Work & Employment", count: 0, hasSubfolders: true },
   { id: "contracts", name: "Contracts", count: 0, hasSubfolders: true },
-  { id: "vehicles", name: "Vehicles", count: 0 },
-  { id: "property", name: "Property / Real Estate", count: 0 },
-  { id: "medical", name: "Medical Records", count: 0 },
-  { id: "tax", name: "Tax Documents", count: 0 },
-  { id: "company", name: "Company Documents", count: 0 },
-  { id: "compliance", name: "Compliance", count: 0 },
-  { id: "personal_other", name: "Other Personal", count: 0 },
+  { id: "tax", name: "Tax", count: 0, hasSubfolders: true },
+  { id: "company", name: "Company", count: 0, hasSubfolders: true },
+  { id: "compliance", name: "Compliance", count: 0, hasSubfolders: true },
+  { id: "personal_other", name: "Other", count: 0 },
 ];
 
-const financeSubfolders = [
-  { id: "finance_banking", name: "Banking", count: 0 },
-  { id: "finance_investments", name: "Investments", count: 0 },
-  { id: "finance_pension", name: "Pension / Retirement", count: 0 },
-  { id: "finance_insurance", name: "Insurance", count: 0 },
-  { id: "finance_stocks", name: "Stocks & Shares", count: 0 },
-  { id: "finance_crypto", name: "Cryptocurrency", count: 0 },
-];
+const SUBFOLDER_MAP: Record<string, FolderDef[]> = {
+  personal_id: [
+    { id: "passport", name: "Passports", count: 0 },
+    { id: "id_document", name: "Identity Documents", count: 0 },
+    { id: "birth_certificate", name: "Birth Certificates", count: 0 },
+  ],
+  marriage_family: [
+    { id: "marriage_certificate", name: "Marriage Certificate", count: 0 },
+    { id: "marriage_agreement", name: "Antenuptial / Marriage Agreement", count: 0 },
+    { id: "divorce_decree", name: "Divorce Decree", count: 0 },
+    { id: "maintenance_order", name: "Maintenance Order", count: 0 },
+  ],
+  children: [
+    { id: "child_birth_cert", name: "Birth Certificates", count: 0 },
+    { id: "child_passport", name: "Passports", count: 0 },
+    { id: "child_school", name: "School / Reports", count: 0 },
+    { id: "child_medical", name: "Medical Records", count: 0 },
+    { id: "child_custody", name: "Custody Agreement", count: 0 },
+  ],
+  academic: [
+    { id: "degree", name: "Degrees / Diplomas", count: 0 },
+    { id: "matric", name: "Matric Certificate", count: 0 },
+    { id: "professional_cert", name: "Professional Certifications", count: 0 },
+    { id: "training_cert", name: "Training / Courses", count: 0 },
+  ],
+  finance: [
+    { id: "finance_banking", name: "Banking", count: 0 },
+    { id: "finance_credit", name: "Credit / Loans", count: 0 },
+    { id: "finance_investments", name: "Investments", count: 0 },
+    { id: "finance_stocks", name: "Stocks & Shares", count: 0 },
+    { id: "finance_crypto", name: "Cryptocurrency", count: 0 },
+    { id: "finance_pension", name: "Pension / Retirement", count: 0 },
+    { id: "finance_ra", name: "Retirement Annuity", count: 0 },
+    { id: "finance_life_insurance", name: "Life Insurance", count: 0 },
+    { id: "finance_medical_aid", name: "Medical Aid / Health Ins.", count: 0 },
+    { id: "finance_short_term", name: "Short-Term Insurance", count: 0 },
+    { id: "finance_disability", name: "Disability / Income Prot.", count: 0 },
+  ],
+  health: [
+    { id: "medical_records", name: "Medical Records", count: 0 },
+    { id: "medical_prescription", name: "Prescriptions", count: 0 },
+    { id: "medical_specialist", name: "Specialist Reports", count: 0 },
+    { id: "medical_dental", name: "Dental Records", count: 0 },
+    { id: "medical_mental", name: "Mental Health", count: 0 },
+  ],
+  housing: [
+    { id: "title_deed", name: "Title Deeds", count: 0 },
+    { id: "lease_agreement", name: "Lease / Rental", count: 0 },
+    { id: "bond_statement", name: "Bond / Mortgage", count: 0 },
+    { id: "rates_account", name: "Rates & Utilities", count: 0 },
+    { id: "homeowners_insurance", name: "Homeowners Insurance", count: 0 },
+  ],
+  vehicles: [
+    { id: "vehicle_registration", name: "Registration", count: 0 },
+    { id: "vehicle_license", name: "License Disc", count: 0 },
+    { id: "vehicle_insurance", name: "Insurance", count: 0 },
+    { id: "vehicle_finance", name: "Finance Agreement", count: 0 },
+    { id: "drivers_license", name: "Driver's License", count: 0 },
+  ],
+  work: [
+    { id: "employment_contract", name: "Employment Contracts", count: 0 },
+    { id: "payslip", name: "Payslips", count: 0 },
+    { id: "letter_of_appointment", name: "Appointment Letters", count: 0 },
+    { id: "work_permit", name: "Work Permits / Visas", count: 0 },
+    { id: "nda", name: "NDAs", count: 0 },
+    { id: "reference_letter", name: "Reference Letters", count: 0 },
+  ],
+  tax: [
+    { id: "tax_return", name: "Tax Returns", count: 0 },
+    { id: "irp5", name: "IRP5 / IT3(a)", count: 0 },
+    { id: "tax_clearance", name: "Tax Clearance", count: 0 },
+    { id: "vat_return", name: "VAT Returns", count: 0 },
+  ],
+  company: [
+    { id: "cipc_registration", name: "CIPC Registration", count: 0 },
+    { id: "moi", name: "Memorandum of Incorporation", count: 0 },
+    { id: "director_resolution", name: "Director Resolutions", count: 0 },
+    { id: "company_financials", name: "Financial Statements", count: 0 },
+  ],
+  compliance: [
+    { id: "fica", name: "FICA Documents", count: 0 },
+    { id: "bbbee", name: "B-BBEE Certificate", count: 0 },
+    { id: "compliance_other", name: "Other Compliance", count: 0 },
+  ],
+};
 
-const athleteContractFolders = [
+const athleteContractFolders: FolderDef[] = [
   { id: "endorsement", name: "Endorsement Contracts", count: 0 },
   { id: "sponsorship", name: "Sponsorship Agreements", count: 0 },
-  { id: "team-contracts", name: "Team Contracts", count: 0 },
-  { id: "agent-agreements", name: "Agent/Manager Agreements", count: 0 },
-  { id: "appearance-fees", name: "Appearance Fees", count: 0 },
-  { id: "image-rights", name: "Image Rights", count: 0 },
-  { id: "merchandise", name: "Merchandise Licensing", count: 0 },
-  { id: "broadcasting", name: "Broadcasting Rights", count: 0 },
+  { id: "team_contract", name: "Team Contracts", count: 0 },
+  { id: "agent_agreement", name: "Agent/Manager Agreements", count: 0 },
+  { id: "image_rights", name: "Image Rights", count: 0 },
+  { id: "contracts", name: "General Contracts", count: 0 },
 ];
 
-const artistContractFolders = [
+const artistContractFolders: FolderDef[] = [
   { id: "recording", name: "Recording Contracts", count: 0 },
   { id: "publishing", name: "Publishing Deals", count: 0 },
-  { id: "licensing", name: "Licensing Agreements", count: 0 },
-  { id: "gallery", name: "Gallery Representation", count: 0 },
-  { id: "royalty", name: "Royalty Agreements", count: 0 },
-  { id: "collaboration", name: "Collaboration Agreements", count: 0 },
-  { id: "sync-licensing", name: "Sync Licensing", count: 0 },
+  { id: "royalty_agreement", name: "Royalty Agreements", count: 0 },
   { id: "distribution", name: "Distribution Deals", count: 0 },
-  { id: "performance", name: "Performance Contracts", count: 0 },
+  { id: "performance_contract", name: "Performance Contracts", count: 0 },
+  { id: "contracts", name: "General Contracts", count: 0 },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -134,39 +277,39 @@ const artistContractFolders = [
 const COLLATE_PRESETS = [
   {
     label: "Visa Application",
-    requiredCategories: ["passport", "id_document", "finance_banking", "academic", "medical"],
+    requiredCategories: ["passport", "id_document", "finance_banking", "degree", "medical_records", "employment_contract"],
   },
   {
     label: "Funding / Loan Application",
-    requiredCategories: ["id_document", "finance_banking", "finance_investments", "tax", "company"],
+    requiredCategories: ["id_document", "finance_banking", "finance_investments", "irp5", "tax_clearance", "payslip", "company_financials"],
   },
   {
     label: "Property Purchase",
-    requiredCategories: ["id_document", "marriage", "finance_banking", "tax", "property"],
+    requiredCategories: ["id_document", "marriage_certificate", "finance_banking", "tax_clearance", "payslip", "irp5"],
   },
   {
     label: "Sponsorship Pitch",
-    requiredCategories: ["id_document", "company", "contracts", "compliance"],
+    requiredCategories: ["id_document", "cipc_registration", "contracts", "bbbee", "company_financials"],
   },
   {
     label: "School Enrolment",
-    requiredCategories: ["id_document", "children", "academic", "medical", "finance_banking"],
+    requiredCategories: ["id_document", "child_birth_cert", "child_passport", "child_medical", "child_school", "finance_banking", "medical_records"],
   },
   {
     label: "Insurance Claim",
-    requiredCategories: ["id_document", "finance_insurance", "medical", "vehicles", "property"],
+    requiredCategories: ["id_document", "finance_life_insurance", "finance_medical_aid", "medical_records", "vehicle_insurance", "homeowners_insurance"],
   },
   {
     label: "Work Permit Application",
-    requiredCategories: ["passport", "id_document", "academic", "contracts", "tax", "medical"],
+    requiredCategories: ["passport", "id_document", "degree", "professional_cert", "employment_contract", "tax_clearance", "medical_records"],
   },
   {
     label: "Tax Filing",
-    requiredCategories: ["id_document", "tax", "finance_banking", "finance_investments", "finance_pension", "company"],
+    requiredCategories: ["id_document", "irp5", "tax_return", "finance_banking", "finance_investments", "finance_pension", "company_financials"],
   },
   {
     label: "Divorce Proceedings",
-    requiredCategories: ["id_document", "marriage", "children", "property", "finance_banking", "finance_investments"],
+    requiredCategories: ["id_document", "marriage_certificate", "marriage_agreement", "child_birth_cert", "child_custody", "title_deed", "finance_banking", "finance_investments"],
   },
 ];
 
@@ -184,47 +327,85 @@ interface DocumentItem {
 }
 
 const documents: DocumentItem[] = [
+  // Personal ID
   { id: "1", name: "Passport - John Doe.pdf", type: "pdf", category: "passport", date: "Mar 1, 2026", size: "1.8 MB" },
   { id: "2", name: "Passport - Jane Doe (Spouse).pdf", type: "pdf", category: "passport", date: "Mar 1, 2026", size: "1.7 MB" },
-  { id: "3", name: "Passport - Child 1.pdf", type: "pdf", category: "passport", date: "Feb 20, 2026", size: "1.5 MB" },
+  { id: "3", name: "Passport - Child 1.pdf", type: "pdf", category: "child_passport", date: "Feb 20, 2026", size: "1.5 MB" },
   { id: "4", name: "ID Document - John Doe.jpg", type: "image", category: "id_document", date: "Dec 20, 2025", size: "3.1 MB" },
   { id: "5", name: "ID Document - Jane Doe.jpg", type: "image", category: "id_document", date: "Dec 20, 2025", size: "2.9 MB" },
-  { id: "6", name: "Marriage Certificate.pdf", type: "pdf", category: "marriage", date: "Jun 15, 2020", size: "980 KB" },
-  { id: "7", name: "Antenuptial Contract (ANC).pdf", type: "pdf", category: "marriage", date: "Jun 10, 2020", size: "1.4 MB" },
-  { id: "8", name: "Birth Certificate - Child 1.pdf", type: "pdf", category: "children", date: "Sep 5, 2022", size: "650 KB" },
-  { id: "9", name: "School Enrolment Letter.pdf", type: "pdf", category: "children", date: "Jan 12, 2026", size: "420 KB" },
-  { id: "10", name: "BCom Honours Degree.pdf", type: "pdf", category: "academic", date: "Dec 1, 2018", size: "1.1 MB" },
-  { id: "11", name: "Matric Certificate.pdf", type: "pdf", category: "academic", date: "Dec 1, 2014", size: "890 KB" },
-  { id: "12", name: "FIFA Coaching Badge.pdf", type: "pdf", category: "academic", date: "Aug 20, 2023", size: "750 KB" },
-  { id: "13", name: "FNB Cheque Account Statement.pdf", type: "pdf", category: "finance_banking", date: "Mar 1, 2026", size: "2.4 MB" },
-  { id: "14", name: "Investment Portfolio - Allan Gray.pdf", type: "pdf", category: "finance_investments", date: "Feb 28, 2026", size: "3.2 MB" },
-  { id: "15", name: "Pension Fund Statement.pdf", type: "pdf", category: "finance_pension", date: "Jan 31, 2026", size: "1.6 MB" },
-  { id: "16", name: "Life Insurance Policy - Discovery.pdf", type: "pdf", category: "finance_insurance", date: "Jan 15, 2026", size: "2.1 MB" },
-  { id: "17", name: "JSE Share Portfolio.pdf", type: "pdf", category: "finance_stocks", date: "Feb 15, 2026", size: "1.8 MB" },
-  { id: "18", name: "Crypto Wallet Holdings - Luno.pdf", type: "pdf", category: "finance_crypto", date: "Mar 3, 2026", size: "540 KB" },
-  { id: "19", name: "Sponsorship Agreement - Nike.pdf", type: "pdf", category: "contracts", date: "Dec 15, 2025", size: "4.5 MB" },
-  { id: "20", name: "Vehicle Registration - BMW X5.pdf", type: "pdf", category: "vehicles", date: "Nov 10, 2025", size: "1.2 MB" },
-  { id: "21", name: "Vehicle Insurance - Outsurance.pdf", type: "pdf", category: "vehicles", date: "Nov 10, 2025", size: "980 KB" },
-  { id: "22", name: "Property Title Deed - Sandton.pdf", type: "pdf", category: "property", date: "Apr 5, 2024", size: "3.8 MB" },
-  { id: "23", name: "Medical Aid - Discovery Health.pdf", type: "pdf", category: "medical", date: "Jan 1, 2026", size: "1.4 MB" },
-  { id: "24", name: "Tax Clearance Certificate.pdf", type: "pdf", category: "tax", date: "Dec 10, 2025", size: "890 KB" },
-  { id: "25", name: "IRP5 - 2025 Tax Year.pdf", type: "pdf", category: "tax", date: "Jul 15, 2025", size: "1.1 MB" },
-  { id: "26", name: "Memorandum of Incorporation.pdf", type: "pdf", category: "company", date: "Jan 15, 2026", size: "2.4 MB" },
-  { id: "27", name: "Company Registration Certificate.pdf", type: "pdf", category: "company", date: "Jan 10, 2026", size: "1.2 MB" },
-  { id: "28", name: "Director Resolution - Bank Account.docx", type: "doc", category: "compliance", date: "Jan 8, 2026", size: "156 KB" },
+  { id: "6", name: "Birth Certificate - John Doe.pdf", type: "pdf", category: "birth_certificate", date: "Jan 5, 1990", size: "620 KB" },
+  // Marriage & Family
+  { id: "7", name: "Marriage Certificate.pdf", type: "pdf", category: "marriage_certificate", date: "Jun 15, 2020", size: "980 KB" },
+  { id: "8", name: "Antenuptial Contract (ANC).pdf", type: "pdf", category: "marriage_agreement", date: "Jun 10, 2020", size: "1.4 MB" },
+  // Children
+  { id: "9", name: "Birth Certificate - Child 1.pdf", type: "pdf", category: "child_birth_cert", date: "Sep 5, 2022", size: "650 KB" },
+  { id: "10", name: "School Enrolment Letter.pdf", type: "pdf", category: "child_school", date: "Jan 12, 2026", size: "420 KB" },
+  { id: "11", name: "Immunisation Card - Child 1.pdf", type: "pdf", category: "child_medical", date: "Oct 1, 2022", size: "380 KB" },
+  // Academic
+  { id: "12", name: "BCom Honours Degree.pdf", type: "pdf", category: "degree", date: "Dec 1, 2018", size: "1.1 MB" },
+  { id: "13", name: "Matric Certificate.pdf", type: "pdf", category: "matric", date: "Dec 1, 2014", size: "890 KB" },
+  { id: "14", name: "FIFA Coaching Badge.pdf", type: "pdf", category: "professional_cert", date: "Aug 20, 2023", size: "750 KB" },
+  // Finance
+  { id: "15", name: "FNB Cheque Account Statement.pdf", type: "pdf", category: "finance_banking", date: "Mar 1, 2026", size: "2.4 MB" },
+  { id: "16", name: "Investment Portfolio - Allan Gray.pdf", type: "pdf", category: "finance_investments", date: "Feb 28, 2026", size: "3.2 MB" },
+  { id: "17", name: "Pension Fund Statement.pdf", type: "pdf", category: "finance_pension", date: "Jan 31, 2026", size: "1.6 MB" },
+  { id: "18", name: "Life Insurance Policy - Discovery.pdf", type: "pdf", category: "finance_life_insurance", date: "Jan 15, 2026", size: "2.1 MB" },
+  { id: "19", name: "Medical Aid - Discovery Health.pdf", type: "pdf", category: "finance_medical_aid", date: "Jan 1, 2026", size: "1.4 MB" },
+  { id: "20", name: "JSE Share Portfolio.pdf", type: "pdf", category: "finance_stocks", date: "Feb 15, 2026", size: "1.8 MB" },
+  { id: "21", name: "Crypto Wallet Holdings - Luno.pdf", type: "pdf", category: "finance_crypto", date: "Mar 3, 2026", size: "540 KB" },
+  { id: "22", name: "Home Loan Agreement - Nedbank.pdf", type: "pdf", category: "finance_credit", date: "Apr 5, 2024", size: "2.6 MB" },
+  // Health
+  { id: "23", name: "Annual Check-Up Report 2025.pdf", type: "pdf", category: "medical_records", date: "Nov 20, 2025", size: "1.3 MB" },
+  { id: "24", name: "Specialist Report - Orthopaedic.pdf", type: "pdf", category: "medical_specialist", date: "Sep 15, 2025", size: "980 KB" },
+  { id: "25", name: "Dental X-Ray Results.pdf", type: "pdf", category: "medical_dental", date: "Aug 10, 2025", size: "2.2 MB" },
+  // Housing
+  { id: "26", name: "Title Deed - Sandton Property.pdf", type: "pdf", category: "title_deed", date: "Apr 5, 2024", size: "3.8 MB" },
+  { id: "27", name: "Bond Statement - Nedbank.pdf", type: "pdf", category: "bond_statement", date: "Mar 1, 2026", size: "1.1 MB" },
+  { id: "28", name: "Rates Account - CoJ.pdf", type: "pdf", category: "rates_account", date: "Feb 28, 2026", size: "450 KB" },
+  { id: "29", name: "Homeowners Insurance - Santam.pdf", type: "pdf", category: "homeowners_insurance", date: "Jan 1, 2026", size: "1.8 MB" },
+  // Vehicles
+  { id: "30", name: "Vehicle Registration - BMW X5.pdf", type: "pdf", category: "vehicle_registration", date: "Nov 10, 2025", size: "1.2 MB" },
+  { id: "31", name: "Vehicle Insurance - Outsurance.pdf", type: "pdf", category: "vehicle_insurance", date: "Nov 10, 2025", size: "980 KB" },
+  { id: "32", name: "Driver's License - John Doe.jpg", type: "image", category: "drivers_license", date: "Mar 15, 2024", size: "1.5 MB" },
+  // Work
+  { id: "33", name: "Employment Contract - Current.pdf", type: "pdf", category: "employment_contract", date: "Jan 15, 2025", size: "2.8 MB" },
+  { id: "34", name: "Payslip - March 2026.pdf", type: "pdf", category: "payslip", date: "Mar 1, 2026", size: "320 KB" },
+  { id: "35", name: "Work Permit - UK.pdf", type: "pdf", category: "work_permit", date: "Jun 1, 2025", size: "1.9 MB" },
+  { id: "36", name: "Reference Letter - Previous Employer.pdf", type: "pdf", category: "reference_letter", date: "Dec 20, 2024", size: "450 KB" },
+  // Contracts
+  { id: "37", name: "Sponsorship Agreement - Nike.pdf", type: "pdf", category: "sponsorship", date: "Dec 15, 2025", size: "4.5 MB" },
+  { id: "38", name: "Agent Management Agreement.pdf", type: "pdf", category: "agent_agreement", date: "Jan 5, 2026", size: "3.1 MB" },
+  // Tax
+  { id: "39", name: "Tax Clearance Certificate.pdf", type: "pdf", category: "tax_clearance", date: "Dec 10, 2025", size: "890 KB" },
+  { id: "40", name: "IRP5 - 2025 Tax Year.pdf", type: "pdf", category: "irp5", date: "Jul 15, 2025", size: "1.1 MB" },
+  // Company
+  { id: "41", name: "Memorandum of Incorporation.pdf", type: "pdf", category: "moi", date: "Jan 15, 2026", size: "2.4 MB" },
+  { id: "42", name: "CIPC Registration Certificate.pdf", type: "pdf", category: "cipc_registration", date: "Jan 10, 2026", size: "1.2 MB" },
+  { id: "43", name: "Director Resolution - Bank Account.docx", type: "doc", category: "director_resolution", date: "Jan 8, 2026", size: "156 KB" },
+  // Compliance
+  { id: "44", name: "FICA - Proof of Address.pdf", type: "pdf", category: "fica", date: "Feb 1, 2026", size: "680 KB" },
+  { id: "45", name: "B-BBEE Certificate.pdf", type: "pdf", category: "bbbee", date: "Mar 1, 2026", size: "520 KB" },
 ];
 
 /* ------------------------------------------------------------------ */
 /*  HELPERS                                                           */
 /* ------------------------------------------------------------------ */
 
-const FINANCE_CATS = ["finance_banking", "finance_investments", "finance_pension", "finance_insurance", "finance_stocks", "finance_crypto"];
-const CONTRACT_CATS = ["contracts", "endorsement", "sponsorship", "team-contracts", "agent-agreements", "appearance-fees", "image-rights", "merchandise", "broadcasting", "recording", "publishing", "licensing", "gallery", "royalty", "collaboration", "sync-licensing", "distribution", "performance"];
+// Build a map of parent folder → all child category IDs
+const PARENT_CAT_MAP: Record<string, string[]> = {};
+for (const [parentId, subs] of Object.entries(SUBFOLDER_MAP)) {
+  PARENT_CAT_MAP[parentId] = subs.map((s) => s.id);
+}
+// Contracts also include profile-specific folders
+const ALL_CONTRACT_CATS = [
+  ...athleteContractFolders.map((f) => f.id),
+  ...artistContractFolders.map((f) => f.id),
+];
+PARENT_CAT_MAP["contracts"] = [...new Set([...(PARENT_CAT_MAP["contracts"] || []), ...ALL_CONTRACT_CATS])];
 
 function matchesFolder(doc: DocumentItem, folderId: string): boolean {
   if (folderId === "all") return true;
-  if (folderId === "finance") return FINANCE_CATS.includes(doc.category);
-  if (folderId === "contracts") return CONTRACT_CATS.includes(doc.category);
+  if (PARENT_CAT_MAP[folderId]) return PARENT_CAT_MAP[folderId].includes(doc.category);
   return doc.category === folderId;
 }
 
@@ -347,9 +528,9 @@ const Documents = () => {
               const fCount = countForFolder(folder.id);
               const isExpanded = !!expandedFolders[folder.id];
               const subfolders =
-                folder.id === "finance" ? financeSubfolders :
-                folder.id === "contracts" ? (profileType === "athlete" ? athleteContractFolders : artistContractFolders) :
-                null;
+                folder.id === "contracts"
+                  ? (profileType === "athlete" ? athleteContractFolders : artistContractFolders)
+                  : SUBFOLDER_MAP[folder.id] || null;
 
               return (
                 <div key={folder.id}>
