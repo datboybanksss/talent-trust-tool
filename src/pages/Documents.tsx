@@ -694,25 +694,48 @@ const Documents = () => {
 
           {/* Collate toolbar */}
           {collateMode && (
-            <div className="mb-4 p-4 bg-gold/10 border border-gold/30 rounded-xl flex flex-wrap items-center gap-4">
-              <div className="flex items-center gap-2 flex-1 min-w-[200px]">
-                <Archive className="w-5 h-5 text-gold" />
-                <span className="text-sm font-medium text-foreground">Select documents to collate</span>
+            <div className="mb-4 p-4 bg-gold/10 border border-gold/30 rounded-xl space-y-3">
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="flex items-center gap-2 flex-1 min-w-[200px]">
+                  <Archive className="w-5 h-5 text-gold" />
+                  <span className="text-sm font-medium text-foreground">Select documents to collate or re-assign</span>
+                </div>
+                <Select value={collatePreset} onValueChange={applyPreset}>
+                  <SelectTrigger className="w-[220px]">
+                    <SelectValue placeholder="Quick preset…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {COLLATE_PRESETS.map((p) => (
+                      <SelectItem key={p.label} value={p.label}>{p.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button variant="gold" size="sm" onClick={handleDownloadZip} disabled={selectedDocIds.size === 0}>
+                  <Download className="w-4 h-4" />
+                  Download ZIP ({selectedDocIds.size})
+                </Button>
               </div>
-              <Select value={collatePreset} onValueChange={applyPreset}>
-                <SelectTrigger className="w-[220px]">
-                  <SelectValue placeholder="Quick preset…" />
-                </SelectTrigger>
-                <SelectContent>
-                  {COLLATE_PRESETS.map((p) => (
-                    <SelectItem key={p.label} value={p.label}>{p.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button variant="gold" size="sm" onClick={handleDownloadZip} disabled={selectedDocIds.size === 0}>
-                <Download className="w-4 h-4" />
-                Download ZIP ({selectedDocIds.size})
-              </Button>
+              {/* Batch assign category */}
+              {selectedDocIds.size > 0 && (
+                <div className="flex items-center gap-3 pt-2 border-t border-gold/20">
+                  <FolderSync className="w-4 h-4 text-gold" />
+                  <span className="text-xs font-medium text-foreground">Batch move selected to:</span>
+                  <Select value={batchCategory} onValueChange={setBatchCategory}>
+                    <SelectTrigger className="w-[220px] h-8 text-xs">
+                      <SelectValue placeholder="Choose category…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DOCUMENT_CATEGORIES.map((cat) => (
+                        <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button size="sm" variant="outline" onClick={handleBatchAssign} disabled={!batchCategory} className="h-8 text-xs">
+                    <FolderInput className="w-3.5 h-3.5" />
+                    Move {selectedDocIds.size} doc(s)
+                  </Button>
+                </div>
+              )}
             </div>
           )}
 
