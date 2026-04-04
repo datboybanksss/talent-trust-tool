@@ -19,7 +19,7 @@ import {
   FolderInput,
   FolderSync,
 } from "lucide-react";
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { cn } from "@/lib/utils";
 import {
   Dialog,
@@ -434,6 +434,10 @@ const Documents = () => {
   const [moveDocId, setMoveDocId] = useState<string | null>(null);
   const [moveTarget, setMoveTarget] = useState("");
 
+  // Drag-and-drop state
+  const [dragOverFolder, setDragOverFolder] = useState<string | null>(null);
+  const dragDocId = useRef<string | null>(null);
+
   // Batch assign state
   const [batchCategory, setBatchCategory] = useState("");
 
@@ -529,6 +533,44 @@ const Documents = () => {
     setSelectedDocIds(new Set());
   };
 
+  /* Drag-and-drop onto folders */
+  const handleFolderDragOver = useCallback((e: React.DragEvent, folderId: string) => {
+    if (folderId === "all") return;
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOverFolder(folderId);
+  }, []);
+
+  const handleFolderDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOverFolder(null);
+  }, []);
+
+  const handleFolderDrop = useCallback((e: React.DragEvent, folderId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOverFolder(null);
+    const docId = e.dataTransfer.getData("text/doc-id") || dragDocId.current;
+    if (!docId || folderId === "all") return;
+    // If this is a parent folder with subfolders, open the move dialog
+    if (PARENT_CAT_MAP[folderId]) {
+      setMoveDocId(docId);
+      setMoveTarget("");
+      return;
+    }
+    // Direct subfolder/category – move immediately
+    setDocs((prev) => prev.map((d) => d.id === docId ? { ...d, category: folderId } : d));
+    const catLabel = DOCUMENT_CATEGORIES.find((c) => c.value === folderId)?.label || folderId;
+    toast({ title: "Document moved", description: `Moved to "${catLabel}"` });
+    dragDocId.current = null;
+  }, []);
+
+  const handleDocDragStart = useCallback((e: React.DragEvent, docId: string) => {
+    e.dataTransfer.setData("text/doc-id", docId);
+    e.dataTransfer.effectAllowed = "move";
+    dragDocId.current = docId;
+  }, []);
+
   /* ---------------------------------------------------------------- */
 
   return (
@@ -569,9 +611,13 @@ const Documents = () => {
                       if (folder.hasSubfolders) toggleFolder(folder.id);
                       setSelectedFolder(folder.id);
                     }}
+                    onDragOver={(e) => handleFolderDragOver(e, folder.id)}
+                    onDragLeave={handleFolderDragLeave}
+                    onDrop={(e) => handleFolderDrop(e, folder.id)}
                     className={cn(
                       "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors",
-                      selectedFolder === folder.id ? "bg-primary text-primary-foreground" : "hover:bg-secondary text-foreground"
+                      selectedFolder === folder.id ? "bg-primary text-primary-foreground" : "hover:bg-secondary text-foreground",
+                      dragOverFolder === folder.id && "ring-2 ring-gold bg-gold/10"
                     )}
                   >
                     {folder.hasSubfolders ? (isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />) : <FolderLock className="w-4 h-4" />}
@@ -585,9 +631,13 @@ const Documents = () => {
                         <button
                           key={sf.id}
                           onClick={() => setSelectedFolder(sf.id)}
+                          onDragOver={(e) => handleFolderDragOver(e, sf.id)}
+                          onDragLeave={handleFolderDragLeave}
+                          onDrop={(e) => handleFolderDrop(e, sf.id)}
                           className={cn(
                             "w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left transition-colors text-xs",
-                            selectedFolder === sf.id ? "bg-gold/20 text-gold" : "hover:bg-secondary text-muted-foreground hover:text-foreground"
+                            selectedFolder === sf.id ? "bg-gold/20 text-gold" : "hover:bg-secondary text-muted-foreground hover:text-foreground",
+                            dragOverFolder === sf.id && "ring-2 ring-gold bg-gold/10"
                           )}
                         >
                           <FolderLock className="w-3 h-3" />
@@ -762,6 +812,7 @@ const Documents = () => {
                   selected={selectedDocIds.has(doc.id)}
                   onToggle={() => toggleDocSelect(doc.id)}
                   onMoveRequest={(id) => { setMoveDocId(id); setMoveTarget(""); }}
+                  onDragStart={(e) => handleDocDragStart(e, doc.id)}
                 />
               ))}
             </div>
@@ -827,9 +878,10 @@ interface DocumentRowProps {
   selected: boolean;
   onToggle: () => void;
   onMoveRequest: (id: string) => void;
+  onDragStart?: (e: React.DragEvent) => void;
 }
 
-const DocumentRow = ({ document, collateMode, selected, onToggle, onMoveRequest }: DocumentRowProps) => {
+const DocumentRow = ({ document, collateMode, selected, onToggle, onMoveRequest, onDragStart }: DocumentRowProps) => {
   const getIcon = () => {
     switch (document.type) {
       case "pdf": return <FileText className="w-5 h-5 text-destructive" />;
@@ -841,11 +893,15 @@ const DocumentRow = ({ document, collateMode, selected, onToggle, onMoveRequest 
   const catLabel = DOCUMENT_CATEGORIES.find((c) => c.value === document.category)?.label || document.category;
 
   return (
-    <div className={cn(
-      "grid gap-4 px-6 py-4 items-center hover:bg-secondary/50 transition-colors",
-      collateMode ? "grid-cols-[32px_1fr_160px_120px_80px_100px]" : "grid-cols-12",
-      selected && "bg-gold/5"
-    )}>
+    <div
+      draggable
+      onDragStart={onDragStart}
+      className={cn(
+        "grid gap-4 px-6 py-4 items-center hover:bg-secondary/50 transition-colors cursor-grab active:cursor-grabbing",
+        collateMode ? "grid-cols-[32px_1fr_160px_120px_80px_100px]" : "grid-cols-12",
+        selected && "bg-gold/5"
+      )}
+    >
       {collateMode && (
         <Checkbox checked={selected} onCheckedChange={onToggle} />
       )}
