@@ -148,6 +148,26 @@ const COLLATE_PRESETS = [
     label: "Sponsorship Pitch",
     requiredCategories: ["id_document", "company", "contracts", "compliance"],
   },
+  {
+    label: "School Enrolment",
+    requiredCategories: ["id_document", "children", "academic", "medical", "finance_banking"],
+  },
+  {
+    label: "Insurance Claim",
+    requiredCategories: ["id_document", "finance_insurance", "medical", "vehicles", "property"],
+  },
+  {
+    label: "Work Permit Application",
+    requiredCategories: ["passport", "id_document", "academic", "contracts", "tax", "medical"],
+  },
+  {
+    label: "Tax Filing",
+    requiredCategories: ["id_document", "tax", "finance_banking", "finance_investments", "finance_pension", "company"],
+  },
+  {
+    label: "Divorce Proceedings",
+    requiredCategories: ["id_document", "marriage", "children", "property", "finance_banking", "finance_investments"],
+  },
 ];
 
 /* ------------------------------------------------------------------ */
