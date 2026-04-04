@@ -463,6 +463,42 @@ const Documents = () => {
     return [...DOCUMENT_CATEGORIES, ...custom];
   }, [customFolders]);
 
+  const countForFolder = useCallback((folderId: string) => {
+    return docs.filter((d) => matchesFolder(d, folderId)).length;
+  }, [docs]);
+
+  const getFolderDisplayName = useCallback((folder: FolderDef) => {
+    return folderNameOverrides[folder.id] || folder.name;
+  }, [folderNameOverrides]);
+
+  const handleCreateFolder = () => {
+    const name = newFolderName.trim();
+    if (!name) return;
+    const id = "custom_" + name.toLowerCase().replace(/\s+/g, "_") + "_" + Date.now();
+    setCustomFolders((prev) => [...prev, { id, name, count: 0 }]);
+    setNewFolderName("");
+    setIsCreateFolderOpen(false);
+    toast({ title: "Folder created", description: `"${name}" added to your folders` });
+  };
+
+  const startRename = (folderId: string, currentName: string) => {
+    setRenamingFolderId(folderId);
+    setRenameValue(currentName);
+  };
+
+  const commitRename = () => {
+    if (!renamingFolderId || !renameValue.trim()) { setRenamingFolderId(null); return; }
+    const isCustom = customFolders.some((f) => f.id === renamingFolderId);
+    if (isCustom) {
+      setCustomFolders((prev) => prev.map((f) => f.id === renamingFolderId ? { ...f, name: renameValue.trim() } : f));
+    } else {
+      setFolderNameOverrides((prev) => ({ ...prev, [renamingFolderId]: renameValue.trim() }));
+    }
+    toast({ title: "Folder renamed", description: `Renamed to "${renameValue.trim()}"` });
+    setRenamingFolderId(null);
+    setRenameValue("");
+  };
+
   const toggleFolder = (id: string) => setExpandedFolders((p) => ({ ...p, [id]: !p[id] }));
 
   const filteredDocs = useMemo(() => {
