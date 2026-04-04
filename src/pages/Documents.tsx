@@ -637,6 +637,9 @@ const Documents = () => {
         <div className="bg-card rounded-2xl border border-border p-4 shadow-soft h-fit">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-foreground">Folders</h3>
+            <Button variant="ghost" size="icon" className="h-7 w-7" title="Create folder" onClick={() => setIsCreateFolderOpen(true)}>
+              <FolderPlus className="w-4 h-4" />
+            </Button>
           </div>
 
           {/* Profile Toggle */}
@@ -650,34 +653,61 @@ const Documents = () => {
           </div>
 
           <div className="space-y-1 max-h-[55vh] overflow-y-auto pr-1">
-            {baseFolders.map((folder) => {
+            {allBaseFolders.map((folder) => {
               const fCount = countForFolder(folder.id);
               const isExpanded = !!expandedFolders[folder.id];
               const subfolders =
                 folder.id === "contracts"
                   ? (profileType === "athlete" ? athleteContractFolders : artistContractFolders)
                   : SUBFOLDER_MAP[folder.id] || null;
+              const displayName = getFolderDisplayName(folder);
+              const isRenaming = renamingFolderId === folder.id;
 
               return (
-                <div key={folder.id}>
-                  <button
-                    onClick={() => {
-                      if (folder.hasSubfolders) toggleFolder(folder.id);
-                      setSelectedFolder(folder.id);
-                    }}
-                    onDragOver={(e) => handleFolderDragOver(e, folder.id)}
-                    onDragLeave={handleFolderDragLeave}
-                    onDrop={(e) => handleFolderDrop(e, folder.id)}
-                    className={cn(
-                      "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors",
-                      selectedFolder === folder.id ? "bg-primary text-primary-foreground" : "hover:bg-secondary text-foreground",
-                      dragOverFolder === folder.id && "ring-2 ring-gold bg-gold/10"
-                    )}
-                  >
-                    {folder.hasSubfolders ? (isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />) : <FolderLock className="w-4 h-4" />}
-                    <span className="flex-1 text-sm">{folder.name}</span>
-                    <span className={cn("text-xs px-2 py-0.5 rounded-full", selectedFolder === folder.id ? "bg-primary-foreground/20" : "bg-secondary")}>{fCount}</span>
-                  </button>
+                <div key={folder.id} className="group/folder">
+                  {isRenaming ? (
+                    <div className="flex items-center gap-1 px-2 py-1">
+                      <input
+                        autoFocus
+                        value={renameValue}
+                        onChange={(e) => setRenameValue(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter") commitRename(); if (e.key === "Escape") setRenamingFolderId(null); }}
+                        className="flex-1 text-sm bg-secondary rounded px-2 py-1 border border-border focus:outline-none focus:ring-1 focus:ring-primary"
+                      />
+                      <button onClick={commitRename} className="p-1 hover:bg-secondary rounded"><Check className="w-3.5 h-3.5 text-primary" /></button>
+                      <button onClick={() => setRenamingFolderId(null)} className="p-1 hover:bg-secondary rounded"><X className="w-3.5 h-3.5 text-muted-foreground" /></button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center">
+                      <button
+                        onClick={() => {
+                          if (folder.hasSubfolders) toggleFolder(folder.id);
+                          setSelectedFolder(folder.id);
+                        }}
+                        onDragOver={(e) => handleFolderDragOver(e, folder.id)}
+                        onDragLeave={handleFolderDragLeave}
+                        onDrop={(e) => handleFolderDrop(e, folder.id)}
+                        className={cn(
+                          "flex-1 flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors",
+                          selectedFolder === folder.id ? "bg-primary text-primary-foreground" : "hover:bg-secondary text-foreground",
+                          dragOverFolder === folder.id && "ring-2 ring-gold bg-gold/10"
+                        )}
+                      >
+                        {folder.hasSubfolders ? (isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />) : <FolderLock className="w-4 h-4" />}
+                        <span className="flex-1 text-sm truncate">{displayName}</span>
+                        <span className={cn("text-xs px-2 py-0.5 rounded-full", selectedFolder === folder.id ? "bg-primary-foreground/20" : "bg-secondary")}>{fCount}</span>
+                      </button>
+                      {folder.id !== "all" && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); startRename(folder.id, displayName); }}
+                          className="p-1 rounded opacity-0 group-hover/folder:opacity-100 hover:bg-secondary transition-opacity"
+                          title="Rename folder"
+                        >
+                          <Pencil className="w-3 h-3 text-muted-foreground" />
+                        </button>
+                      )}
+                    </div>
+                  )}
 
                   {folder.hasSubfolders && isExpanded && subfolders && (
                     <div className="ml-4 mt-1 space-y-1 border-l-2 border-border pl-2">
