@@ -812,6 +812,7 @@ const Documents = () => {
                   selected={selectedDocIds.has(doc.id)}
                   onToggle={() => toggleDocSelect(doc.id)}
                   onMoveRequest={(id) => { setMoveDocId(id); setMoveTarget(""); }}
+                  onDragStart={(e) => handleDocDragStart(e, doc.id)}
                 />
               ))}
             </div>
