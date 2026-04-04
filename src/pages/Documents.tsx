@@ -16,6 +16,8 @@ import {
   ChevronDown,
   PackageCheck,
   Archive,
+  FolderInput,
+  FolderSync,
 } from "lucide-react";
 import { useState, useCallback, useMemo } from "react";
 import { cn } from "@/lib/utils";
@@ -326,7 +328,7 @@ interface DocumentItem {
   size: string;
 }
 
-const documents: DocumentItem[] = [
+const initialDocuments: DocumentItem[] = [
   // Personal ID
   { id: "1", name: "Passport - John Doe.pdf", type: "pdf", category: "passport", date: "Mar 1, 2026", size: "1.8 MB" },
   { id: "2", name: "Passport - Jane Doe (Spouse).pdf", type: "pdf", category: "passport", date: "Mar 1, 2026", size: "1.7 MB" },
@@ -409,15 +411,12 @@ function matchesFolder(doc: DocumentItem, folderId: string): boolean {
   return doc.category === folderId;
 }
 
-function countForFolder(folderId: string): number {
-  return documents.filter((d) => matchesFolder(d, folderId)).length;
-}
-
 /* ------------------------------------------------------------------ */
 /*  COMPONENT                                                         */
 /* ------------------------------------------------------------------ */
 
 const Documents = () => {
+  const [docs, setDocs] = useState<DocumentItem[]>(initialDocuments);
   const [selectedFolder, setSelectedFolder] = useState("all");
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -431,16 +430,27 @@ const Documents = () => {
   const [selectedDocIds, setSelectedDocIds] = useState<Set<string>>(new Set());
   const [collatePreset, setCollatePreset] = useState("");
 
+  // Move single doc state
+  const [moveDocId, setMoveDocId] = useState<string | null>(null);
+  const [moveTarget, setMoveTarget] = useState("");
+
+  // Batch assign state
+  const [batchCategory, setBatchCategory] = useState("");
+
+  const countForFolder = useCallback((folderId: string) => {
+    return docs.filter((d) => matchesFolder(d, folderId)).length;
+  }, [docs]);
+
   const toggleFolder = (id: string) => setExpandedFolders((p) => ({ ...p, [id]: !p[id] }));
 
   const filteredDocs = useMemo(() => {
-    let list = documents.filter((d) => matchesFolder(d, selectedFolder));
+    let list = docs.filter((d) => matchesFolder(d, selectedFolder));
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       list = list.filter((d) => d.name.toLowerCase().includes(q) || d.category.toLowerCase().includes(q));
     }
     return list;
-  }, [selectedFolder, searchQuery]);
+  }, [selectedFolder, searchQuery, docs]);
 
   /* Upload handlers */
   const handleDragOver = useCallback((e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }, []);
@@ -478,7 +488,7 @@ const Documents = () => {
     const preset = COLLATE_PRESETS.find((p) => p.label === presetLabel);
     if (!preset) return;
     const ids = new Set<string>();
-    documents.forEach((d) => { if (preset.requiredCategories.includes(d.category)) ids.add(d.id); });
+    docs.forEach((d) => { if (preset.requiredCategories.includes(d.category)) ids.add(d.id); });
     setSelectedDocIds(ids);
     toast({ title: `Preset applied: ${presetLabel}`, description: `${ids.size} documents selected` });
   };
@@ -486,7 +496,7 @@ const Documents = () => {
   const handleDownloadZip = async () => {
     if (selectedDocIds.size === 0) { toast({ title: "No documents selected", variant: "destructive" }); return; }
     const zip = new JSZip();
-    const selected = documents.filter((d) => selectedDocIds.has(d.id));
+    const selected = docs.filter((d) => selectedDocIds.has(d.id));
     // For demo, create placeholder text files since we don't have real file blobs
     selected.forEach((d) => {
       const catLabel = DOCUMENT_CATEGORIES.find((c) => c.value === d.category)?.label || d.category;
@@ -497,6 +507,26 @@ const Documents = () => {
     const presetSuffix = collatePreset ? `_${collatePreset.replace(/\s+/g, "_")}` : "";
     saveAs(blob, `LegacyBuilder_Documents${presetSuffix}.zip`);
     toast({ title: "ZIP downloaded", description: `${selected.length} documents collated` });
+  };
+
+  /* Move single document */
+  const handleMoveDoc = () => {
+    if (!moveDocId || !moveTarget) return;
+    setDocs((prev) => prev.map((d) => d.id === moveDocId ? { ...d, category: moveTarget } : d));
+    const catLabel = DOCUMENT_CATEGORIES.find((c) => c.value === moveTarget)?.label || moveTarget;
+    toast({ title: "Document moved", description: `Moved to "${catLabel}"` });
+    setMoveDocId(null);
+    setMoveTarget("");
+  };
+
+  /* Batch assign category */
+  const handleBatchAssign = () => {
+    if (selectedDocIds.size === 0 || !batchCategory) return;
+    setDocs((prev) => prev.map((d) => selectedDocIds.has(d.id) ? { ...d, category: batchCategory } : d));
+    const catLabel = DOCUMENT_CATEGORIES.find((c) => c.value === batchCategory)?.label || batchCategory;
+    toast({ title: "Category updated", description: `${selectedDocIds.size} document(s) moved to "${catLabel}"` });
+    setBatchCategory("");
+    setSelectedDocIds(new Set());
   };
 
   /* ---------------------------------------------------------------- */
@@ -664,25 +694,48 @@ const Documents = () => {
 
           {/* Collate toolbar */}
           {collateMode && (
-            <div className="mb-4 p-4 bg-gold/10 border border-gold/30 rounded-xl flex flex-wrap items-center gap-4">
-              <div className="flex items-center gap-2 flex-1 min-w-[200px]">
-                <Archive className="w-5 h-5 text-gold" />
-                <span className="text-sm font-medium text-foreground">Select documents to collate</span>
+            <div className="mb-4 p-4 bg-gold/10 border border-gold/30 rounded-xl space-y-3">
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="flex items-center gap-2 flex-1 min-w-[200px]">
+                  <Archive className="w-5 h-5 text-gold" />
+                  <span className="text-sm font-medium text-foreground">Select documents to collate or re-assign</span>
+                </div>
+                <Select value={collatePreset} onValueChange={applyPreset}>
+                  <SelectTrigger className="w-[220px]">
+                    <SelectValue placeholder="Quick preset…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {COLLATE_PRESETS.map((p) => (
+                      <SelectItem key={p.label} value={p.label}>{p.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button variant="gold" size="sm" onClick={handleDownloadZip} disabled={selectedDocIds.size === 0}>
+                  <Download className="w-4 h-4" />
+                  Download ZIP ({selectedDocIds.size})
+                </Button>
               </div>
-              <Select value={collatePreset} onValueChange={applyPreset}>
-                <SelectTrigger className="w-[220px]">
-                  <SelectValue placeholder="Quick preset…" />
-                </SelectTrigger>
-                <SelectContent>
-                  {COLLATE_PRESETS.map((p) => (
-                    <SelectItem key={p.label} value={p.label}>{p.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button variant="gold" size="sm" onClick={handleDownloadZip} disabled={selectedDocIds.size === 0}>
-                <Download className="w-4 h-4" />
-                Download ZIP ({selectedDocIds.size})
-              </Button>
+              {/* Batch assign category */}
+              {selectedDocIds.size > 0 && (
+                <div className="flex items-center gap-3 pt-2 border-t border-gold/20">
+                  <FolderSync className="w-4 h-4 text-gold" />
+                  <span className="text-xs font-medium text-foreground">Batch move selected to:</span>
+                  <Select value={batchCategory} onValueChange={setBatchCategory}>
+                    <SelectTrigger className="w-[220px] h-8 text-xs">
+                      <SelectValue placeholder="Choose category…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DOCUMENT_CATEGORIES.map((cat) => (
+                        <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button size="sm" variant="outline" onClick={handleBatchAssign} disabled={!batchCategory} className="h-8 text-xs">
+                    <FolderInput className="w-3.5 h-3.5" />
+                    Move {selectedDocIds.size} doc(s)
+                  </Button>
+                </div>
+              )}
             </div>
           )}
 
@@ -708,6 +761,7 @@ const Documents = () => {
                   collateMode={collateMode}
                   selected={selectedDocIds.has(doc.id)}
                   onToggle={() => toggleDocSelect(doc.id)}
+                  onMoveRequest={(id) => { setMoveDocId(id); setMoveTarget(""); }}
                 />
               ))}
             </div>
@@ -732,6 +786,33 @@ const Documents = () => {
           </div>
         </div>
       </div>
+      {/* Move Document Dialog */}
+      <Dialog open={!!moveDocId} onOpenChange={(open) => { if (!open) { setMoveDocId(null); setMoveTarget(""); } }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><FolderInput className="w-5 h-5 text-gold" /> Move Document</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <p className="text-sm text-muted-foreground">
+              Moving: <span className="font-medium text-foreground">{docs.find((d) => d.id === moveDocId)?.name}</span>
+            </p>
+            <div className="space-y-2">
+              <Label>Move to category</Label>
+              <Select value={moveTarget} onValueChange={setMoveTarget}>
+                <SelectTrigger><SelectValue placeholder="Select destination category" /></SelectTrigger>
+                <SelectContent>
+                  {DOCUMENT_CATEGORIES.map((cat) => (
+                    <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button onClick={handleMoveDoc} variant="gold" className="w-full" disabled={!moveTarget}>
+              <FolderInput className="w-4 h-4" /> Move Document
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 };
@@ -745,9 +826,10 @@ interface DocumentRowProps {
   collateMode: boolean;
   selected: boolean;
   onToggle: () => void;
+  onMoveRequest: (id: string) => void;
 }
 
-const DocumentRow = ({ document, collateMode, selected, onToggle }: DocumentRowProps) => {
+const DocumentRow = ({ document, collateMode, selected, onToggle, onMoveRequest }: DocumentRowProps) => {
   const getIcon = () => {
     switch (document.type) {
       case "pdf": return <FileText className="w-5 h-5 text-destructive" />;
@@ -781,6 +863,7 @@ const DocumentRow = ({ document, collateMode, selected, onToggle }: DocumentRowP
         <span className="text-sm text-muted-foreground">{document.size}</span>
       </div>
       <div className={cn("flex items-center justify-end gap-1", !collateMode && "col-span-2")}>
+        <button title="Move to folder" onClick={() => onMoveRequest(document.id)} className="p-2 hover:bg-secondary rounded-lg transition-colors"><FolderInput className="w-4 h-4 text-muted-foreground" /></button>
         <button className="p-2 hover:bg-secondary rounded-lg transition-colors"><Eye className="w-4 h-4 text-muted-foreground" /></button>
         <button className="p-2 hover:bg-secondary rounded-lg transition-colors"><Download className="w-4 h-4 text-muted-foreground" /></button>
         <button className="p-2 hover:bg-secondary rounded-lg transition-colors"><Trash2 className="w-4 h-4 text-muted-foreground" /></button>
