@@ -936,7 +936,7 @@ const Documents = () => {
               <Select value={moveTarget} onValueChange={setMoveTarget}>
                 <SelectTrigger><SelectValue placeholder="Select destination category" /></SelectTrigger>
                 <SelectContent>
-                  {DOCUMENT_CATEGORIES.map((cat) => (
+                  {allCategories.map((cat) => (
                     <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
                   ))}
                 </SelectContent>
