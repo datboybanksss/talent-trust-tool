@@ -533,6 +533,44 @@ const Documents = () => {
     setSelectedDocIds(new Set());
   };
 
+  /* Drag-and-drop onto folders */
+  const handleFolderDragOver = useCallback((e: React.DragEvent, folderId: string) => {
+    if (folderId === "all") return;
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOverFolder(folderId);
+  }, []);
+
+  const handleFolderDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOverFolder(null);
+  }, []);
+
+  const handleFolderDrop = useCallback((e: React.DragEvent, folderId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragOverFolder(null);
+    const docId = e.dataTransfer.getData("text/doc-id") || dragDocId.current;
+    if (!docId || folderId === "all") return;
+    // If this is a parent folder with subfolders, open the move dialog
+    if (PARENT_CAT_MAP[folderId]) {
+      setMoveDocId(docId);
+      setMoveTarget("");
+      return;
+    }
+    // Direct subfolder/category – move immediately
+    setDocs((prev) => prev.map((d) => d.id === docId ? { ...d, category: folderId } : d));
+    const catLabel = DOCUMENT_CATEGORIES.find((c) => c.value === folderId)?.label || folderId;
+    toast({ title: "Document moved", description: `Moved to "${catLabel}"` });
+    dragDocId.current = null;
+  }, []);
+
+  const handleDocDragStart = useCallback((e: React.DragEvent, docId: string) => {
+    e.dataTransfer.setData("text/doc-id", docId);
+    e.dataTransfer.effectAllowed = "move";
+    dragDocId.current = docId;
+  }, []);
+
   /* ---------------------------------------------------------------- */
 
   return (
