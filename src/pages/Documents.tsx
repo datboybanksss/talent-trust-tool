@@ -948,6 +948,28 @@ const Documents = () => {
           </div>
         </DialogContent>
       </Dialog>
+      {/* Create Folder Dialog */}
+      <Dialog open={isCreateFolderOpen} onOpenChange={setIsCreateFolderOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><FolderPlus className="w-5 h-5 text-gold" /> Create Custom Folder</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Folder Name</Label>
+              <Input
+                placeholder="e.g. Travel, Legal, Estate…"
+                value={newFolderName}
+                onChange={(e) => setNewFolderName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") handleCreateFolder(); }}
+              />
+            </div>
+            <Button onClick={handleCreateFolder} variant="gold" className="w-full" disabled={!newFolderName.trim()}>
+              <FolderPlus className="w-4 h-4" /> Create Folder
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 };
