@@ -786,6 +786,33 @@ const Documents = () => {
           </div>
         </div>
       </div>
+      {/* Move Document Dialog */}
+      <Dialog open={!!moveDocId} onOpenChange={(open) => { if (!open) { setMoveDocId(null); setMoveTarget(""); } }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><FolderInput className="w-5 h-5 text-gold" /> Move Document</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <p className="text-sm text-muted-foreground">
+              Moving: <span className="font-medium text-foreground">{docs.find((d) => d.id === moveDocId)?.name}</span>
+            </p>
+            <div className="space-y-2">
+              <Label>Move to category</Label>
+              <Select value={moveTarget} onValueChange={setMoveTarget}>
+                <SelectTrigger><SelectValue placeholder="Select destination category" /></SelectTrigger>
+                <SelectContent>
+                  {DOCUMENT_CATEGORIES.map((cat) => (
+                    <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button onClick={handleMoveDoc} variant="gold" className="w-full" disabled={!moveTarget}>
+              <FolderInput className="w-4 h-4" /> Move Document
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 };
