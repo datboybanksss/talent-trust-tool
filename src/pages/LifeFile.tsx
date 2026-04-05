@@ -404,10 +404,14 @@ const LifeFilePage = () => {
 
       {/* Tabs */}
       <Tabs defaultValue="trusts-wills" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="trusts-wills" className="flex items-center gap-2">
             <Scale className="w-4 h-4" />
             Trusts & Wills
+          </TabsTrigger>
+          <TabsTrigger value="asset-registry" className="flex items-center gap-2">
+            <Landmark className="w-4 h-4" />
+            Asset Registry
           </TabsTrigger>
           <TabsTrigger value="beneficiaries" className="flex items-center gap-2">
             <Users className="w-4 h-4" />
