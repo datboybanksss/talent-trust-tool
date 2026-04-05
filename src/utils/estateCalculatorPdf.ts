@@ -130,7 +130,7 @@ export const generateEstateReport = (state: EstimatorState) => {
   doc.setLineWidth(0.5);
   doc.line(margin, y, pageWidth - margin, y);
   y += 6;
-  addText("DISCLAIMER: This calculator is illustrative only and does not constitute financial, tax, or legal advice. Outcomes for athletes and entertainers are highly sensitive to income volatility, health, and career duration. Consult a qualified financial adviser before making decisions based on these projections.");
+  addText("DISCLAIMER: This calculator is illustrative only and does not constitute financial, tax, or legal advice. Consult a qualified financial adviser before making decisions based on these projections.");
 
   const totalPages = doc.getNumberOfPages();
   for (let i = 1; i <= totalPages; i++) {

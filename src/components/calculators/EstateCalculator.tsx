@@ -394,7 +394,6 @@ const EstateCalculator = () => {
                 <AlertTriangle className="w-5 h-5 text-warning mt-0.5 shrink-0" />
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   <strong>Disclaimer:</strong> This calculator is illustrative only and does not constitute financial, tax, or legal advice.
-                  Outcomes for athletes and entertainers are highly sensitive to income volatility, health, and career duration.
                   Consult a qualified financial adviser before making decisions based on these projections.
                 </p>
               </div>
