@@ -15,7 +15,7 @@ import {
   Calendar,
   Clock,
   Home,
-  Store,
+  
   Trophy,
   Palette,
   Music,
