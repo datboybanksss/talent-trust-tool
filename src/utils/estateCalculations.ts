@@ -14,13 +14,31 @@ export interface TransferProperty {
   value: number;
 }
 
+export interface AssetBreakdown {
+  property: number;
+  business: number;
+  shares: number;
+  cashSavings: number;
+  vehicles: number;
+  otherAssets: number;
+}
+
+export interface InsurancePolicies {
+  lifeCover: number;
+  creditLife: number;
+  keyManInsurance: number;
+  buySellCover: number;
+  disabilityCover: number;
+  incomeProtection: number;
+  funeralCover: number;
+}
+
 export interface FinancialDetails {
   monthlyIncome: number;
   monthlyExpenses: number;
-  totalAssets: number;
+  assets: AssetBreakdown;
   totalDebts: number;
-  existingLifeCover: number;
-  existingDisabilityCover: number;
+  insurancePolicies: InsurancePolicies;
   educationCosts: number;
   funeralCosts: number;
   inflationRate: number;
@@ -61,18 +79,37 @@ export interface InsuranceEstimate {
   funeralCosts: number;
   propertyTransfer: PropertyTransferSummary;
   totalDeathNeed: number;
-  existingLifeCover: number;
+  totalExistingDeathCover: number;
   lifeShortfall: number;
 
   // Disability cover
   lostCareerIncome: number;
   ongoingExpenses: number;
   totalDisabilityNeed: number;
-  existingDisabilityCover: number;
+  totalExistingDisabilityCover: number;
   disabilityShortfall: number;
+
+  // Asset & insurance breakdowns for display
+  grossEstate: number;
+  netEstate: number;
 
   flags: string[];
 }
+
+// Helper to compute total assets from breakdown
+export const computeTotalAssets = (assets: AssetBreakdown): number => {
+  return assets.property + assets.business + assets.shares + assets.cashSavings + assets.vehicles + assets.otherAssets;
+};
+
+// Helper to compute total death-related cover from all policies
+export const computeTotalDeathCover = (policies: InsurancePolicies): number => {
+  return policies.lifeCover + policies.creditLife + policies.keyManInsurance + policies.buySellCover;
+};
+
+// Helper to compute total disability-related cover
+export const computeTotalDisabilityCover = (policies: InsurancePolicies): number => {
+  return policies.disabilityCover + policies.incomeProtection;
+};
 
 // SA Estate Duty: R3.5m abatement, 20% up to R30m, 25% above
 const computeEstateDuty = (netEstate: number): number => {
@@ -143,7 +180,7 @@ export const computeInsuranceEstimate = (state: EstimatorState): InsuranceEstima
   const flags: string[] = [];
 
   // --- DEATH COVER ---
-  const grossEstate = financial.totalAssets;
+  const grossEstate = computeTotalAssets(financial.assets);
   const netEstate = grossEstate - financial.totalDebts;
   const executorFees = computeExecutorFees(grossEstate);
   const estateDuty = computeEstateDuty(netEstate);
@@ -173,22 +210,26 @@ export const computeInsuranceEstimate = (state: EstimatorState): InsuranceEstima
   }
 
   const totalDeathNeed = estateCostsTotal + debtSettlement + incomeReplacement + educationFund + funeralCosts + propertyTransfer.combinedTotal;
-  const lifeShortfall = Math.max(0, totalDeathNeed - financial.existingLifeCover);
+  const totalExistingDeathCover = computeTotalDeathCover(financial.insurancePolicies);
+  const lifeShortfall = Math.max(0, totalDeathNeed - totalExistingDeathCover);
 
   // --- DISABILITY COVER ---
   const annualIncome = financial.monthlyIncome * 12;
   const lostIncome = annualIncome * personal.remainingWorkingYears;
   const ongoingExpenses = capitaliseAnnuity(annualExpenses, personal.remainingWorkingYears, financial.inflationRate);
   const totalDisabilityNeed = Math.max(lostIncome, ongoingExpenses);
-  const disabilityShortfall = Math.max(0, totalDisabilityNeed - financial.existingDisabilityCover);
+  const totalExistingDisabilityCover = computeTotalDisabilityCover(financial.insurancePolicies);
+  const disabilityShortfall = Math.max(0, totalDisabilityNeed - totalExistingDisabilityCover);
 
   // Flags
   if (lifeShortfall > 0) flags.push('You may not have enough life cover to protect your family');
   if (disabilityShortfall > 0) flags.push('You may not have enough disability cover to replace your income');
-  if (financial.totalDebts > financial.totalAssets * 0.5) flags.push('High debt-to-asset ratio increases risk');
-  if (personal.numberOfDependants > 0 && financial.existingLifeCover === 0) flags.push('Dependants are unprotected — no existing life cover');
+  if (financial.totalDebts > grossEstate * 0.5) flags.push('High debt-to-asset ratio increases risk');
+  if (personal.numberOfDependants > 0 && totalExistingDeathCover === 0) flags.push('Dependants are unprotected — no existing life cover');
   if (personal.remainingWorkingYears <= 5) flags.push('Few remaining working years — plan for income transition');
   if (financial.propertyTransferNeeded && propertyTransfer.combinedTotal > 0) flags.push('Property transfer costs add to your estate liquidity needs');
+  if (financial.assets.business > 0 && financial.insurancePolicies.buySellCover === 0) flags.push('Business interests exist without buy-sell cover — business continuity risk');
+  if (financial.assets.business > 0 && financial.insurancePolicies.keyManInsurance === 0) flags.push('No key-man insurance — business value may be at risk');
 
   return {
     estateCosts: { executorFees, estateDuty, adminCosts, total: estateCostsTotal },
@@ -198,13 +239,15 @@ export const computeInsuranceEstimate = (state: EstimatorState): InsuranceEstima
     funeralCosts,
     propertyTransfer,
     totalDeathNeed,
-    existingLifeCover: financial.existingLifeCover,
+    totalExistingDeathCover,
     lifeShortfall,
     lostCareerIncome: lostIncome,
     ongoingExpenses,
     totalDisabilityNeed,
-    existingDisabilityCover: financial.existingDisabilityCover,
+    totalExistingDisabilityCover,
     disabilityShortfall,
+    grossEstate,
+    netEstate,
     flags,
   };
 };
@@ -224,10 +267,24 @@ export const getDefaultState = (): EstimatorState => ({
   financial: {
     monthlyIncome: 0,
     monthlyExpenses: 0,
-    totalAssets: 0,
+    assets: {
+      property: 0,
+      business: 0,
+      shares: 0,
+      cashSavings: 0,
+      vehicles: 0,
+      otherAssets: 0,
+    },
     totalDebts: 0,
-    existingLifeCover: 0,
-    existingDisabilityCover: 0,
+    insurancePolicies: {
+      lifeCover: 0,
+      creditLife: 0,
+      keyManInsurance: 0,
+      buySellCover: 0,
+      disabilityCover: 0,
+      incomeProtection: 0,
+      funeralCover: 0,
+    },
     educationCosts: 0,
     funeralCosts: 50000,
     inflationRate: 6,

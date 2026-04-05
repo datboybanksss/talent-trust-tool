@@ -5,8 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Calculator, Shield, Heart, AlertTriangle, ChevronRight, ChevronLeft, Home, Plus, Trash2, FileText, Phone, Copy, GitCompareArrows } from "lucide-react";
-import { EstimatorState, TransferProperty, getDefaultState, computeInsuranceEstimate, formatZAR, InsuranceEstimate } from "@/utils/estateCalculations";
+import { Calculator, Shield, Heart, AlertTriangle, ChevronRight, ChevronLeft, Home, Plus, Trash2, FileText, Phone, Copy, GitCompareArrows, Building2, TrendingUp, Wallet, Car, Package, Briefcase } from "lucide-react";
+import { EstimatorState, TransferProperty, getDefaultState, computeInsuranceEstimate, computeTotalAssets, formatZAR, InsuranceEstimate } from "@/utils/estateCalculations";
 import { generateEstateReport } from "@/utils/estateCalculatorPdf";
 import { toast } from "@/hooks/use-toast";
 
@@ -26,9 +26,14 @@ const EstateCalculator = () => {
     setState(s => ({ ...s, personal: { ...s.personal, [key]: value } }));
   const updateFinancial = (key: string, value: any) =>
     setState(s => ({ ...s, financial: { ...s.financial, [key]: value } }));
+  const updateAsset = (key: string, value: number) =>
+    setState(s => ({ ...s, financial: { ...s.financial, assets: { ...s.financial.assets, [key]: value } } }));
+  const updateInsurance = (key: string, value: number) =>
+    setState(s => ({ ...s, financial: { ...s.financial, insurancePolicies: { ...s.financial.insurancePolicies, [key]: value } } }));
 
   const estimate = computeInsuranceEstimate(state);
-  const steps = ["Your Details", "Your Finances", "Your Estimate"];
+  const totalAssets = computeTotalAssets(state.financial.assets);
+  const steps = ["Your Details", "Your Finances", "Insurance Policies", "Your Estimate"];
 
   const handleExportPdf = () => {
     try {
@@ -68,7 +73,7 @@ const EstateCalculator = () => {
       </div>
 
       {/* Step indicator */}
-      <div className="flex items-center justify-center gap-2">
+      <div className="flex items-center justify-center gap-2 flex-wrap">
         {steps.map((label, i) => (
           <React.Fragment key={i}>
             <button
@@ -127,134 +132,202 @@ const EstateCalculator = () => {
         </Card>
       )}
 
-      {/* Step 2: Financial */}
+      {/* Step 2: Financial — Assets & Debts */}
       {step === 1 && !showComparison && (
-        <Card>
-          <CardHeader><CardTitle className="text-lg">Your Financial Picture</CardTitle></CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Monthly Income (R)</Label>
-              <Input type="number" value={state.financial.monthlyIncome || ''} onChange={e => updateFinancial('monthlyIncome', Number(e.target.value))} placeholder="e.g. 400000" />
-            </div>
-            <div className="space-y-2">
-              <Label>Monthly Family Expenses (R)</Label>
-              <Input type="number" value={state.financial.monthlyExpenses || ''} onChange={e => updateFinancial('monthlyExpenses', Number(e.target.value))} placeholder="e.g. 150000" />
-            </div>
-            <div className="space-y-2">
-              <Label>Total Assets (R)</Label>
-              <Input type="number" value={state.financial.totalAssets || ''} onChange={e => updateFinancial('totalAssets', Number(e.target.value))} placeholder="Property, investments, savings" />
-            </div>
-            <div className="space-y-2">
-              <Label>Total Debts (R)</Label>
-              <Input type="number" value={state.financial.totalDebts || ''} onChange={e => updateFinancial('totalDebts', Number(e.target.value))} placeholder="Home loan, car, etc." />
-            </div>
-            <div className="space-y-2">
-              <Label>Education Fund Needed (R)</Label>
-              <Input type="number" value={state.financial.educationCosts || ''} onChange={e => updateFinancial('educationCosts', Number(e.target.value))} placeholder="School & university costs" />
-            </div>
-            <div className="space-y-2">
-              <Label>Funeral Costs (R)</Label>
-              <Input type="number" value={state.financial.funeralCosts} onChange={e => updateFinancial('funeralCosts', Number(e.target.value))} />
-            </div>
-            <div className="space-y-2">
-              <Label>Existing Life Cover (R)</Label>
-              <Input type="number" value={state.financial.existingLifeCover || ''} onChange={e => updateFinancial('existingLifeCover', Number(e.target.value))} placeholder="Current life insurance" />
-            </div>
-            <div className="space-y-2">
-              <Label>Existing Disability Cover (R)</Label>
-              <Input type="number" value={state.financial.existingDisabilityCover || ''} onChange={e => updateFinancial('existingDisabilityCover', Number(e.target.value))} placeholder="Current disability insurance" />
-            </div>
-            <div className="space-y-2">
-              <Label>Assumed Inflation Rate (%)</Label>
-              <Input type="number" value={state.financial.inflationRate} onChange={e => updateFinancial('inflationRate', Number(e.target.value))} min={0} max={20} step={0.5} />
-            </div>
+        <div className="space-y-6">
+          {/* Income & Expenses */}
+          <Card>
+            <CardHeader><CardTitle className="text-lg">Income & Expenses</CardTitle></CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Monthly Income (R)</Label>
+                <Input type="number" value={state.financial.monthlyIncome || ''} onChange={e => updateFinancial('monthlyIncome', Number(e.target.value))} placeholder="e.g. 400 000" />
+              </div>
+              <div className="space-y-2">
+                <Label>Monthly Family Expenses (R)</Label>
+                <Input type="number" value={state.financial.monthlyExpenses || ''} onChange={e => updateFinancial('monthlyExpenses', Number(e.target.value))} placeholder="e.g. 150 000" />
+              </div>
+              <div className="space-y-2">
+                <Label>Education Fund Needed (R)</Label>
+                <Input type="number" value={state.financial.educationCosts || ''} onChange={e => updateFinancial('educationCosts', Number(e.target.value))} placeholder="School & university costs" />
+              </div>
+              <div className="space-y-2">
+                <Label>Funeral Costs (R)</Label>
+                <Input type="number" value={state.financial.funeralCosts} onChange={e => updateFinancial('funeralCosts', Number(e.target.value))} />
+              </div>
+              <div className="space-y-2">
+                <Label>Assumed Inflation Rate (%)</Label>
+                <Input type="number" value={state.financial.inflationRate} onChange={e => updateFinancial('inflationRate', Number(e.target.value))} min={0} max={20} step={0.5} />
+              </div>
+            </CardContent>
+          </Card>
 
-            {/* Property Transfer Section */}
-            <div className="md:col-span-2 border-t border-border pt-4 mt-2">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <Home className="w-4 h-4 text-primary" />
-                  <Label className="text-sm font-semibold">Property Transfer on Death</Label>
-                </div>
+          {/* Asset Breakdown */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Briefcase className="w-5 h-5 text-primary" />
+                Asset Breakdown
+              </CardTitle>
+              <p className="text-xs text-muted-foreground">
+                Break down your total assets by class. The total feeds into estate duty and executor's fee calculations.
+              </p>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <AssetInput icon={<Home className="w-4 h-4" />} label="Property (R)" value={state.financial.assets.property} onChange={v => updateAsset('property', v)} placeholder="Primary residence, rental, etc." />
+              <AssetInput icon={<Building2 className="w-4 h-4" />} label="Business Interests (R)" value={state.financial.assets.business} onChange={v => updateAsset('business', v)} placeholder="Business equity, partnerships" />
+              <AssetInput icon={<TrendingUp className="w-4 h-4" />} label="Shares & Investments (R)" value={state.financial.assets.shares} onChange={v => updateAsset('shares', v)} placeholder="Listed shares, unit trusts, ETFs" />
+              <AssetInput icon={<Wallet className="w-4 h-4" />} label="Cash & Savings (R)" value={state.financial.assets.cashSavings} onChange={v => updateAsset('cashSavings', v)} placeholder="Bank accounts, fixed deposits" />
+              <AssetInput icon={<Car className="w-4 h-4" />} label="Vehicles (R)" value={state.financial.assets.vehicles} onChange={v => updateAsset('vehicles', v)} placeholder="Cars, boats, etc." />
+              <AssetInput icon={<Package className="w-4 h-4" />} label="Other Assets (R)" value={state.financial.assets.otherAssets} onChange={v => updateAsset('otherAssets', v)} placeholder="Art, jewellery, collectibles" />
+              <div className="md:col-span-2 p-3 rounded-lg bg-primary/10 flex items-center justify-between">
+                <span className="text-sm font-semibold text-foreground">Total Assets</span>
+                <span className="text-lg font-bold text-primary">{formatZAR(totalAssets)}</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Debts */}
+          <Card>
+            <CardHeader><CardTitle className="text-lg">Debts & Liabilities</CardTitle></CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <Label>Total Debts (R)</Label>
+                <Input type="number" value={state.financial.totalDebts || ''} onChange={e => updateFinancial('totalDebts', Number(e.target.value))} placeholder="Home loan, car finance, credit cards" />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Property Transfer Section */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Home className="w-5 h-5 text-primary" />
+                  Property Transfer on Death
+                </CardTitle>
                 <Switch
                   checked={state.financial.propertyTransferNeeded}
                   onCheckedChange={v => updateFinancial('propertyTransferNeeded', v)}
                 />
               </div>
-              <p className="text-xs text-muted-foreground mb-3">
+              <p className="text-xs text-muted-foreground">
                 If properties need to be transferred to beneficiaries or spouse on death, transfer costs apply per property.
               </p>
-              {state.financial.propertyTransferNeeded && (
-                <div className="space-y-3">
-                  {state.financial.transferProperties.map((prop, idx) => (
-                    <div key={prop.id} className="grid grid-cols-[1.5fr_1fr_auto] gap-2 items-end">
-                      <div className="space-y-1">
-                        <Label className="text-xs">Property {idx + 1} Description</Label>
-                        <Input
-                          className="h-9"
-                          value={prop.description}
-                          onChange={e => {
-                            const updated = state.financial.transferProperties.map(p =>
-                              p.id === prop.id ? { ...p, description: e.target.value } : p
-                            );
-                            updateFinancial('transferProperties', updated);
-                          }}
-                          placeholder="e.g. Primary residence, Holiday home"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-xs">Value (R)</Label>
-                        <Input
-                          className="h-9"
-                          type="number"
-                          value={prop.value || ''}
-                          onChange={e => {
-                            const updated = state.financial.transferProperties.map(p =>
-                              p.id === prop.id ? { ...p, value: Number(e.target.value) } : p
-                            );
-                            updateFinancial('transferProperties', updated);
-                          }}
-                          placeholder="e.g. 5000000"
-                        />
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-9 w-9"
-                        onClick={() => {
-                          const updated = state.financial.transferProperties.filter(p => p.id !== prop.id);
+            </CardHeader>
+            {state.financial.propertyTransferNeeded && (
+              <CardContent className="space-y-3">
+                {state.financial.transferProperties.map((prop, idx) => (
+                  <div key={prop.id} className="grid grid-cols-[1.5fr_1fr_auto] gap-2 items-end">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Property {idx + 1} Description</Label>
+                      <Input
+                        className="h-9"
+                        value={prop.description}
+                        onChange={e => {
+                          const updated = state.financial.transferProperties.map(p =>
+                            p.id === prop.id ? { ...p, description: e.target.value } : p
+                          );
                           updateFinancial('transferProperties', updated);
                         }}
-                      >
-                        <Trash2 className="w-4 h-4 text-destructive" />
-                      </Button>
+                        placeholder="e.g. Primary residence, Holiday home"
+                      />
                     </div>
-                  ))}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      const newProp: TransferProperty = { id: crypto.randomUUID(), description: '', value: 0 };
-                      updateFinancial('transferProperties', [...state.financial.transferProperties, newProp]);
-                    }}
-                    className="gap-1"
-                  >
-                    <Plus className="w-4 h-4" /> Add Property
-                  </Button>
-                  {state.financial.transferProperties.length > 0 && (
-                    <p className="text-xs text-muted-foreground text-right">
-                      Combined property value: {formatZAR(state.financial.transferProperties.reduce((s, p) => s + p.value, 0))}
-                    </p>
-                  )}
-                </div>
-              )}
+                    <div className="space-y-1">
+                      <Label className="text-xs">Value (R)</Label>
+                      <Input
+                        className="h-9"
+                        type="number"
+                        value={prop.value || ''}
+                        onChange={e => {
+                          const updated = state.financial.transferProperties.map(p =>
+                            p.id === prop.id ? { ...p, value: Number(e.target.value) } : p
+                          );
+                          updateFinancial('transferProperties', updated);
+                        }}
+                        placeholder="e.g. 5 000 000"
+                      />
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9"
+                      onClick={() => {
+                        const updated = state.financial.transferProperties.filter(p => p.id !== prop.id);
+                        updateFinancial('transferProperties', updated);
+                      }}
+                    >
+                      <Trash2 className="w-4 h-4 text-destructive" />
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const newProp: TransferProperty = { id: crypto.randomUUID(), description: '', value: 0 };
+                    updateFinancial('transferProperties', [...state.financial.transferProperties, newProp]);
+                  }}
+                  className="gap-1"
+                >
+                  <Plus className="w-4 h-4" /> Add Property
+                </Button>
+                {state.financial.transferProperties.length > 0 && (
+                  <p className="text-xs text-muted-foreground text-right">
+                    Combined property value: {formatZAR(state.financial.transferProperties.reduce((s, p) => s + p.value, 0))}
+                  </p>
+                )}
+              </CardContent>
+            )}
+          </Card>
+        </div>
+      )}
+
+      {/* Step 3: Insurance Policies */}
+      {step === 2 && !showComparison && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Shield className="w-5 h-5 text-primary" />
+              Existing Insurance Policies
+            </CardTitle>
+            <p className="text-xs text-muted-foreground">
+              Enter your current cover amounts. These are offset against your estimated needs to identify any shortfall.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Death-trigger policies */}
+            <div>
+              <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                <Heart className="w-4 h-4 text-destructive" />
+                Policies That Pay Out on Death
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <InsuranceInput label="Life Insurance (R)" value={state.financial.insurancePolicies.lifeCover} onChange={v => updateInsurance('lifeCover', v)} hint="Standard life cover / term life policy" />
+                <InsuranceInput label="Credit Life Insurance (R)" value={state.financial.insurancePolicies.creditLife} onChange={v => updateInsurance('creditLife', v)} hint="Covers outstanding debts (home loan, vehicle finance)" />
+                <InsuranceInput label="Key-Man Insurance (R)" value={state.financial.insurancePolicies.keyManInsurance} onChange={v => updateInsurance('keyManInsurance', v)} hint="Protects business if key person dies" />
+                <InsuranceInput label="Buy-Sell Insurance (R)" value={state.financial.insurancePolicies.buySellCover} onChange={v => updateInsurance('buySellCover', v)} hint="Funds buy-sell agreement between business partners" />
+              </div>
+            </div>
+
+            {/* Disability-trigger policies */}
+            <div className="border-t border-border pt-4">
+              <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                <Shield className="w-4 h-4 text-primary" />
+                Policies That Pay Out on Disability / Health
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <InsuranceInput label="Disability Cover (R)" value={state.financial.insurancePolicies.disabilityCover} onChange={v => updateInsurance('disabilityCover', v)} hint="Lump-sum payout on permanent disability" />
+                <InsuranceInput label="Income Protection (R)" value={state.financial.insurancePolicies.incomeProtection} onChange={v => updateInsurance('incomeProtection', v)} hint="Monthly benefit capitalised value (or lump sum equivalent)" />
+                <InsuranceInput label="Funeral Cover (R)" value={state.financial.insurancePolicies.funeralCover} onChange={v => updateInsurance('funeralCover', v)} hint="Dedicated funeral policy payout amount" />
+              </div>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Step 3: Results */}
-      {step === 2 && !showComparison && (
+      {/* Step 4: Results */}
+      {step === 3 && !showComparison && (
         <div className="space-y-6">
           {/* Save Scenario Button */}
           <div className="flex items-center justify-between">
@@ -277,6 +350,33 @@ const EstateCalculator = () => {
               )}
             </div>
           </div>
+
+          {/* Asset Summary */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
+                <Briefcase className="w-4 h-4" /> Asset Summary
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-center">
+                {state.financial.assets.property > 0 && <MiniStat label="Property" value={state.financial.assets.property} />}
+                {state.financial.assets.business > 0 && <MiniStat label="Business" value={state.financial.assets.business} />}
+                {state.financial.assets.shares > 0 && <MiniStat label="Shares & Investments" value={state.financial.assets.shares} />}
+                {state.financial.assets.cashSavings > 0 && <MiniStat label="Cash & Savings" value={state.financial.assets.cashSavings} />}
+                {state.financial.assets.vehicles > 0 && <MiniStat label="Vehicles" value={state.financial.assets.vehicles} />}
+                {state.financial.assets.otherAssets > 0 && <MiniStat label="Other" value={state.financial.assets.otherAssets} />}
+              </div>
+              <div className="mt-3 p-3 rounded-lg bg-primary/10 flex items-center justify-between">
+                <span className="text-sm font-semibold text-foreground">Gross Estate</span>
+                <span className="text-lg font-bold text-primary">{formatZAR(estimate.grossEstate)}</span>
+              </div>
+              <div className="mt-2 p-3 rounded-lg bg-secondary flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Net Estate (after debts)</span>
+                <span className="text-lg font-bold text-foreground">{formatZAR(estimate.netEstate)}</span>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Life Cover */}
           <Card className={estimate.lifeShortfall > 0 ? 'border-destructive/30' : 'border-accent/30'}>
@@ -303,8 +403,9 @@ const EstateCalculator = () => {
                   <p className="text-xl font-bold text-foreground">{formatZAR(estimate.totalDeathNeed)}</p>
                 </div>
                 <div className="p-4 rounded-lg bg-secondary text-center">
-                  <p className="text-xs text-muted-foreground">Existing Cover</p>
-                  <p className="text-xl font-bold text-primary">{formatZAR(estimate.existingLifeCover)}</p>
+                  <p className="text-xs text-muted-foreground">Existing Death Cover</p>
+                  <p className="text-xl font-bold text-primary">{formatZAR(estimate.totalExistingDeathCover)}</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">Life + Credit Life + Key-Man + Buy-Sell</p>
                 </div>
                 <div className={`p-4 rounded-lg text-center ${estimate.lifeShortfall > 0 ? 'bg-destructive/10' : 'bg-accent/20'}`}>
                   <p className="text-xs text-muted-foreground font-semibold">
@@ -337,8 +438,9 @@ const EstateCalculator = () => {
                   <p className="text-xl font-bold text-foreground">{formatZAR(estimate.totalDisabilityNeed)}</p>
                 </div>
                 <div className="p-4 rounded-lg bg-secondary text-center">
-                  <p className="text-xs text-muted-foreground">Existing Cover</p>
-                  <p className="text-xl font-bold text-primary">{formatZAR(estimate.existingDisabilityCover)}</p>
+                  <p className="text-xs text-muted-foreground">Existing Disability Cover</p>
+                  <p className="text-xl font-bold text-primary">{formatZAR(estimate.totalExistingDisabilityCover)}</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">Disability + Income Protection</p>
                 </div>
                 <div className={`p-4 rounded-lg text-center ${estimate.disabilityShortfall > 0 ? 'bg-destructive/10' : 'bg-accent/20'}`}>
                   <p className="text-xs text-muted-foreground font-semibold">
@@ -452,6 +554,15 @@ const EstateCalculator = () => {
                   {estimate.disabilityShortfall > 0 && (
                     <SolutionCard title="Disability Cover" desc={`A lump-sum disability benefit of at least ${formatZAR(estimate.disabilityShortfall)} could replace lost income and cover ongoing expenses.`} />
                   )}
+                  {state.financial.insurancePolicies.creditLife === 0 && state.financial.totalDebts > 0 && (
+                    <SolutionCard title="Credit Life Insurance" desc={`Credit life cover of ${formatZAR(state.financial.totalDebts)} would settle outstanding debts (home loan, vehicle finance) on death or disability.`} />
+                  )}
+                  {state.financial.assets.business > 0 && state.financial.insurancePolicies.keyManInsurance === 0 && (
+                    <SolutionCard title="Key-Man Insurance" desc="Protects your business from financial loss if you (as a key person) die or become disabled. Ensures business continuity." />
+                  )}
+                  {state.financial.assets.business > 0 && state.financial.insurancePolicies.buySellCover === 0 && (
+                    <SolutionCard title="Buy-Sell Insurance" desc="Funds a buy-sell agreement between business partners, allowing surviving partners to purchase the deceased's share at fair value." />
+                  )}
                   <SolutionCard title="Estate Cover / Liquidity Policy" desc={`Ensures executor's fees, estate duty, and admin costs (${formatZAR(estimate.estateCosts.total)}) are covered without selling assets.`} />
                   <SolutionCard title="Gap Cover" desc="Covers the shortfall between what medical aid pays and the actual cost of medical treatment, especially relevant for hospital procedures." />
                   <SolutionCard title="Income Protection" desc="Pays a monthly benefit (typically 75% of income) if you are unable to work due to illness or injury for an extended period." />
@@ -515,7 +626,7 @@ const EstateCalculator = () => {
               { label: "Debt Settlement", a: formatZAR(savedScenarios[0].estimate.debtSettlement), b: formatZAR(savedScenarios[1].estimate.debtSettlement) },
               { label: "Income Replacement", a: formatZAR(savedScenarios[0].estimate.incomeReplacement), b: formatZAR(savedScenarios[1].estimate.incomeReplacement) },
               { label: "Total Death Need", a: formatZAR(savedScenarios[0].estimate.totalDeathNeed), b: formatZAR(savedScenarios[1].estimate.totalDeathNeed) },
-              { label: "Existing Cover", a: formatZAR(savedScenarios[0].estimate.existingLifeCover), b: formatZAR(savedScenarios[1].estimate.existingLifeCover) },
+              { label: "Existing Death Cover", a: formatZAR(savedScenarios[0].estimate.totalExistingDeathCover), b: formatZAR(savedScenarios[1].estimate.totalExistingDeathCover) },
               { label: "Life Shortfall", a: savedScenarios[0].estimate.lifeShortfall > 0 ? formatZAR(savedScenarios[0].estimate.lifeShortfall) : "✓ Adequate", b: savedScenarios[1].estimate.lifeShortfall > 0 ? formatZAR(savedScenarios[1].estimate.lifeShortfall) : "✓ Adequate" },
             ]}
             labels={[savedScenarios[0].label, savedScenarios[1].label]}
@@ -538,7 +649,7 @@ const EstateCalculator = () => {
               { label: "Age", a: `${savedScenarios[0].state.personal.currentAge}`, b: `${savedScenarios[1].state.personal.currentAge}` },
               { label: "Working Years Left", a: `${savedScenarios[0].state.personal.remainingWorkingYears}`, b: `${savedScenarios[1].state.personal.remainingWorkingYears}` },
               { label: "Monthly Income", a: formatZAR(savedScenarios[0].state.financial.monthlyIncome), b: formatZAR(savedScenarios[1].state.financial.monthlyIncome) },
-              { label: "Total Assets", a: formatZAR(savedScenarios[0].state.financial.totalAssets), b: formatZAR(savedScenarios[1].state.financial.totalAssets) },
+              { label: "Gross Estate", a: formatZAR(savedScenarios[0].estimate.grossEstate), b: formatZAR(savedScenarios[1].estimate.grossEstate) },
               { label: "Total Debts", a: formatZAR(savedScenarios[0].state.financial.totalDebts), b: formatZAR(savedScenarios[1].state.financial.totalDebts) },
             ]}
             labels={[savedScenarios[0].label, savedScenarios[1].label]}
@@ -556,7 +667,7 @@ const EstateCalculator = () => {
           <Button variant="outline" onClick={() => setStep(s => s - 1)} disabled={step === 0} className="gap-1">
             <ChevronLeft className="w-4 h-4" /> Back
           </Button>
-          {step < 2 && (
+          {step < 3 && (
             <Button onClick={() => setStep(s => s + 1)} className="gap-1">
               Next <ChevronRight className="w-4 h-4" />
             </Button>
@@ -566,6 +677,28 @@ const EstateCalculator = () => {
     </div>
   );
 };
+
+const AssetInput = ({ icon, label, value, onChange, placeholder }: { icon: React.ReactNode; label: string; value: number; onChange: (v: number) => void; placeholder: string }) => (
+  <div className="space-y-2">
+    <Label className="flex items-center gap-1.5 text-sm">{icon} {label}</Label>
+    <Input type="number" value={value || ''} onChange={e => onChange(Number(e.target.value))} placeholder={placeholder} />
+  </div>
+);
+
+const InsuranceInput = ({ label, value, onChange, hint }: { label: string; value: number; onChange: (v: number) => void; hint: string }) => (
+  <div className="space-y-1">
+    <Label className="text-sm">{label}</Label>
+    <Input type="number" value={value || ''} onChange={e => onChange(Number(e.target.value))} placeholder="0" />
+    <p className="text-[10px] text-muted-foreground">{hint}</p>
+  </div>
+);
+
+const MiniStat = ({ label, value }: { label: string; value: number }) => (
+  <div className="p-2 rounded-lg bg-secondary text-center">
+    <p className="text-[10px] text-muted-foreground">{label}</p>
+    <p className="text-sm font-bold text-foreground">{formatZAR(value)}</p>
+  </div>
+);
 
 const ResultRow = ({ label, value }: { label: string; value: number }) => (
   <div className="p-3 rounded-lg bg-secondary">
