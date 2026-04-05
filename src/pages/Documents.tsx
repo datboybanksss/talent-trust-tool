@@ -1,4 +1,5 @@
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import DocumentSearchBot from "@/components/documents/DocumentSearchBot";
 import { Button } from "@/components/ui/button";
 import {
   FolderLock,
@@ -859,6 +860,9 @@ const Documents = () => {
 
         {/* ========== MAIN CONTENT ========== */}
         <div className="lg:col-span-3">
+          {/* AI Document Search Assistant */}
+          <DocumentSearchBot className="mb-6" />
+
           {/* Action Bar */}
           <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
             <div className="relative flex-1 min-w-[200px] max-w-md">
