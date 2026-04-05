@@ -19,7 +19,7 @@ import athleteTrophy from "@/assets/athlete-trophy.jpg";
 const athleteCategories = [
   { title: "Rugby Players", href: "/client-type?type=rugby-players", description: "Contract and wealth management for rugby professionals" },
   { title: "Soccer Players", href: "/client-type?type=soccer-players", description: "Career protection for footballers at all levels" },
-  { title: "Cricket Players", href: "/client-type?type=cricket-players", description: "Financial planning for Proteas and franchise players" },
+  { title: "Cricket Players", href: "/client-type?type=cricket-players", description: "Financial planning for Proteas and domestic cricket players" },
   { title: "Tennis Players", href: "/client-type?type=tennis-players", description: "Individual athlete wealth structuring" },
   { title: "Golf Players", href: "/client-type?type=golf-players", description: "Long-term career and sponsorship management" },
   { title: "Olympic Athletes", href: "/client-type?type=olympic-athletes", description: "Support for SA's Olympic hopefuls and champions" },
@@ -396,7 +396,7 @@ const Landing = () => {
           >
             <FeatureCard icon={FileText} title="Contract Manager" description="Track all active contracts, endorsements, and deal values with expiry alerts." />
             <FeatureCard icon={FolderHeart} title="Life File & Estate Planning" description="Organise wills, trusts, beneficiaries, and emergency contacts — share securely." />
-            <FeatureCard icon={TrendingUp} title="Investment Tracker" description="Monitor property and franchise investments with ROI calculations." />
+            <FeatureCard icon={TrendingUp} title="Investment Tracker" description="Monitor property investments and asset growth with ROI calculations." />
             <FeatureCard icon={Bell} title="Smart Reminders" description="Automated alerts for tax deadlines, contract renewals, and compliance." />
             <FeatureCard icon={Share2} title="Secure Sharing" description="Grant time-limited, section-level access to advisors, agents, or family." />
             <FeatureCard icon={Calculator} title="Budget & Cash Flow" description="Monthly budget planner with category breakdowns and spending insights." />
@@ -474,7 +474,7 @@ const Landing = () => {
             <ServiceCard icon={Users} title="Compliance Support" description="Keep your affairs SARS-compliant." />
             <ServiceCard icon={Lock} title="Financial Products" description="Access vetted advisors and exclusive solutions." />
             <ServiceCard icon={Briefcase} title="Funding Support" description="Apply for funding tailored to your career." />
-            <ServiceCard icon={TrendingUp} title="Investment Opportunity" description="Explore vetted property and franchise investments." />
+            <ServiceCard icon={TrendingUp} title="Investment Opportunity" description="Explore vetted property and investment opportunities." />
             <ServiceCard icon={FolderHeart} title="Life File" description="Organise essential life documents in one place." />
             <ServiceCard icon={Calculator} title="Budget Calculator" description="Smart allocation tools and spending insights." />
           </motion.div>
