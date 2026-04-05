@@ -24,6 +24,7 @@ import {
   Bell,
   Clock,
   AlertTriangle,
+  CheckCircle2,
 } from "lucide-react";
 import { useState, useCallback, useMemo, useRef } from "react";
 import { cn } from "@/lib/utils";
@@ -136,11 +137,20 @@ const DOCUMENT_CATEGORIES = [
   { value: "royalty_agreement", label: "Royalty Agreement" },
   { value: "distribution", label: "Distribution Deal" },
   { value: "performance_contract", label: "Performance Contract" },
-  // Tax
+  // Tax – Personal
+  { value: "payslip_doc", label: "Payslip (Tax)" },
   { value: "tax_return", label: "Tax Return / ITR12" },
   { value: "irp5", label: "IRP5 / IT3(a)" },
+  { value: "tax_certificate", label: "Tax Certificate / IRP5" },
   { value: "tax_clearance", label: "Tax Clearance Certificate" },
+  { value: "medical_tax", label: "Medical Tax Certificate" },
+  { value: "retirement_annuity_cert", label: "Retirement Annuity Certificate" },
+  // Tax – Business
   { value: "vat_return", label: "VAT Return" },
+  { value: "company_tax_return", label: "Company Tax Return" },
+  { value: "provisional_tax", label: "Provisional Tax" },
+  { value: "paye_return", label: "PAYE Return" },
+  { value: "business_tax_clearance", label: "Business Tax Clearance" },
   // Company
   { value: "cipc_registration", label: "CIPC Registration" },
   { value: "moi", label: "Memorandum of Incorporation" },
@@ -242,10 +252,18 @@ const SUBFOLDER_MAP: Record<string, FolderDef[]> = {
     { id: "reference_letter", name: "Reference Letters", count: 0 },
   ],
   tax: [
-    { id: "tax_return", name: "Tax Returns", count: 0 },
+    { id: "payslip_doc", name: "Payslips", count: 0 },
+    { id: "tax_return", name: "Tax Returns / ITR12", count: 0 },
     { id: "irp5", name: "IRP5 / IT3(a)", count: 0 },
+    { id: "tax_certificate", name: "Tax Certificate / IRP5", count: 0 },
     { id: "tax_clearance", name: "Tax Clearance", count: 0 },
+    { id: "medical_tax", name: "Medical Tax Certificate", count: 0 },
+    { id: "retirement_annuity_cert", name: "Retirement Annuity Cert.", count: 0 },
     { id: "vat_return", name: "VAT Returns", count: 0 },
+    { id: "company_tax_return", name: "Company Tax Return", count: 0 },
+    { id: "provisional_tax", name: "Provisional Tax", count: 0 },
+    { id: "paye_return", name: "PAYE Return", count: 0 },
+    { id: "business_tax_clearance", name: "Business Tax Clearance", count: 0 },
   ],
   company: [
     { id: "cipc_registration", name: "CIPC Registration", count: 0 },
@@ -320,6 +338,29 @@ const COLLATE_PRESETS = [
     requiredCategories: ["id_document", "marriage_certificate", "marriage_agreement", "child_birth_cert", "child_custody", "title_deed", "finance_banking", "finance_investments"],
   },
 ];
+
+/* ------------------------------------------------------------------ */
+/*  TAX COMPLIANCE – REQUIRED DOCUMENTS                               */
+/* ------------------------------------------------------------------ */
+
+const REQUIRED_TAX_DOCS = {
+  personal: [
+    { type: "payslip_doc", label: "Latest Payslip", description: "Most recent month's payslip" },
+    { type: "tax_return", label: "Income Tax Return (ITR)", description: "Annual income tax return filing" },
+    { type: "tax_certificate", label: "Tax Certificate / IRP5", description: "Employer-issued tax certificate" },
+    { type: "tax_clearance", label: "Tax Clearance Certificate", description: "SARS tax clearance" },
+    { type: "medical_tax", label: "Medical Tax Certificate", description: "Medical aid tax certificate" },
+    { type: "retirement_annuity_cert", label: "Retirement Annuity Certificate", description: "RA contribution certificate" },
+  ],
+  business: [
+    { type: "vat_return", label: "VAT Return", description: "Latest VAT return submission" },
+    { type: "company_tax_return", label: "Company Tax Return", description: "Annual company tax return" },
+    { type: "company_financials", label: "Financial Statements", description: "Audited or reviewed financial statements" },
+    { type: "provisional_tax", label: "Provisional Tax", description: "Provisional tax payment proof" },
+    { type: "paye_return", label: "PAYE Return", description: "Pay-As-You-Earn return" },
+    { type: "business_tax_clearance", label: "Business Tax Clearance", description: "Business tax compliance certificate" },
+  ],
+};
 
 /* ------------------------------------------------------------------ */
 /*  MOCK DATA                                                         */
@@ -400,9 +441,14 @@ const initialDocuments: DocumentItem[] = [
   // Contracts
   { id: "37", name: "Sponsorship Agreement - Nike.pdf", type: "pdf", category: "sponsorship", date: "Dec 15, 2025", size: "4.5 MB", expiryDate: "2028-12-15", version: 1 },
   { id: "38", name: "Agent Management Agreement.pdf", type: "pdf", category: "agent_agreement", date: "Jan 5, 2026", size: "3.1 MB", expiryDate: "2029-01-05", version: 1 },
-  // Tax
+  // Tax – Personal
   { id: "39", name: "Tax Clearance Certificate.pdf", type: "pdf", category: "tax_clearance", date: "Dec 10, 2025", size: "890 KB", expiryDate: "2026-12-10", version: 1 },
   { id: "40", name: "IRP5 - 2025 Tax Year.pdf", type: "pdf", category: "irp5", date: "Jul 15, 2025", size: "1.1 MB", version: 1 },
+  { id: "46", name: "Payslip - March 2026.pdf", type: "pdf", category: "payslip_doc", date: "Mar 1, 2026", size: "320 KB", version: 1 },
+  { id: "47", name: "ITR12 - 2025 Tax Year.pdf", type: "pdf", category: "tax_return", date: "Oct 15, 2025", size: "1.4 MB", version: 1 },
+  { id: "48", name: "Medical Tax Certificate 2025.pdf", type: "pdf", category: "medical_tax", date: "Mar 1, 2026", size: "450 KB", version: 1 },
+  // Tax – Business
+  { id: "49", name: "VAT Return Q1 2026.pdf", type: "pdf", category: "vat_return", date: "Apr 1, 2026", size: "780 KB", version: 1 },
   // Company
   { id: "41", name: "Memorandum of Incorporation.pdf", type: "pdf", category: "moi", date: "Jan 15, 2026", size: "2.4 MB", version: 1 },
   { id: "42", name: "CIPC Registration Certificate.pdf", type: "pdf", category: "cipc_registration", date: "Jan 10, 2026", size: "1.2 MB", version: 1 },
@@ -462,6 +508,8 @@ const Documents = () => {
   const dragDocId = useRef<string | null>(null);
 
   // Batch assign state
+  // Tax compliance state
+  const [taxComplianceTab, setTaxComplianceTab] = useState<"personal" | "business">("personal");
   const [batchCategory, setBatchCategory] = useState("");
 
   // Custom folders state
@@ -529,6 +577,12 @@ const Documents = () => {
     }
     return list;
   }, [selectedFolder, searchQuery, docs]);
+
+  // Tax compliance: compute missing required documents
+  const isTaxFolder = selectedFolder === "tax" || (SUBFOLDER_MAP.tax || []).some((sf) => sf.id === selectedFolder);
+  const taxRequiredDocs = REQUIRED_TAX_DOCS[taxComplianceTab];
+  const taxUploadedTypes = docs.filter((d) => !d.isExpired).map((d) => d.category);
+  const taxMissingDocs = taxRequiredDocs.filter((r) => !taxUploadedTypes.includes(r.type));
 
   /* Upload handlers */
   const handleDragOver = useCallback((e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }, []);
@@ -959,6 +1013,88 @@ const Documents = () => {
                     <FolderInput className="w-3.5 h-3.5" />
                     Move {selectedDocIds.size} doc(s)
                   </Button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Tax Compliance Panel – shown when in Tax folder */}
+          {isTaxFolder && (
+            <div className="mb-6 bg-card rounded-2xl border border-border shadow-soft p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Bell className="w-5 h-5 text-primary" />
+                  <h3 className="font-semibold text-foreground">Tax Compliance Checker</h3>
+                </div>
+                <Tabs value={taxComplianceTab} onValueChange={(v) => setTaxComplianceTab(v as "personal" | "business")}>
+                  <TabsList className="h-8">
+                    <TabsTrigger value="personal" className="text-xs h-7 px-3">Personal</TabsTrigger>
+                    <TabsTrigger value="business" className="text-xs h-7 px-3">Business</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
+
+              {/* Summary stats */}
+              <div className="grid grid-cols-3 gap-3 mb-4">
+                <div className="bg-secondary/50 rounded-xl p-3 flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <FileText className="w-4 h-4 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-lg font-bold text-foreground">{taxRequiredDocs.length - taxMissingDocs.length}</p>
+                    <p className="text-[10px] text-muted-foreground">Uploaded</p>
+                  </div>
+                </div>
+                <div className="bg-secondary/50 rounded-xl p-3 flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center">
+                    <CheckCircle2 className="w-4 h-4 text-green-500" />
+                  </div>
+                  <div>
+                    <p className="text-lg font-bold text-foreground">{taxRequiredDocs.length - taxMissingDocs.length}/{taxRequiredDocs.length}</p>
+                    <p className="text-[10px] text-muted-foreground">Required</p>
+                  </div>
+                </div>
+                <div className="bg-secondary/50 rounded-xl p-3 flex items-center gap-3">
+                  <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", taxMissingDocs.length > 0 ? "bg-destructive/10" : "bg-green-500/10")}>
+                    {taxMissingDocs.length > 0 ? <AlertTriangle className="w-4 h-4 text-destructive" /> : <CheckCircle2 className="w-4 h-4 text-green-500" />}
+                  </div>
+                  <div>
+                    <p className="text-lg font-bold text-foreground">{taxMissingDocs.length}</p>
+                    <p className="text-[10px] text-muted-foreground">Missing</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Missing docs list */}
+              {taxMissingDocs.length > 0 && (
+                <div className="bg-destructive/5 border border-destructive/20 rounded-xl p-4">
+                  <p className="text-sm text-muted-foreground mb-3">
+                    The following {taxComplianceTab} tax documents are required but haven't been uploaded:
+                  </p>
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                    {taxMissingDocs.map((doc) => (
+                      <div
+                        key={doc.type}
+                        className="flex items-center gap-2 bg-background/60 rounded-lg px-3 py-2 cursor-pointer hover:bg-background transition-colors"
+                        onClick={() => {
+                          setUploadForm((prev) => ({ ...prev, category: doc.type, title: doc.label }));
+                          setIsUploadOpen(true);
+                        }}
+                      >
+                        <AlertTriangle className="w-3.5 h-3.5 text-destructive shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-xs font-medium text-foreground truncate">{doc.label}</p>
+                          <p className="text-[10px] text-muted-foreground truncate">{doc.description}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {taxMissingDocs.length === 0 && (
+                <div className="flex items-center gap-2 text-green-600 bg-green-500/5 rounded-xl px-4 py-3">
+                  <CheckCircle2 className="w-5 h-5" />
+                  <span className="text-sm font-medium">All required {taxComplianceTab} tax documents are uploaded!</span>
                 </div>
               )}
             </div>

@@ -28,7 +28,7 @@ import PropertyInvestments from "./pages/PropertyInvestments";
 import FranchiseInvestments from "./pages/FranchiseInvestments";
 
 import MonthlyBudgetPage from "./pages/MonthlyBudget";
-import PayslipTaxDocuments from "./pages/PayslipTaxDocuments";
+import { Navigate } from "react-router-dom";
 import ApplyForFunding from "./pages/ApplyForFunding";
 import ContractManager from "./pages/ContractManager";
 import EndorsementTracker from "./pages/EndorsementTracker";
@@ -73,7 +73,7 @@ const App = () => (
             <Route path="/dashboard/property-investments" element={<ProtectedRoute><PropertyInvestments /></ProtectedRoute>} />
             <Route path="/dashboard/franchise-investments" element={<ProtectedRoute><FranchiseInvestments /></ProtectedRoute>} />
             
-            <Route path="/dashboard/payslip-tax" element={<ProtectedRoute><PayslipTaxDocuments /></ProtectedRoute>} />
+            <Route path="/dashboard/payslip-tax" element={<Navigate to="/dashboard/documents" replace />} />
             <Route path="/dashboard/budget" element={<ProtectedRoute><MonthlyBudgetPage /></ProtectedRoute>} />
             <Route path="/dashboard/apply-for-funding" element={<ProtectedRoute><ApplyForFunding /></ProtectedRoute>} />
             <Route path="/dashboard/contracts" element={<ProtectedRoute><ContractManager /></ProtectedRoute>} />
