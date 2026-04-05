@@ -26,6 +26,7 @@ import {
   Share2,
   FileDown,
   Scale,
+  Landmark,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -34,6 +35,7 @@ import {
   LifeFileDocument,
   DOCUMENT_TYPES,
 } from "@/types/lifeFile";
+import { LifeFileAsset } from "@/types/lifeFileAsset";
 import {
   fetchBeneficiaries,
   createBeneficiary,
@@ -50,6 +52,12 @@ import {
   uploadLifeFileDocument,
 } from "@/services/lifeFileService";
 import {
+  fetchLifeFileAssets,
+  createLifeFileAsset,
+  updateLifeFileAsset,
+  deleteLifeFileAsset,
+} from "@/services/lifeFileAssetService";
+import {
   fetchLifeFileShares,
   createLifeFileShare,
   updateLifeFileShare,
@@ -63,6 +71,8 @@ import DocumentDialog from "@/components/life-file/DocumentDialog";
 import ShareLifeFileDialog from "@/components/life-file/ShareLifeFileDialog";
 import ShareList from "@/components/life-file/ShareList";
 import TrustsWillsFolder from "@/components/life-file/TrustsWillsFolder";
+import AssetRegistryTab from "@/components/life-file/AssetRegistryTab";
+import AssetRegistryDialog from "@/components/life-file/AssetRegistryDialog";
 import { generateLifeFilePDF } from "@/utils/lifeFilePdfExport";
 import {
   AlertDialog,
@@ -86,21 +96,25 @@ const LifeFilePage = () => {
   const [contacts, setContacts] = useState<EmergencyContact[]>([]);
   const [documents, setDocuments] = useState<LifeFileDocument[]>([]);
   const [shares, setShares] = useState<LifeFileShare[]>([]);
+  const [assets, setAssets] = useState<LifeFileAsset[]>([]);
 
   // Dialog states
   const [beneficiaryDialogOpen, setBeneficiaryDialogOpen] = useState(false);
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
   const [documentDialogOpen, setDocumentDialogOpen] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [assetDialogOpen, setAssetDialogOpen] = useState(false);
+  const [assetDialogCategory, setAssetDialogCategory] = useState<"insurance" | "investment">("insurance");
   const [editingBeneficiary, setEditingBeneficiary] = useState<Beneficiary | null>(null);
   const [editingContact, setEditingContact] = useState<EmergencyContact | null>(null);
   const [editingDocument, setEditingDocument] = useState<LifeFileDocument | null>(null);
   const [editingShare, setEditingShare] = useState<LifeFileShare | null>(null);
+  const [editingAsset, setEditingAsset] = useState<LifeFileAsset | null>(null);
 
   // Delete confirmation
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{
-    type: "beneficiary" | "contact" | "document" | "share";
+    type: "beneficiary" | "contact" | "document" | "share" | "asset";
     id: string;
     name: string;
   } | null>(null);
@@ -127,16 +141,18 @@ const LifeFilePage = () => {
   const loadData = async (uid: string) => {
     setLoading(true);
     try {
-      const [benefs, conts, docs, shrs] = await Promise.all([
+      const [benefs, conts, docs, shrs, assts] = await Promise.all([
         fetchBeneficiaries(uid),
         fetchEmergencyContacts(uid),
         fetchLifeFileDocuments(uid),
         fetchLifeFileShares(uid),
+        fetchLifeFileAssets(uid),
       ]);
       setBeneficiaries(benefs || []);
       setContacts(conts || []);
       setDocuments(docs || []);
       setShares(shrs || []);
+      setAssets(assts || []);
     } catch (error) {
       console.error("Error loading Life File data:", error);
       toast({
@@ -256,6 +272,21 @@ const LifeFilePage = () => {
     toast({ title: "Access revoked" });
   };
 
+  // Asset handlers
+  const handleAddAsset = async (data: any) => {
+    if (!userId) return;
+    await createLifeFileAsset({ ...data, user_id: userId });
+    await loadData(userId);
+    toast({ title: "Asset registered" });
+  };
+
+  const handleUpdateAsset = async (data: any) => {
+    if (!editingAsset || !userId) return;
+    await updateLifeFileAsset(editingAsset.id, data);
+    await loadData(userId);
+    toast({ title: "Asset updated" });
+  };
+
   // Delete handler
   const handleDelete = async () => {
     if (!deleteTarget || !userId) return;
@@ -273,6 +304,9 @@ const LifeFilePage = () => {
           break;
         case "share":
           await deleteLifeFileShare(deleteTarget.id);
+          break;
+        case "asset":
+          await deleteLifeFileAsset(deleteTarget.id);
           break;
       }
       await loadData(userId);
@@ -370,10 +404,14 @@ const LifeFilePage = () => {
 
       {/* Tabs */}
       <Tabs defaultValue="trusts-wills" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="trusts-wills" className="flex items-center gap-2">
             <Scale className="w-4 h-4" />
             Trusts & Wills
+          </TabsTrigger>
+          <TabsTrigger value="asset-registry" className="flex items-center gap-2">
+            <Landmark className="w-4 h-4" />
+            Asset Registry
           </TabsTrigger>
           <TabsTrigger value="beneficiaries" className="flex items-center gap-2">
             <Users className="w-4 h-4" />
@@ -416,7 +454,27 @@ const LifeFilePage = () => {
           />
         </TabsContent>
 
-        {/* Beneficiaries Tab */}
+        {/* Asset Registry Tab */}
+        <TabsContent value="asset-registry">
+          <AssetRegistryTab
+            assets={assets}
+            onAdd={(category) => {
+              setEditingAsset(null);
+              setAssetDialogCategory(category);
+              setAssetDialogOpen(true);
+            }}
+            onEdit={(asset) => {
+              setEditingAsset(asset);
+              setAssetDialogCategory(asset.asset_category as "insurance" | "investment");
+              setAssetDialogOpen(true);
+            }}
+            onDelete={(asset) => {
+              setDeleteTarget({ type: "asset", id: asset.id, name: `${asset.institution} - ${asset.asset_type}` });
+              setDeleteDialogOpen(true);
+            }}
+          />
+        </TabsContent>
+
         <TabsContent value="beneficiaries" className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
@@ -814,7 +872,14 @@ const LifeFilePage = () => {
         existingShare={editingShare}
       />
 
-      {/* Delete Confirmation */}
+      <AssetRegistryDialog
+        open={assetDialogOpen}
+        onOpenChange={setAssetDialogOpen}
+        onSubmit={editingAsset ? handleUpdateAsset : handleAddAsset}
+        asset={editingAsset}
+        defaultCategory={assetDialogCategory}
+      />
+
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

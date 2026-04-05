@@ -484,6 +484,78 @@ export type Database = {
         }
         Relationships: []
       }
+      life_file_assets: {
+        Row: {
+          amount: number | null
+          asset_category: string
+          asset_type: string
+          beneficiary_allocation: string | null
+          beneficiary_names: string | null
+          created_at: string
+          currency: string
+          description: string | null
+          file_name: string | null
+          file_url: string | null
+          id: string
+          institution: string
+          maturity_or_expiry_date: string | null
+          notes: string | null
+          policy_or_account_number: string | null
+          premium_frequency: string | null
+          premium_or_contribution: number | null
+          start_date: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number | null
+          asset_category?: string
+          asset_type: string
+          beneficiary_allocation?: string | null
+          beneficiary_names?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          institution: string
+          maturity_or_expiry_date?: string | null
+          notes?: string | null
+          policy_or_account_number?: string | null
+          premium_frequency?: string | null
+          premium_or_contribution?: number | null
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number | null
+          asset_category?: string
+          asset_type?: string
+          beneficiary_allocation?: string | null
+          beneficiary_names?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          file_name?: string | null
+          file_url?: string | null
+          id?: string
+          institution?: string
+          maturity_or_expiry_date?: string | null
+          notes?: string | null
+          policy_or_account_number?: string | null
+          premium_frequency?: string | null
+          premium_or_contribution?: number | null
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       life_file_documents: {
         Row: {
           created_at: string
