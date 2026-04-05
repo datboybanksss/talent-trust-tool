@@ -339,6 +339,29 @@ const COLLATE_PRESETS = [
 ];
 
 /* ------------------------------------------------------------------ */
+/*  TAX COMPLIANCE – REQUIRED DOCUMENTS                               */
+/* ------------------------------------------------------------------ */
+
+const REQUIRED_TAX_DOCS = {
+  personal: [
+    { type: "payslip_doc", label: "Latest Payslip", description: "Most recent month's payslip" },
+    { type: "tax_return", label: "Income Tax Return (ITR)", description: "Annual income tax return filing" },
+    { type: "tax_certificate", label: "Tax Certificate / IRP5", description: "Employer-issued tax certificate" },
+    { type: "tax_clearance", label: "Tax Clearance Certificate", description: "SARS tax clearance" },
+    { type: "medical_tax", label: "Medical Tax Certificate", description: "Medical aid tax certificate" },
+    { type: "retirement_annuity_cert", label: "Retirement Annuity Certificate", description: "RA contribution certificate" },
+  ],
+  business: [
+    { type: "vat_return", label: "VAT Return", description: "Latest VAT return submission" },
+    { type: "company_tax_return", label: "Company Tax Return", description: "Annual company tax return" },
+    { type: "company_financials", label: "Financial Statements", description: "Audited or reviewed financial statements" },
+    { type: "provisional_tax", label: "Provisional Tax", description: "Provisional tax payment proof" },
+    { type: "paye_return", label: "PAYE Return", description: "Pay-As-You-Earn return" },
+    { type: "business_tax_clearance", label: "Business Tax Clearance", description: "Business tax compliance certificate" },
+  ],
+};
+
+/* ------------------------------------------------------------------ */
 /*  MOCK DATA                                                         */
 /* ------------------------------------------------------------------ */
 
