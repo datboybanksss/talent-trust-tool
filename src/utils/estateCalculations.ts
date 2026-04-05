@@ -20,11 +20,21 @@ export interface FinancialDetails {
   educationCosts: number;
   funeralCosts: number;
   inflationRate: number;
+  propertyValue: number;
+  propertyTransferNeeded: boolean;
 }
 
 export interface EstimatorState {
   personal: PersonalDetails;
   financial: FinancialDetails;
+}
+
+export interface PropertyTransferCosts {
+  transferDuty: number;
+  conveyancingFees: number;
+  ratesClearance: number;
+  deedsOfficeFees: number;
+  total: number;
 }
 
 export interface InsuranceEstimate {
@@ -34,6 +44,7 @@ export interface InsuranceEstimate {
   incomeReplacement: number;
   educationFund: number;
   funeralCosts: number;
+  propertyTransferCosts: PropertyTransferCosts;
   totalDeathNeed: number;
   existingLifeCover: number;
   lifeShortfall: number;
