@@ -454,7 +454,27 @@ const LifeFilePage = () => {
           />
         </TabsContent>
 
-        {/* Beneficiaries Tab */}
+        {/* Asset Registry Tab */}
+        <TabsContent value="asset-registry">
+          <AssetRegistryTab
+            assets={assets}
+            onAdd={(category) => {
+              setEditingAsset(null);
+              setAssetDialogCategory(category);
+              setAssetDialogOpen(true);
+            }}
+            onEdit={(asset) => {
+              setEditingAsset(asset);
+              setAssetDialogCategory(asset.asset_category as "insurance" | "investment");
+              setAssetDialogOpen(true);
+            }}
+            onDelete={(asset) => {
+              setDeleteTarget({ type: "asset", id: asset.id, name: `${asset.institution} - ${asset.asset_type}` });
+              setDeleteDialogOpen(true);
+            }}
+          />
+        </TabsContent>
+
         <TabsContent value="beneficiaries" className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
