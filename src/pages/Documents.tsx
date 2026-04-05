@@ -830,7 +830,7 @@ const Documents = () => {
                     Upload
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
+                <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Upload Document</DialogTitle>
                   </DialogHeader>
@@ -850,6 +850,42 @@ const Documents = () => {
                         </SelectContent>
                       </Select>
                     </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="expiry">Expiry Date</Label>
+                      <Input id="expiry" type="date" value={uploadForm.expiryDate} onChange={(e) => setUploadForm((p) => ({ ...p, expiryDate: e.target.value }))} />
+                      <p className="text-xs text-muted-foreground">Optional — set if this document expires</p>
+                    </div>
+
+                    {/* Reminder Intervals */}
+                    {uploadForm.expiryDate && (
+                      <div className="space-y-3 p-3 bg-secondary/50 rounded-lg border border-border">
+                        <Label className="text-sm font-semibold">Expiry Reminders</Label>
+                        <p className="text-xs text-muted-foreground">Select when you'd like to be reminded before expiry</p>
+                        <div className="grid grid-cols-1 gap-2">
+                          {REMINDER_OPTIONS.map((opt) => (
+                            <label key={opt.key} className="flex items-center gap-3 cursor-pointer hover:bg-secondary rounded-md px-2 py-1.5 transition-colors">
+                              <Checkbox
+                                checked={uploadForm[opt.key]}
+                                onCheckedChange={(checked) => setUploadForm((p) => ({ ...p, [opt.key]: !!checked }))}
+                              />
+                              <span className="text-sm text-foreground">{opt.label}</span>
+                            </label>
+                          ))}
+                        </div>
+                        <div className="space-y-2 pt-2 border-t border-border">
+                          <Label htmlFor="notifyEmail" className="text-sm">Also notify another person (optional)</Label>
+                          <Input
+                            id="notifyEmail"
+                            type="email"
+                            placeholder="e.g. spouse@email.com"
+                            value={uploadForm.notifyEmail}
+                            onChange={(e) => setUploadForm((p) => ({ ...p, notifyEmail: e.target.value }))}
+                          />
+                          <p className="text-xs text-muted-foreground">They will receive email reminders too</p>
+                        </div>
+                      </div>
+                    )}
+
                     <div className="space-y-2">
                       <Label htmlFor="file">File</Label>
                       <div className="border-2 border-dashed border-border rounded-lg p-4 text-center hover:border-gold transition-colors cursor-pointer">
