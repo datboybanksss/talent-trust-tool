@@ -141,16 +141,18 @@ const LifeFilePage = () => {
   const loadData = async (uid: string) => {
     setLoading(true);
     try {
-      const [benefs, conts, docs, shrs] = await Promise.all([
+      const [benefs, conts, docs, shrs, assts] = await Promise.all([
         fetchBeneficiaries(uid),
         fetchEmergencyContacts(uid),
         fetchLifeFileDocuments(uid),
         fetchLifeFileShares(uid),
+        fetchLifeFileAssets(uid),
       ]);
       setBeneficiaries(benefs || []);
       setContacts(conts || []);
       setDocuments(docs || []);
       setShares(shrs || []);
+      setAssets(assts || []);
     } catch (error) {
       console.error("Error loading Life File data:", error);
       toast({
