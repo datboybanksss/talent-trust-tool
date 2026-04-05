@@ -215,10 +215,8 @@ export const formatZAR = (value: number): string => {
 
 export const getDefaultState = (): EstimatorState => ({
   personal: {
-    profession: 'athlete',
-    field: '',
-    currentAge: 25,
-    remainingCareerYears: 10,
+    currentAge: 30,
+    remainingWorkingYears: 30,
     maritalStatus: 'single',
     numberOfDependants: 0,
     dependantsDependencyYears: 18,

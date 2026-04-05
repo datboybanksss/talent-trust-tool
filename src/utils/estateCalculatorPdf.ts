@@ -47,10 +47,8 @@ export const generateEstateReport = (state: EstimatorState) => {
     startY: y,
     head: [["Detail", "Value"]],
     body: [
-      ["Profession", state.personal.profession],
-      ["Field", state.personal.field || "Not specified"],
       ["Age", String(state.personal.currentAge)],
-      ["Remaining Career", `${state.personal.remainingCareerYears} years`],
+      ["Remaining Working Years", `${state.personal.remainingWorkingYears} years`],
       ["Marital Status", state.personal.maritalStatus.replace(/-/g, ' ')],
       ["Dependants", String(state.personal.numberOfDependants)],
       ["Dependency Window", `${state.personal.dependantsDependencyYears} years`],
