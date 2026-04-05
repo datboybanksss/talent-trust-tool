@@ -136,11 +136,20 @@ const DOCUMENT_CATEGORIES = [
   { value: "royalty_agreement", label: "Royalty Agreement" },
   { value: "distribution", label: "Distribution Deal" },
   { value: "performance_contract", label: "Performance Contract" },
-  // Tax
+  // Tax – Personal
+  { value: "payslip_doc", label: "Payslip (Tax)" },
   { value: "tax_return", label: "Tax Return / ITR12" },
   { value: "irp5", label: "IRP5 / IT3(a)" },
+  { value: "tax_certificate", label: "Tax Certificate / IRP5" },
   { value: "tax_clearance", label: "Tax Clearance Certificate" },
+  { value: "medical_tax", label: "Medical Tax Certificate" },
+  { value: "retirement_annuity_cert", label: "Retirement Annuity Certificate" },
+  // Tax – Business
   { value: "vat_return", label: "VAT Return" },
+  { value: "company_tax_return", label: "Company Tax Return" },
+  { value: "provisional_tax", label: "Provisional Tax" },
+  { value: "paye_return", label: "PAYE Return" },
+  { value: "business_tax_clearance", label: "Business Tax Clearance" },
   // Company
   { value: "cipc_registration", label: "CIPC Registration" },
   { value: "moi", label: "Memorandum of Incorporation" },
