@@ -21,6 +21,9 @@ import {
   FolderPlus,
   Pencil,
   Check,
+  Bell,
+  Clock,
+  AlertTriangle,
 } from "lucide-react";
 import { useState, useCallback, useMemo, useRef } from "react";
 import { cn } from "@/lib/utils";
