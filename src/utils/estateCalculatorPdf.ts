@@ -72,7 +72,7 @@ export const generateEstateReport = (state: EstimatorState) => {
       ["Income Replacement for Dependants", formatZAR(estimate.incomeReplacement)],
       ["Education Fund", formatZAR(estimate.educationFund)],
       ["Funeral Costs", formatZAR(estimate.funeralCosts)],
-      ...(estimate.propertyTransferCosts.total > 0 ? [["Property Transfer Costs", formatZAR(estimate.propertyTransferCosts.total)]] : []),
+      ...(estimate.propertyTransfer.combinedTotal > 0 ? [["Property Transfer Costs", formatZAR(estimate.propertyTransfer.combinedTotal)]] : []),
       ["TOTAL NEED", formatZAR(estimate.totalDeathNeed)],
       ["Existing Life Cover", formatZAR(estimate.existingLifeCover)],
       ["SHORTFALL", estimate.lifeShortfall > 0 ? formatZAR(estimate.lifeShortfall) : "Adequately covered"],
