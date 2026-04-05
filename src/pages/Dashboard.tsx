@@ -3,6 +3,7 @@ import { useProfile } from "@/hooks/useProfile";
 import CurrentTierBadge from "@/components/subscription/CurrentTierBadge";
 import StatsCard from "@/components/dashboard/StatsCard";
 import PropertyInvestments from "@/components/dashboard/PropertyInvestments";
+import LifeFileSummaryCard from "@/components/dashboard/LifeFileSummaryCard";
 
 import FinancialOverview from "@/components/dashboard/FinancialOverview";
 import { Button } from "@/components/ui/button";
@@ -122,6 +123,9 @@ const Dashboard = () => {
           )}
 
           <div className="grid lg:grid-cols-3 gap-8">
+            {/* Life File Summary */}
+            <LifeFileSummaryCard />
+
             {/* Upcoming Reminders */}
             <div className="bg-card rounded-2xl border border-border p-6 shadow-soft">
               <div className="flex items-center justify-between mb-6">
