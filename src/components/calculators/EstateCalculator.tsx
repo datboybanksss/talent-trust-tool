@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Calculator, Shield, Heart, AlertTriangle, ChevronRight, ChevronLeft, Home, Plus, Trash2, FileText } from "lucide-react";
+import { Calculator, Shield, Heart, AlertTriangle, ChevronRight, ChevronLeft, Home, Plus, Trash2, FileText, Phone } from "lucide-react";
 import { EstimatorState, TransferProperty, getDefaultState, computeInsuranceEstimate, formatZAR } from "@/utils/estateCalculations";
 import { generateEstateReport } from "@/utils/estateCalculatorPdf";
 import { toast } from "@/hooks/use-toast";
@@ -387,6 +387,84 @@ const EstateCalculator = () => {
             </Card>
           )}
 
+          {/* Illustrative Solutions */}
+          {(estimate.lifeShortfall > 0 || estimate.disabilityShortfall > 0) && (
+            <Card className="border-primary/30 bg-primary/5">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-primary" />
+                  Illustrative Solutions to Cover Your Shortfall
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  Based on your estimated shortfalls, the following products may help protect your estate and family:
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {estimate.lifeShortfall > 0 && (
+                    <div className="p-4 rounded-lg bg-background border border-border">
+                      <p className="text-sm font-semibold text-foreground">Life Insurance</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        A life cover policy of at least <strong>{formatZAR(estimate.lifeShortfall)}</strong> could ensure your dependants are financially protected and estate costs are covered.
+                      </p>
+                    </div>
+                  )}
+                  {estimate.disabilityShortfall > 0 && (
+                    <div className="p-4 rounded-lg bg-background border border-border">
+                      <p className="text-sm font-semibold text-foreground">Disability Cover</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        A lump-sum disability benefit of at least <strong>{formatZAR(estimate.disabilityShortfall)}</strong> could replace lost income and cover ongoing expenses.
+                      </p>
+                    </div>
+                  )}
+                  <div className="p-4 rounded-lg bg-background border border-border">
+                    <p className="text-sm font-semibold text-foreground">Estate Cover / Liquidity Policy</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Ensures executor's fees, estate duty, and admin costs ({formatZAR(estimate.estateCosts.total)}) are covered without selling assets.
+                    </p>
+                  </div>
+                  <div className="p-4 rounded-lg bg-background border border-border">
+                    <p className="text-sm font-semibold text-foreground">Gap Cover</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Covers the shortfall between what medical aid pays and the actual cost of medical treatment, especially relevant for hospital procedures.
+                    </p>
+                  </div>
+                  <div className="p-4 rounded-lg bg-background border border-border">
+                    <p className="text-sm font-semibold text-foreground">Income Protection</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Pays a monthly benefit (typically 75% of income) if you are unable to work due to illness or injury for an extended period.
+                    </p>
+                  </div>
+                  {estimate.funeralCosts > 0 && (
+                    <div className="p-4 rounded-lg bg-background border border-border">
+                      <p className="text-sm font-semibold text-foreground">Funeral Cover</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        A dedicated funeral policy of {formatZAR(estimate.funeralCosts)} provides immediate liquidity for funeral expenses without waiting for the estate to be wound up.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* CTA - Contact a Financial Planner */}
+          <Card className="border-primary bg-primary/10">
+            <CardContent className="pt-6 text-center space-y-3">
+              <Phone className="w-8 h-8 text-primary mx-auto" />
+              <h3 className="text-lg font-bold text-foreground">Speak to a Certified Financial Planner</h3>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                These results are illustrative. A certified financial planner (CFP®) can provide personalised advice, 
+                structure your estate plan, and recommend the right combination of products to protect your family.
+              </p>
+              <Button asChild className="gap-2">
+                <a href="/contact">
+                  <Phone className="w-4 h-4" /> Contact a Financial Planner
+                </a>
+              </Button>
+            </CardContent>
+          </Card>
+
           {/* Disclaimer */}
           <Card className="border-warning/50 bg-warning/5">
             <CardContent className="pt-6">
@@ -394,7 +472,8 @@ const EstateCalculator = () => {
                 <AlertTriangle className="w-5 h-5 text-warning mt-0.5 shrink-0" />
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   <strong>Disclaimer:</strong> This calculator is illustrative only and does not constitute financial, tax, or legal advice.
-                  Consult a qualified financial adviser before making decisions based on these projections.
+                  Outcomes are sensitive to personal circumstances, tax legislation, and market conditions.
+                  Consult a certified financial planner before making decisions based on these projections.
                 </p>
               </div>
             </CardContent>

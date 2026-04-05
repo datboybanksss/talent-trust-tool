@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, AlertTriangle, ChevronRight, ChevronLeft, FileText, Wallet, PiggyBank } from "lucide-react";
+import { TrendingUp, AlertTriangle, ChevronRight, ChevronLeft, FileText, Wallet, PiggyBank, Shield, Phone } from "lucide-react";
 import { RetirementState, getDefaultRetirementState, computeRetirementEstimate } from "@/utils/retirementCalculations";
 import { formatZAR } from "@/utils/estateCalculations";
 import { generateRetirementReport } from "@/utils/retirementPdf";
@@ -232,6 +232,58 @@ const RetirementCalculator = () => {
             </Card>
           )}
 
+          {/* Illustrative Solutions */}
+          {estimate.savingsShortfall > 0 && (
+            <Card className="border-primary/30 bg-primary/5">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-primary" />
+                  Illustrative Solutions to Cover Your Shortfall
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  Based on your estimated shortfall of <strong>{formatZAR(estimate.savingsShortfall)}</strong>, the following products may help bridge the gap:
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="p-4 rounded-lg bg-background border border-border">
+                    <p className="text-sm font-semibold text-foreground">Retirement Annuity (RA)</p>
+                    <p className="text-xs text-muted-foreground mt-1">Tax-deductible contributions to build your retirement corpus. Ideal for closing the savings gap with disciplined monthly investing.</p>
+                  </div>
+                  <div className="p-4 rounded-lg bg-background border border-border">
+                    <p className="text-sm font-semibold text-foreground">Living Annuity</p>
+                    <p className="text-xs text-muted-foreground mt-1">Flexible income drawdown at retirement. You choose between 2.5% – 17.5% of your investment as annual income.</p>
+                  </div>
+                  <div className="p-4 rounded-lg bg-background border border-border">
+                    <p className="text-sm font-semibold text-foreground">Tax-Free Savings Account</p>
+                    <p className="text-xs text-muted-foreground mt-1">Contribute up to R36,000/year (R500,000 lifetime) with no tax on growth, dividends, or withdrawals.</p>
+                  </div>
+                  <div className="p-4 rounded-lg bg-background border border-border">
+                    <p className="text-sm font-semibold text-foreground">Endowment Policy</p>
+                    <p className="text-xs text-muted-foreground mt-1">A medium- to long-term savings vehicle with tax advantages, suitable for supplementing retirement savings.</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* CTA - Contact a Financial Planner */}
+          <Card className="border-primary bg-primary/10">
+            <CardContent className="pt-6 text-center space-y-3">
+              <Phone className="w-8 h-8 text-primary mx-auto" />
+              <h3 className="text-lg font-bold text-foreground">Speak to a Certified Financial Planner</h3>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                These results are illustrative. A certified financial planner (CFP®) can provide personalised advice, 
+                recommend suitable products, and help you build a comprehensive retirement plan.
+              </p>
+              <Button asChild className="gap-2">
+                <a href="/contact">
+                  <Phone className="w-4 h-4" /> Contact a Financial Planner
+                </a>
+              </Button>
+            </CardContent>
+          </Card>
+
           {/* Disclaimer */}
           <Card className="border-warning/50 bg-warning/5">
             <CardContent className="pt-6">
@@ -239,7 +291,8 @@ const RetirementCalculator = () => {
                 <AlertTriangle className="w-5 h-5 text-warning mt-0.5 shrink-0" />
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   <strong>Disclaimer:</strong> This calculator is illustrative only and does not constitute financial, tax, or legal advice.
-                  Consult a qualified financial adviser before making decisions based on these projections.
+                  Outcomes are sensitive to market performance, inflation, and personal circumstances.
+                  Consult a certified financial planner before making decisions based on these projections.
                 </p>
               </div>
             </CardContent>
