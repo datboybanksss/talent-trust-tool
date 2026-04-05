@@ -285,10 +285,10 @@ const EstateCalculator = () => {
             </Card>
 
             {/* Disclaimer */}
-            <Card className="border-amber-300/50 bg-amber-50/30">
+            <Card className="border-warning/50 bg-warning/5">
               <CardContent className="pt-6">
                 <div className="flex items-start gap-3">
-                  <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
+                  <AlertTriangle className="w-5 h-5 text-warning mt-0.5 shrink-0" />
                   <p className="text-xs text-muted-foreground leading-relaxed">
                     <strong>Disclaimer:</strong> This calculator is illustrative only and does not constitute financial, tax, or legal advice.
                     Outcomes for athletes and entertainers are highly sensitive to income volatility, health, and career duration.
