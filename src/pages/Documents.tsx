@@ -21,6 +21,9 @@ import {
   FolderPlus,
   Pencil,
   Check,
+  Bell,
+  Clock,
+  AlertTriangle,
 } from "lucide-react";
 import { useState, useCallback, useMemo, useRef } from "react";
 import { cn } from "@/lib/utils";
@@ -329,67 +332,84 @@ interface DocumentItem {
   category: string;
   date: string;
   size: string;
+  expiryDate?: string;
+  reminder30?: boolean;
+  reminder60?: boolean;
+  reminder90?: boolean;
+  reminder6m?: boolean;
+  reminder1y?: boolean;
+  notifyEmail?: string;
+  version?: number;
+  isExpired?: boolean;
 }
+
+const REMINDER_OPTIONS = [
+  { key: "reminder30" as const, label: "30 Days Before" },
+  { key: "reminder60" as const, label: "60 Days Before" },
+  { key: "reminder90" as const, label: "90 Days Before" },
+  { key: "reminder6m" as const, label: "6 Months Before" },
+  { key: "reminder1y" as const, label: "1 Year Before" },
+];
 
 const initialDocuments: DocumentItem[] = [
   // Personal ID
-  { id: "1", name: "Passport - John Doe.pdf", type: "pdf", category: "passport", date: "Mar 1, 2026", size: "1.8 MB" },
-  { id: "2", name: "Passport - Jane Doe (Spouse).pdf", type: "pdf", category: "passport", date: "Mar 1, 2026", size: "1.7 MB" },
-  { id: "3", name: "Passport - Child 1.pdf", type: "pdf", category: "child_passport", date: "Feb 20, 2026", size: "1.5 MB" },
-  { id: "4", name: "ID Document - John Doe.jpg", type: "image", category: "id_document", date: "Dec 20, 2025", size: "3.1 MB" },
-  { id: "5", name: "ID Document - Jane Doe.jpg", type: "image", category: "id_document", date: "Dec 20, 2025", size: "2.9 MB" },
-  { id: "6", name: "Birth Certificate - John Doe.pdf", type: "pdf", category: "birth_certificate", date: "Jan 5, 1990", size: "620 KB" },
+  { id: "1", name: "Passport - John Doe.pdf", type: "pdf", category: "passport", date: "Mar 1, 2026", size: "1.8 MB", expiryDate: "2031-03-01", version: 1 },
+  { id: "2", name: "Passport - Jane Doe (Spouse).pdf", type: "pdf", category: "passport", date: "Mar 1, 2026", size: "1.7 MB", expiryDate: "2031-03-01", version: 1 },
+  { id: "3", name: "Passport - Child 1.pdf", type: "pdf", category: "child_passport", date: "Feb 20, 2026", size: "1.5 MB", expiryDate: "2031-02-20", version: 1 },
+  { id: "4", name: "ID Document - John Doe.jpg", type: "image", category: "id_document", date: "Dec 20, 2025", size: "3.1 MB", version: 1 },
+  { id: "5", name: "ID Document - Jane Doe.jpg", type: "image", category: "id_document", date: "Dec 20, 2025", size: "2.9 MB", version: 1 },
+  { id: "6", name: "Birth Certificate - John Doe.pdf", type: "pdf", category: "birth_certificate", date: "Jan 5, 1990", size: "620 KB", version: 1 },
   // Marriage & Family
-  { id: "7", name: "Marriage Certificate.pdf", type: "pdf", category: "marriage_certificate", date: "Jun 15, 2020", size: "980 KB" },
-  { id: "8", name: "Antenuptial Contract (ANC).pdf", type: "pdf", category: "marriage_agreement", date: "Jun 10, 2020", size: "1.4 MB" },
+  { id: "7", name: "Marriage Certificate.pdf", type: "pdf", category: "marriage_certificate", date: "Jun 15, 2020", size: "980 KB", version: 1 },
+  { id: "8", name: "Antenuptial Contract (ANC).pdf", type: "pdf", category: "marriage_agreement", date: "Jun 10, 2020", size: "1.4 MB", version: 1 },
   // Children
-  { id: "9", name: "Birth Certificate - Child 1.pdf", type: "pdf", category: "child_birth_cert", date: "Sep 5, 2022", size: "650 KB" },
-  { id: "10", name: "School Enrolment Letter.pdf", type: "pdf", category: "child_school", date: "Jan 12, 2026", size: "420 KB" },
-  { id: "11", name: "Immunisation Card - Child 1.pdf", type: "pdf", category: "child_medical", date: "Oct 1, 2022", size: "380 KB" },
+  { id: "9", name: "Birth Certificate - Child 1.pdf", type: "pdf", category: "child_birth_cert", date: "Sep 5, 2022", size: "650 KB", version: 1 },
+  { id: "10", name: "School Enrolment Letter.pdf", type: "pdf", category: "child_school", date: "Jan 12, 2026", size: "420 KB", version: 1 },
+  { id: "11", name: "Immunisation Card - Child 1.pdf", type: "pdf", category: "child_medical", date: "Oct 1, 2022", size: "380 KB", version: 1 },
   // Academic
-  { id: "12", name: "BCom Honours Degree.pdf", type: "pdf", category: "degree", date: "Dec 1, 2018", size: "1.1 MB" },
-  { id: "13", name: "Matric Certificate.pdf", type: "pdf", category: "matric", date: "Dec 1, 2014", size: "890 KB" },
-  { id: "14", name: "FIFA Coaching Badge.pdf", type: "pdf", category: "professional_cert", date: "Aug 20, 2023", size: "750 KB" },
+  { id: "12", name: "BCom Honours Degree.pdf", type: "pdf", category: "degree", date: "Dec 1, 2018", size: "1.1 MB", version: 1 },
+  { id: "13", name: "Matric Certificate.pdf", type: "pdf", category: "matric", date: "Dec 1, 2014", size: "890 KB", version: 1 },
+  { id: "14", name: "FIFA Coaching Badge.pdf", type: "pdf", category: "professional_cert", date: "Aug 20, 2023", size: "750 KB", expiryDate: "2027-08-20", version: 1 },
   // Finance
-  { id: "15", name: "FNB Cheque Account Statement.pdf", type: "pdf", category: "finance_banking", date: "Mar 1, 2026", size: "2.4 MB" },
-  { id: "16", name: "Investment Portfolio - Allan Gray.pdf", type: "pdf", category: "finance_investments", date: "Feb 28, 2026", size: "3.2 MB" },
-  { id: "17", name: "Pension Fund Statement.pdf", type: "pdf", category: "finance_pension", date: "Jan 31, 2026", size: "1.6 MB" },
-  { id: "18", name: "Life Insurance Policy - Discovery.pdf", type: "pdf", category: "finance_life_insurance", date: "Jan 15, 2026", size: "2.1 MB" },
-  { id: "19", name: "Medical Aid - Discovery Health.pdf", type: "pdf", category: "finance_medical_aid", date: "Jan 1, 2026", size: "1.4 MB" },
-  { id: "20", name: "JSE Share Portfolio.pdf", type: "pdf", category: "finance_stocks", date: "Feb 15, 2026", size: "1.8 MB" },
-  { id: "21", name: "Crypto Wallet Holdings - Luno.pdf", type: "pdf", category: "finance_crypto", date: "Mar 3, 2026", size: "540 KB" },
-  { id: "22", name: "Home Loan Agreement - Nedbank.pdf", type: "pdf", category: "finance_credit", date: "Apr 5, 2024", size: "2.6 MB" },
+  { id: "15", name: "FNB Cheque Account Statement.pdf", type: "pdf", category: "finance_banking", date: "Mar 1, 2026", size: "2.4 MB", version: 1 },
+  { id: "16", name: "Investment Portfolio - Allan Gray.pdf", type: "pdf", category: "finance_investments", date: "Feb 28, 2026", size: "3.2 MB", version: 1 },
+  { id: "17", name: "Pension Fund Statement.pdf", type: "pdf", category: "finance_pension", date: "Jan 31, 2026", size: "1.6 MB", version: 1 },
+  { id: "18", name: "Life Insurance Policy - Discovery.pdf", type: "pdf", category: "finance_life_insurance", date: "Jan 15, 2026", size: "2.1 MB", expiryDate: "2027-01-15", version: 1 },
+  { id: "19", name: "Medical Aid - Discovery Health.pdf", type: "pdf", category: "finance_medical_aid", date: "Jan 1, 2026", size: "1.4 MB", expiryDate: "2027-01-01", version: 1 },
+  { id: "20", name: "JSE Share Portfolio.pdf", type: "pdf", category: "finance_stocks", date: "Feb 15, 2026", size: "1.8 MB", version: 1 },
+  { id: "21", name: "Crypto Wallet Holdings - Luno.pdf", type: "pdf", category: "finance_crypto", date: "Mar 3, 2026", size: "540 KB", version: 1 },
+  { id: "22", name: "Home Loan Agreement - Nedbank.pdf", type: "pdf", category: "finance_credit", date: "Apr 5, 2024", size: "2.6 MB", version: 1 },
   // Health
-  { id: "23", name: "Annual Check-Up Report 2025.pdf", type: "pdf", category: "medical_records", date: "Nov 20, 2025", size: "1.3 MB" },
-  { id: "24", name: "Specialist Report - Orthopaedic.pdf", type: "pdf", category: "medical_specialist", date: "Sep 15, 2025", size: "980 KB" },
-  { id: "25", name: "Dental X-Ray Results.pdf", type: "pdf", category: "medical_dental", date: "Aug 10, 2025", size: "2.2 MB" },
+  { id: "23", name: "Annual Check-Up Report 2025.pdf", type: "pdf", category: "medical_records", date: "Nov 20, 2025", size: "1.3 MB", version: 1 },
+  { id: "24", name: "Specialist Report - Orthopaedic.pdf", type: "pdf", category: "medical_specialist", date: "Sep 15, 2025", size: "980 KB", version: 1 },
+  { id: "25", name: "Dental X-Ray Results.pdf", type: "pdf", category: "medical_dental", date: "Aug 10, 2025", size: "2.2 MB", version: 1 },
   // Housing
-  { id: "26", name: "Title Deed - Sandton Property.pdf", type: "pdf", category: "title_deed", date: "Apr 5, 2024", size: "3.8 MB" },
-  { id: "27", name: "Bond Statement - Nedbank.pdf", type: "pdf", category: "bond_statement", date: "Mar 1, 2026", size: "1.1 MB" },
-  { id: "28", name: "Rates Account - CoJ.pdf", type: "pdf", category: "rates_account", date: "Feb 28, 2026", size: "450 KB" },
-  { id: "29", name: "Homeowners Insurance - Santam.pdf", type: "pdf", category: "homeowners_insurance", date: "Jan 1, 2026", size: "1.8 MB" },
+  { id: "26", name: "Title Deed - Sandton Property.pdf", type: "pdf", category: "title_deed", date: "Apr 5, 2024", size: "3.8 MB", version: 1 },
+  { id: "27", name: "Bond Statement - Nedbank.pdf", type: "pdf", category: "bond_statement", date: "Mar 1, 2026", size: "1.1 MB", version: 1 },
+  { id: "28", name: "Rates Account - CoJ.pdf", type: "pdf", category: "rates_account", date: "Feb 28, 2026", size: "450 KB", version: 1 },
+  { id: "29", name: "Homeowners Insurance - Santam.pdf", type: "pdf", category: "homeowners_insurance", date: "Jan 1, 2026", size: "1.8 MB", expiryDate: "2027-01-01", version: 1 },
   // Vehicles
-  { id: "30", name: "Vehicle Registration - BMW X5.pdf", type: "pdf", category: "vehicle_registration", date: "Nov 10, 2025", size: "1.2 MB" },
-  { id: "31", name: "Vehicle Insurance - Outsurance.pdf", type: "pdf", category: "vehicle_insurance", date: "Nov 10, 2025", size: "980 KB" },
-  { id: "32", name: "Driver's License - John Doe.jpg", type: "image", category: "drivers_license", date: "Mar 15, 2024", size: "1.5 MB" },
+  { id: "30", name: "Vehicle Registration - BMW X5.pdf", type: "pdf", category: "vehicle_registration", date: "Nov 10, 2025", size: "1.2 MB", expiryDate: "2026-11-10", version: 1 },
+  { id: "31", name: "Vehicle Insurance - Outsurance.pdf", type: "pdf", category: "vehicle_insurance", date: "Nov 10, 2025", size: "980 KB", expiryDate: "2026-11-10", version: 1 },
+  { id: "32", name: "Driver's License - John Doe.jpg", type: "image", category: "drivers_license", date: "Mar 15, 2024", size: "1.5 MB", expiryDate: "2029-03-15", version: 1 },
   // Work
-  { id: "33", name: "Employment Contract - Current.pdf", type: "pdf", category: "employment_contract", date: "Jan 15, 2025", size: "2.8 MB" },
-  { id: "34", name: "Payslip - March 2026.pdf", type: "pdf", category: "payslip", date: "Mar 1, 2026", size: "320 KB" },
-  { id: "35", name: "Work Permit - UK.pdf", type: "pdf", category: "work_permit", date: "Jun 1, 2025", size: "1.9 MB" },
-  { id: "36", name: "Reference Letter - Previous Employer.pdf", type: "pdf", category: "reference_letter", date: "Dec 20, 2024", size: "450 KB" },
+  { id: "33", name: "Employment Contract - Current.pdf", type: "pdf", category: "employment_contract", date: "Jan 15, 2025", size: "2.8 MB", expiryDate: "2028-01-15", version: 1 },
+  { id: "34", name: "Payslip - March 2026.pdf", type: "pdf", category: "payslip", date: "Mar 1, 2026", size: "320 KB", version: 1 },
+  { id: "35", name: "Work Permit - UK.pdf", type: "pdf", category: "work_permit", date: "Jun 1, 2025", size: "1.9 MB", expiryDate: "2027-06-01", version: 1 },
+  { id: "36", name: "Reference Letter - Previous Employer.pdf", type: "pdf", category: "reference_letter", date: "Dec 20, 2024", size: "450 KB", version: 1 },
   // Contracts
-  { id: "37", name: "Sponsorship Agreement - Nike.pdf", type: "pdf", category: "sponsorship", date: "Dec 15, 2025", size: "4.5 MB" },
-  { id: "38", name: "Agent Management Agreement.pdf", type: "pdf", category: "agent_agreement", date: "Jan 5, 2026", size: "3.1 MB" },
+  { id: "37", name: "Sponsorship Agreement - Nike.pdf", type: "pdf", category: "sponsorship", date: "Dec 15, 2025", size: "4.5 MB", expiryDate: "2028-12-15", version: 1 },
+  { id: "38", name: "Agent Management Agreement.pdf", type: "pdf", category: "agent_agreement", date: "Jan 5, 2026", size: "3.1 MB", expiryDate: "2029-01-05", version: 1 },
   // Tax
-  { id: "39", name: "Tax Clearance Certificate.pdf", type: "pdf", category: "tax_clearance", date: "Dec 10, 2025", size: "890 KB" },
-  { id: "40", name: "IRP5 - 2025 Tax Year.pdf", type: "pdf", category: "irp5", date: "Jul 15, 2025", size: "1.1 MB" },
+  { id: "39", name: "Tax Clearance Certificate.pdf", type: "pdf", category: "tax_clearance", date: "Dec 10, 2025", size: "890 KB", expiryDate: "2026-12-10", version: 1 },
+  { id: "40", name: "IRP5 - 2025 Tax Year.pdf", type: "pdf", category: "irp5", date: "Jul 15, 2025", size: "1.1 MB", version: 1 },
   // Company
-  { id: "41", name: "Memorandum of Incorporation.pdf", type: "pdf", category: "moi", date: "Jan 15, 2026", size: "2.4 MB" },
-  { id: "42", name: "CIPC Registration Certificate.pdf", type: "pdf", category: "cipc_registration", date: "Jan 10, 2026", size: "1.2 MB" },
-  { id: "43", name: "Director Resolution - Bank Account.docx", type: "doc", category: "director_resolution", date: "Jan 8, 2026", size: "156 KB" },
+  { id: "41", name: "Memorandum of Incorporation.pdf", type: "pdf", category: "moi", date: "Jan 15, 2026", size: "2.4 MB", version: 1 },
+  { id: "42", name: "CIPC Registration Certificate.pdf", type: "pdf", category: "cipc_registration", date: "Jan 10, 2026", size: "1.2 MB", version: 1 },
+  { id: "43", name: "Director Resolution - Bank Account.docx", type: "doc", category: "director_resolution", date: "Jan 8, 2026", size: "156 KB", version: 1 },
   // Compliance
-  { id: "44", name: "FICA - Proof of Address.pdf", type: "pdf", category: "fica", date: "Feb 1, 2026", size: "680 KB" },
-  { id: "45", name: "B-BBEE Certificate.pdf", type: "pdf", category: "bbbee", date: "Mar 1, 2026", size: "520 KB" },
+  { id: "44", name: "FICA - Proof of Address.pdf", type: "pdf", category: "fica", date: "Feb 1, 2026", size: "680 KB", version: 1 },
+  { id: "45", name: "B-BBEE Certificate.pdf", type: "pdf", category: "bbbee", date: "Mar 1, 2026", size: "520 KB", expiryDate: "2027-03-01", version: 1 },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -426,7 +446,7 @@ const Documents = () => {
   const [profileType, setProfileType] = useState<ProfileType>("athlete");
   const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({});
   const [searchQuery, setSearchQuery] = useState("");
-  const [uploadForm, setUploadForm] = useState({ title: "", category: "", file: null as File | null });
+  const [uploadForm, setUploadForm] = useState({ title: "", category: "", file: null as File | null, expiryDate: "", reminder30: false, reminder60: false, reminder90: false, reminder6m: false, reminder1y: false, notifyEmail: "" });
 
   // Collate state
   const [collateMode, setCollateMode] = useState(false);
@@ -531,8 +551,43 @@ const Documents = () => {
     if (!uploadForm.title.trim()) { toast({ title: "Error", description: "Please enter a document title", variant: "destructive" }); return; }
     if (!uploadForm.category) { toast({ title: "Error", description: "Please select a category", variant: "destructive" }); return; }
     if (!uploadForm.file) { toast({ title: "Error", description: "Please select a file to upload", variant: "destructive" }); return; }
-    toast({ title: "Success", description: `"${uploadForm.title}" uploaded to ${DOCUMENT_CATEGORIES.find((c) => c.value === uploadForm.category)?.label || uploadForm.category}` });
-    setUploadForm({ title: "", category: "", file: null });
+
+    // Mark existing documents with same category as expired (version control)
+    const matchingDocs = docs.filter((d) => d.category === uploadForm.category && !d.isExpired);
+    const highestVersion = matchingDocs.reduce((max, d) => Math.max(max, d.version || 1), 0);
+
+    if (matchingDocs.length > 0) {
+      setDocs((prev) => prev.map((d) =>
+        d.category === uploadForm.category && !d.isExpired
+          ? { ...d, isExpired: true }
+          : d
+      ));
+    }
+
+    const newDoc: DocumentItem = {
+      id: String(Date.now()),
+      name: uploadForm.file.name,
+      type: uploadForm.file.name.endsWith(".pdf") ? "pdf" : uploadForm.file.name.match(/\.(jpg|jpeg|png)$/i) ? "image" : "doc",
+      category: uploadForm.category,
+      date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+      size: `${(uploadForm.file.size / (1024 * 1024)).toFixed(1)} MB`,
+      expiryDate: uploadForm.expiryDate || undefined,
+      reminder30: uploadForm.reminder30,
+      reminder60: uploadForm.reminder60,
+      reminder90: uploadForm.reminder90,
+      reminder6m: uploadForm.reminder6m,
+      reminder1y: uploadForm.reminder1y,
+      notifyEmail: uploadForm.notifyEmail || undefined,
+      version: highestVersion + 1,
+      isExpired: false,
+    };
+
+    setDocs((prev) => [...prev, newDoc]);
+
+    const catLabel = allCategories.find((c) => c.value === uploadForm.category)?.label || uploadForm.category;
+    const expiredMsg = matchingDocs.length > 0 ? ` (${matchingDocs.length} previous version(s) marked as expired)` : "";
+    toast({ title: "Success", description: `"${uploadForm.title}" v${newDoc.version} uploaded to ${catLabel}${expiredMsg}` });
+    setUploadForm({ title: "", category: "", file: null, expiryDate: "", reminder30: false, reminder60: false, reminder90: false, reminder6m: false, reminder1y: false, notifyEmail: "" });
     setIsUploadOpen(false);
   };
 
@@ -778,7 +833,7 @@ const Documents = () => {
                     Upload
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
+                <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Upload Document</DialogTitle>
                   </DialogHeader>
@@ -798,6 +853,42 @@ const Documents = () => {
                         </SelectContent>
                       </Select>
                     </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="expiry">Expiry Date</Label>
+                      <Input id="expiry" type="date" value={uploadForm.expiryDate} onChange={(e) => setUploadForm((p) => ({ ...p, expiryDate: e.target.value }))} />
+                      <p className="text-xs text-muted-foreground">Optional — set if this document expires</p>
+                    </div>
+
+                    {/* Reminder Intervals */}
+                    {uploadForm.expiryDate && (
+                      <div className="space-y-3 p-3 bg-secondary/50 rounded-lg border border-border">
+                        <Label className="text-sm font-semibold">Expiry Reminders</Label>
+                        <p className="text-xs text-muted-foreground">Select when you'd like to be reminded before expiry</p>
+                        <div className="grid grid-cols-1 gap-2">
+                          {REMINDER_OPTIONS.map((opt) => (
+                            <label key={opt.key} className="flex items-center gap-3 cursor-pointer hover:bg-secondary rounded-md px-2 py-1.5 transition-colors">
+                              <Checkbox
+                                checked={uploadForm[opt.key]}
+                                onCheckedChange={(checked) => setUploadForm((p) => ({ ...p, [opt.key]: !!checked }))}
+                              />
+                              <span className="text-sm text-foreground">{opt.label}</span>
+                            </label>
+                          ))}
+                        </div>
+                        <div className="space-y-2 pt-2 border-t border-border">
+                          <Label htmlFor="notifyEmail" className="text-sm">Also notify another person (optional)</Label>
+                          <Input
+                            id="notifyEmail"
+                            type="email"
+                            placeholder="e.g. spouse@email.com"
+                            value={uploadForm.notifyEmail}
+                            onChange={(e) => setUploadForm((p) => ({ ...p, notifyEmail: e.target.value }))}
+                          />
+                          <p className="text-xs text-muted-foreground">They will receive email reminders too</p>
+                        </div>
+                      </div>
+                    )}
+
                     <div className="space-y-2">
                       <Label htmlFor="file">File</Label>
                       <div className="border-2 border-dashed border-border rounded-lg p-4 text-center hover:border-gold transition-colors cursor-pointer">
@@ -875,13 +966,15 @@ const Documents = () => {
 
           {/* Documents Table */}
           <div className="bg-card rounded-2xl border border-border shadow-soft overflow-hidden">
-            <div className={cn("grid gap-4 px-6 py-3 bg-secondary text-sm font-medium text-muted-foreground", collateMode ? "grid-cols-[32px_1fr_160px_120px_80px_100px]" : "grid-cols-12")}>
+            <div className={cn("grid gap-4 px-6 py-3 bg-secondary text-sm font-medium text-muted-foreground", collateMode ? "grid-cols-[32px_1fr_120px_100px_60px_80px_80px_90px]" : "grid-cols-[1fr_120px_100px_60px_80px_80px_90px]")}>
               {collateMode && <div />}
-              <div className={collateMode ? "" : "col-span-5"}>Name</div>
-              <div className={collateMode ? "" : "col-span-2"}>Category</div>
-              <div className={collateMode ? "" : "col-span-2"}>Date</div>
-              <div className={collateMode ? "" : "col-span-1"}>Size</div>
-              <div className={cn(collateMode ? "text-right" : "col-span-2 text-right")}>Actions</div>
+              <div>Name</div>
+              <div>Category</div>
+              <div>Date</div>
+              <div>Ver</div>
+              <div>Expiry</div>
+              <div>Size</div>
+              <div className="text-right">Actions</div>
             </div>
 
             <div className="divide-y divide-border max-h-[50vh] overflow-y-auto">
@@ -998,6 +1091,12 @@ const DocumentRow = ({ document, collateMode, selected, onToggle, onMoveRequest,
     }
   };
 
+  const isExpired = document.isExpired;
+  const expiryStr = document.expiryDate
+    ? new Date(document.expiryDate).toLocaleDateString("en-US", { month: "short", year: "numeric" })
+    : "—";
+  const isExpiringSoon = document.expiryDate && !isExpired && new Date(document.expiryDate) <= new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
+  const hasReminders = document.reminder30 || document.reminder60 || document.reminder90 || document.reminder6m || document.reminder1y;
 
   return (
     <div
@@ -1005,27 +1104,39 @@ const DocumentRow = ({ document, collateMode, selected, onToggle, onMoveRequest,
       onDragStart={onDragStart}
       className={cn(
         "grid gap-4 px-6 py-4 items-center hover:bg-secondary/50 transition-colors cursor-grab active:cursor-grabbing",
-        collateMode ? "grid-cols-[32px_1fr_160px_120px_80px_100px]" : "grid-cols-12",
-        selected && "bg-gold/5"
+        collateMode ? "grid-cols-[32px_1fr_120px_100px_60px_80px_80px_90px]" : "grid-cols-[1fr_120px_100px_60px_80px_80px_90px]",
+        selected && "bg-gold/5",
+        isExpired && "opacity-50"
       )}
     >
       {collateMode && (
         <Checkbox checked={selected} onCheckedChange={onToggle} />
       )}
-      <div className={cn("flex items-center gap-3", !collateMode && "col-span-5")}>
+      <div className="flex items-center gap-3 min-w-0">
         {getIcon()}
-        <span className="font-medium text-foreground truncate">{document.name}</span>
+        <span className={cn("font-medium truncate", isExpired ? "text-muted-foreground line-through" : "text-foreground")}>{document.name}</span>
+        {isExpired && <span className="shrink-0 text-[10px] px-1.5 py-0.5 rounded bg-destructive/10 text-destructive font-medium">EXPIRED</span>}
+        {hasReminders && !isExpired && <span title="Reminders set"><Bell className="w-3.5 h-3.5 text-gold shrink-0" /></span>}
       </div>
-      <div className={!collateMode ? "col-span-2" : ""}>
+      <div>
         <span className="text-sm text-muted-foreground">{catLabel}</span>
       </div>
-      <div className={!collateMode ? "col-span-2" : ""}>
+      <div>
         <span className="text-sm text-muted-foreground">{document.date}</span>
       </div>
-      <div className={!collateMode ? "col-span-1" : ""}>
+      <div>
+        <span className="text-xs text-muted-foreground">v{document.version || 1}</span>
+      </div>
+      <div>
+        <span className={cn("text-xs", isExpiringSoon ? "text-warning font-medium" : "text-muted-foreground")}>
+          {isExpiringSoon && <AlertTriangle className="w-3 h-3 inline mr-0.5" />}
+          {expiryStr}
+        </span>
+      </div>
+      <div>
         <span className="text-sm text-muted-foreground">{document.size}</span>
       </div>
-      <div className={cn("flex items-center justify-end gap-1", !collateMode && "col-span-2")}>
+      <div className="flex items-center justify-end gap-1">
         <button title="Move to folder" onClick={() => onMoveRequest(document.id)} className="p-2 hover:bg-secondary rounded-lg transition-colors"><FolderInput className="w-4 h-4 text-muted-foreground" /></button>
         <button className="p-2 hover:bg-secondary rounded-lg transition-colors"><Eye className="w-4 h-4 text-muted-foreground" /></button>
         <button className="p-2 hover:bg-secondary rounded-lg transition-colors"><Download className="w-4 h-4 text-muted-foreground" /></button>
