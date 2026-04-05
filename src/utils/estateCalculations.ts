@@ -88,6 +88,41 @@ const capitaliseAnnuity = (annualAmount: number, years: number, inflationRate: n
   return total;
 };
 
+// SA Transfer Duty (2024 rates)
+const computeTransferDuty = (propertyValue: number): number => {
+  if (propertyValue <= 1_100_000) return 0;
+  if (propertyValue <= 1_512_500) return (propertyValue - 1_100_000) * 0.03;
+  if (propertyValue <= 2_117_500) return 12_375 + (propertyValue - 1_512_500) * 0.06;
+  if (propertyValue <= 2_722_500) return 48_675 + (propertyValue - 2_117_500) * 0.08;
+  if (propertyValue <= 12_100_000) return 97_075 + (propertyValue - 2_722_500) * 0.11;
+  return 1_128_600 + (propertyValue - 12_100_000) * 0.13;
+};
+
+// Conveyancing fees (SA guideline scale, simplified)
+const computeConveyancingFees = (propertyValue: number): number => {
+  if (propertyValue <= 0) return 0;
+  if (propertyValue <= 500_000) return 8_500;
+  if (propertyValue <= 1_000_000) return 12_500;
+  if (propertyValue <= 2_000_000) return 18_000;
+  if (propertyValue <= 5_000_000) return 30_000;
+  if (propertyValue <= 10_000_000) return 45_000;
+  return 65_000;
+};
+
+const computePropertyTransferCosts = (propertyValue: number): PropertyTransferCosts => {
+  const transferDuty = computeTransferDuty(propertyValue);
+  const conveyancingFees = computeConveyancingFees(propertyValue);
+  const ratesClearance = Math.max(2_000, propertyValue * 0.001);
+  const deedsOfficeFees = 1_500;
+  return {
+    transferDuty,
+    conveyancingFees,
+    ratesClearance,
+    deedsOfficeFees,
+    total: transferDuty + conveyancingFees + ratesClearance + deedsOfficeFees,
+  };
+};
+
 export const computeInsuranceEstimate = (state: EstimatorState): InsuranceEstimate => {
   const { personal, financial } = state;
   const flags: string[] = [];
