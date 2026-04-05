@@ -440,9 +440,14 @@ const initialDocuments: DocumentItem[] = [
   // Contracts
   { id: "37", name: "Sponsorship Agreement - Nike.pdf", type: "pdf", category: "sponsorship", date: "Dec 15, 2025", size: "4.5 MB", expiryDate: "2028-12-15", version: 1 },
   { id: "38", name: "Agent Management Agreement.pdf", type: "pdf", category: "agent_agreement", date: "Jan 5, 2026", size: "3.1 MB", expiryDate: "2029-01-05", version: 1 },
-  // Tax
+  // Tax – Personal
   { id: "39", name: "Tax Clearance Certificate.pdf", type: "pdf", category: "tax_clearance", date: "Dec 10, 2025", size: "890 KB", expiryDate: "2026-12-10", version: 1 },
   { id: "40", name: "IRP5 - 2025 Tax Year.pdf", type: "pdf", category: "irp5", date: "Jul 15, 2025", size: "1.1 MB", version: 1 },
+  { id: "46", name: "Payslip - March 2026.pdf", type: "pdf", category: "payslip_doc", date: "Mar 1, 2026", size: "320 KB", version: 1 },
+  { id: "47", name: "ITR12 - 2025 Tax Year.pdf", type: "pdf", category: "tax_return", date: "Oct 15, 2025", size: "1.4 MB", version: 1 },
+  { id: "48", name: "Medical Tax Certificate 2025.pdf", type: "pdf", category: "medical_tax", date: "Mar 1, 2026", size: "450 KB", version: 1 },
+  // Tax – Business
+  { id: "49", name: "VAT Return Q1 2026.pdf", type: "pdf", category: "vat_return", date: "Apr 1, 2026", size: "780 KB", version: 1 },
   // Company
   { id: "41", name: "Memorandum of Incorporation.pdf", type: "pdf", category: "moi", date: "Jan 15, 2026", size: "2.4 MB", version: 1 },
   { id: "42", name: "CIPC Registration Certificate.pdf", type: "pdf", category: "cipc_registration", date: "Jan 10, 2026", size: "1.2 MB", version: 1 },
