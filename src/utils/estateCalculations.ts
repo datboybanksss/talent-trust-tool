@@ -1,10 +1,8 @@
-// Insurance Needs Estimator - South African Context
+// Estate Planning Calculator - South African Context
 
 export interface PersonalDetails {
-  profession: 'athlete' | 'entertainer' | 'hybrid';
-  field: string;
   currentAge: number;
-  remainingCareerYears: number;
+  remainingWorkingYears: number;
   maritalStatus: 'single' | 'married-in-community' | 'married-out-community' | 'married-out-accrual' | 'divorced' | 'widowed';
   numberOfDependants: number;
   dependantsDependencyYears: number;
@@ -179,9 +177,9 @@ export const computeInsuranceEstimate = (state: EstimatorState): InsuranceEstima
 
   // --- DISABILITY COVER ---
   const annualIncome = financial.monthlyIncome * 12;
-  const lostCareerIncome = annualIncome * personal.remainingCareerYears;
-  const ongoingExpenses = capitaliseAnnuity(annualExpenses, personal.remainingCareerYears, financial.inflationRate);
-  const totalDisabilityNeed = Math.max(lostCareerIncome, ongoingExpenses);
+  const lostIncome = annualIncome * personal.remainingWorkingYears;
+  const ongoingExpenses = capitaliseAnnuity(annualExpenses, personal.remainingWorkingYears, financial.inflationRate);
+  const totalDisabilityNeed = Math.max(lostIncome, ongoingExpenses);
   const disabilityShortfall = Math.max(0, totalDisabilityNeed - financial.existingDisabilityCover);
 
   // Flags
@@ -189,7 +187,7 @@ export const computeInsuranceEstimate = (state: EstimatorState): InsuranceEstima
   if (disabilityShortfall > 0) flags.push('You may not have enough disability cover to replace your income');
   if (financial.totalDebts > financial.totalAssets * 0.5) flags.push('High debt-to-asset ratio increases risk');
   if (personal.numberOfDependants > 0 && financial.existingLifeCover === 0) flags.push('Dependants are unprotected — no existing life cover');
-  if (personal.remainingCareerYears <= 5) flags.push('Short remaining career — plan for income transition');
+  if (personal.remainingWorkingYears <= 5) flags.push('Few remaining working years — plan for income transition');
   if (financial.propertyTransferNeeded && propertyTransfer.combinedTotal > 0) flags.push('Property transfer costs add to your estate liquidity needs');
 
   return {
@@ -202,7 +200,7 @@ export const computeInsuranceEstimate = (state: EstimatorState): InsuranceEstima
     totalDeathNeed,
     existingLifeCover: financial.existingLifeCover,
     lifeShortfall,
-    lostCareerIncome,
+    lostCareerIncome: lostIncome,
     ongoingExpenses,
     totalDisabilityNeed,
     existingDisabilityCover: financial.existingDisabilityCover,
@@ -217,10 +215,8 @@ export const formatZAR = (value: number): string => {
 
 export const getDefaultState = (): EstimatorState => ({
   personal: {
-    profession: 'athlete',
-    field: '',
-    currentAge: 25,
-    remainingCareerYears: 10,
+    currentAge: 30,
+    remainingWorkingYears: 30,
     maritalStatus: 'single',
     numberOfDependants: 0,
     dependantsDependencyYears: 18,

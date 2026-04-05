@@ -3,8 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { TrendingUp, AlertTriangle, CheckCircle2, ChevronRight, ChevronLeft, FileText, Wallet, PiggyBank } from "lucide-react";
+import { TrendingUp, AlertTriangle, ChevronRight, ChevronLeft, FileText, Wallet, PiggyBank } from "lucide-react";
 import { RetirementState, getDefaultRetirementState, computeRetirementEstimate } from "@/utils/retirementCalculations";
 import { formatZAR } from "@/utils/estateCalculations";
 import { generateRetirementReport } from "@/utils/retirementPdf";
@@ -33,14 +32,13 @@ const RetirementCalculator = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="text-center">
         <h1 className="text-2xl font-display font-bold text-foreground flex items-center justify-center gap-2">
           <TrendingUp className="w-7 h-7 text-primary" />
           Retirement Calculator
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Estimate how much you need to save and what income you can expect at retirement (age 60)
+          Estimate how much you need to save and what income you can expect at retirement
         </p>
       </div>
 
@@ -71,31 +69,12 @@ const RetirementCalculator = () => {
           <CardHeader><CardTitle className="text-lg">About You</CardTitle></CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Profession</Label>
-              <Select value={state.personal.profession} onValueChange={v => updatePersonal('profession', v)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="athlete">Athlete</SelectItem>
-                  <SelectItem value="entertainer">Entertainer</SelectItem>
-                  <SelectItem value="hybrid">Hybrid</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Sport / Entertainment Field</Label>
-              <Input value={state.personal.field} onChange={e => updatePersonal('field', e.target.value)} placeholder="e.g. Cricket, Music, Acting" />
-            </div>
-            <div className="space-y-2">
               <Label>Current Age</Label>
               <Input type="number" value={state.personal.currentAge} onChange={e => updatePersonal('currentAge', Number(e.target.value))} min={16} max={70} />
             </div>
             <div className="space-y-2">
               <Label>Retirement Age</Label>
               <Input type="number" value={state.personal.retirementAge} onChange={e => updatePersonal('retirementAge', Number(e.target.value))} min={50} max={75} />
-            </div>
-            <div className="space-y-2">
-              <Label>Remaining Active Career (years)</Label>
-              <Input type="number" value={state.personal.remainingCareerYears} onChange={e => updatePersonal('remainingCareerYears', Number(e.target.value))} min={1} max={30} />
             </div>
             <div className="space-y-2">
               <Label>Life Expectancy</Label>
@@ -112,15 +91,15 @@ const RetirementCalculator = () => {
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Current Monthly Income (R)</Label>
-              <Input type="number" value={state.financial.monthlyIncome || ''} onChange={e => updateFinancial('monthlyIncome', Number(e.target.value))} placeholder="e.g. 400000" />
+              <Input type="number" value={state.financial.monthlyIncome || ''} onChange={e => updateFinancial('monthlyIncome', Number(e.target.value))} placeholder="e.g. 50000" />
             </div>
             <div className="space-y-2">
               <Label>Current Monthly Expenses (R)</Label>
-              <Input type="number" value={state.financial.monthlyExpenses || ''} onChange={e => updateFinancial('monthlyExpenses', Number(e.target.value))} placeholder="e.g. 150000" />
+              <Input type="number" value={state.financial.monthlyExpenses || ''} onChange={e => updateFinancial('monthlyExpenses', Number(e.target.value))} placeholder="e.g. 30000" />
             </div>
             <div className="space-y-2">
               <Label>Desired Monthly Retirement Income (R)</Label>
-              <Input type="number" value={state.financial.desiredMonthlyRetirementIncome || ''} onChange={e => updateFinancial('desiredMonthlyRetirementIncome', Number(e.target.value))} placeholder="e.g. 80000" />
+              <Input type="number" value={state.financial.desiredMonthlyRetirementIncome || ''} onChange={e => updateFinancial('desiredMonthlyRetirementIncome', Number(e.target.value))} placeholder="e.g. 40000" />
             </div>
             <div className="space-y-2">
               <Label>Current Savings & Investments (R)</Label>
@@ -153,27 +132,23 @@ const RetirementCalculator = () => {
       {/* Step 3: Results */}
       {step === 2 && (
         <div className="space-y-6">
-          {/* Career Timeline */}
+          {/* Timeline */}
           <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-primary" />
-                Career & Retirement Timeline
+                Retirement Timeline
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
-                <div className="p-3 rounded-lg bg-secondary">
-                  <p className="text-xs text-muted-foreground">Career Ends At</p>
-                  <p className="text-xl font-bold text-foreground">Age {estimate.careerEndAge}</p>
-                </div>
+              <div className="grid grid-cols-3 gap-3 text-center">
                 <div className="p-3 rounded-lg bg-secondary">
                   <p className="text-xs text-muted-foreground">Retirement At</p>
                   <p className="text-xl font-bold text-foreground">Age {state.personal.retirementAge}</p>
                 </div>
                 <div className="p-3 rounded-lg bg-secondary">
-                  <p className="text-xs text-muted-foreground">Post-Career Gap</p>
-                  <p className="text-xl font-bold text-foreground">{estimate.postCareerGapYears} yrs</p>
+                  <p className="text-xs text-muted-foreground">Years to Retirement</p>
+                  <p className="text-xl font-bold text-foreground">{estimate.yearsToRetirement} yrs</p>
                 </div>
                 <div className="p-3 rounded-lg bg-secondary">
                   <p className="text-xs text-muted-foreground">Years in Retirement</p>
@@ -196,7 +171,6 @@ const RetirementCalculator = () => {
                 <ResultRow label="Retirement Corpus Needed" value={estimate.retirementCorpusNeeded} />
                 <ResultRow label="Projected Savings at Retirement" value={estimate.projectedSavingsAtRetirement} />
               </div>
-
               <div className="border-t border-border pt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className={`p-4 rounded-lg text-center ${estimate.savingsShortfall > 0 ? 'bg-destructive/10' : 'bg-accent/20'}`}>
                   <p className="text-xs text-muted-foreground font-semibold">
@@ -265,7 +239,6 @@ const RetirementCalculator = () => {
                 <AlertTriangle className="w-5 h-5 text-warning mt-0.5 shrink-0" />
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   <strong>Disclaimer:</strong> This calculator is illustrative only and does not constitute financial, tax, or legal advice.
-                  Outcomes for athletes and entertainers are highly sensitive to income volatility, health, and career duration.
                   Consult a qualified financial adviser before making decisions based on these projections.
                 </p>
               </div>

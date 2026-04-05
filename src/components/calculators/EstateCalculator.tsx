@@ -71,27 +71,12 @@ const EstateCalculator = () => {
           <CardHeader><CardTitle className="text-lg">About You</CardTitle></CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Profession</Label>
-              <Select value={state.personal.profession} onValueChange={v => updatePersonal('profession', v)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="athlete">Athlete</SelectItem>
-                  <SelectItem value="entertainer">Entertainer</SelectItem>
-                  <SelectItem value="hybrid">Hybrid</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Sport / Entertainment Field</Label>
-              <Input value={state.personal.field} onChange={e => updatePersonal('field', e.target.value)} placeholder="e.g. Cricket, Music, Acting" />
-            </div>
-            <div className="space-y-2">
               <Label>Current Age</Label>
               <Input type="number" value={state.personal.currentAge} onChange={e => updatePersonal('currentAge', Number(e.target.value))} min={16} max={70} />
             </div>
             <div className="space-y-2">
-              <Label>Remaining Career (years)</Label>
-              <Input type="number" value={state.personal.remainingCareerYears} onChange={e => updatePersonal('remainingCareerYears', Number(e.target.value))} min={1} max={30} />
+              <Label>Remaining Working Years</Label>
+              <Input type="number" value={state.personal.remainingWorkingYears} onChange={e => updatePersonal('remainingWorkingYears', Number(e.target.value))} min={1} max={50} />
             </div>
             <div className="space-y-2">
               <Label>Marital Status</Label>
@@ -409,7 +394,6 @@ const EstateCalculator = () => {
                 <AlertTriangle className="w-5 h-5 text-warning mt-0.5 shrink-0" />
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   <strong>Disclaimer:</strong> This calculator is illustrative only and does not constitute financial, tax, or legal advice.
-                  Outcomes for athletes and entertainers are highly sensitive to income volatility, health, and career duration.
                   Consult a qualified financial adviser before making decisions based on these projections.
                 </p>
               </div>
