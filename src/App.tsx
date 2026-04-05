@@ -25,7 +25,7 @@ import Sharing from "./pages/Sharing";
 import SocialMedia from "./pages/SocialMedia";
 import ClientType from "./pages/ClientType";
 import PropertyInvestments from "./pages/PropertyInvestments";
-import FranchiseInvestments from "./pages/FranchiseInvestments";
+
 
 import MonthlyBudgetPage from "./pages/MonthlyBudget";
 import { Navigate } from "react-router-dom";
