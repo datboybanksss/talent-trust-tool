@@ -48,14 +48,11 @@ export const generateRetirementReport = (state: RetirementState) => {
     startY: y,
     head: [["Detail", "Value"]],
     body: [
-      ["Profession", state.personal.profession],
-      ["Field", state.personal.field || "Not specified"],
       ["Current Age", String(state.personal.currentAge)],
       ["Retirement Age", String(state.personal.retirementAge)],
-      ["Remaining Career", `${state.personal.remainingCareerYears} years`],
       ["Years to Retirement", `${estimate.yearsToRetirement} years`],
-      ["Career End Age", String(estimate.careerEndAge)],
-      ["Post-Career Gap", `${estimate.postCareerGapYears} years`],
+      ["Life Expectancy", String(state.financial.lifeExpectancy)],
+      ["Years in Retirement", `${estimate.yearsInRetirement} years`],
     ],
     margin: { left: margin, right: margin },
     styles: { fontSize: 9 },
@@ -108,7 +105,7 @@ export const generateRetirementReport = (state: RetirementState) => {
   doc.setLineWidth(0.5);
   doc.line(margin, y, pageWidth - margin, y);
   y += 6;
-  addText("DISCLAIMER: This calculator is illustrative only and does not constitute financial, tax, or legal advice. Outcomes for athletes and entertainers are highly sensitive to income volatility, health, and career duration. Consult a qualified financial adviser before making decisions based on these projections.");
+  addText("DISCLAIMER: This calculator is illustrative only and does not constitute financial, tax, or legal advice. Consult a qualified financial adviser before making decisions based on these projections.");
 
   const totalPages = doc.getNumberOfPages();
   for (let i = 1; i <= totalPages; i++) {

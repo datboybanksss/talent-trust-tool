@@ -80,52 +80,38 @@ export const computeRetirementEstimate = (state: RetirementState): RetirementEst
 
   const yearsToRetirement = Math.max(0, personal.retirementAge - personal.currentAge);
   const yearsInRetirement = Math.max(0, financial.lifeExpectancy - personal.retirementAge);
-  const careerEndAge = personal.currentAge + personal.remainingCareerYears;
-  const postCareerGapYears = Math.max(0, personal.retirementAge - careerEndAge);
 
   const realReturnPre = (financial.expectedReturnRate - financial.inflationRate) / 100;
   const realReturnPost = (financial.postRetirementReturnRate - financial.inflationRate) / 100;
 
-  // Desired retirement income adjusted for inflation at retirement
   const inflatedRetirementIncome = financial.desiredMonthlyRetirementIncome *
     Math.pow(1 + financial.inflationRate / 100, yearsToRetirement);
 
-  // Corpus needed at retirement to sustain drawdown
   const retirementCorpusNeeded = presentValueAnnuity(inflatedRetirementIncome, realReturnPost, yearsInRetirement);
 
-  // Project current savings + retirement funds + contributions to retirement date
   const savingsGrowth = futureValue(financial.currentSavings + financial.existingRetirementFunds, realReturnPre, yearsToRetirement);
+  const contributionGrowth = futureValueAnnuity(financial.monthlyContribution, realReturnPre, yearsToRetirement);
 
-  // Contributions only during active career years
-  const contributionYears = Math.min(personal.remainingCareerYears, yearsToRetirement);
-  const contributionGrowth = futureValueAnnuity(financial.monthlyContribution, realReturnPre, contributionYears);
-  // Grow contributions from career-end to retirement
-  const contributionAtRetirement = futureValue(contributionGrowth, realReturnPre, Math.max(0, yearsToRetirement - contributionYears));
-
-  const projectedSavingsAtRetirement = savingsGrowth + contributionAtRetirement;
+  const projectedSavingsAtRetirement = savingsGrowth + contributionGrowth;
   const savingsShortfall = Math.max(0, retirementCorpusNeeded - projectedSavingsAtRetirement);
 
-  // Additional monthly saving needed (over remaining career) to close shortfall
   const additionalMonthlySavingNeeded = savingsShortfall > 0
-    ? monthlyPaymentNeeded(savingsShortfall, realReturnPre, contributionYears)
+    ? monthlyPaymentNeeded(savingsShortfall, realReturnPre, yearsToRetirement)
     : 0;
 
-  // What monthly income would projected savings provide?
-  const projectedMonthlyIncomeFromSavings = projectedSavingsAtRetirement > 0 && yearsInRetirement > 0
-    ? projectedSavingsAtRetirement / ((1 - Math.pow(1 + realReturnPost / 12, -yearsInRetirement * 12)) / (realReturnPost / 12 || 1))
+  const projectedMonthlyIncomeFromSavings = projectedSavingsAtRetirement > 0 && yearsInRetirement > 0 && realReturnPost > 0
+    ? projectedSavingsAtRetirement / ((1 - Math.pow(1 + realReturnPost / 12, -yearsInRetirement * 12)) / (realReturnPost / 12))
     : 0;
 
-  const incomeReplacementRatio = financial.monthlyIncome > 0
+  const incomeReplacementRatio = financial.desiredMonthlyRetirementIncome > 0
     ? (projectedMonthlyIncomeFromSavings / inflatedRetirementIncome) * 100
     : 0;
 
-  // Flags
   if (savingsShortfall > 0) flags.push('You have a retirement savings shortfall — consider increasing contributions');
-  if (postCareerGapYears > 5) flags.push(`${postCareerGapYears} years between career end and retirement — plan for income during this gap`);
-  if (incomeReplacementRatio < 75 && incomeReplacementRatio > 0) flags.push('Your projected retirement income may not maintain your current lifestyle');
+  if (incomeReplacementRatio < 75 && incomeReplacementRatio > 0) flags.push('Your projected retirement income may not maintain your desired lifestyle');
   if (financial.monthlyContribution === 0) flags.push('No current monthly savings — start contributing now to benefit from compound growth');
-  if (personal.remainingCareerYears <= 3) flags.push('Very short remaining career — prioritise aggressive saving');
   if (yearsToRetirement <= 10) flags.push('Less than 10 years to retirement — review your plan urgently');
+  if (yearsToRetirement <= 0) flags.push('You have reached or passed your retirement age');
 
   return {
     yearsToRetirement,
@@ -136,19 +122,14 @@ export const computeRetirementEstimate = (state: RetirementState): RetirementEst
     additionalMonthlySavingNeeded,
     projectedMonthlyIncomeFromSavings,
     incomeReplacementRatio,
-    postCareerGapYears,
-    careerEndAge,
     flags,
   };
 };
 
 export const getDefaultRetirementState = (): RetirementState => ({
   personal: {
-    profession: 'athlete',
-    field: '',
-    currentAge: 25,
+    currentAge: 30,
     retirementAge: 60,
-    remainingCareerYears: 10,
   },
   financial: {
     monthlyIncome: 0,
