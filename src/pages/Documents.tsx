@@ -1091,6 +1091,12 @@ const DocumentRow = ({ document, collateMode, selected, onToggle, onMoveRequest,
     }
   };
 
+  const isExpired = document.isExpired;
+  const expiryStr = document.expiryDate
+    ? new Date(document.expiryDate).toLocaleDateString("en-US", { month: "short", year: "numeric" })
+    : "—";
+  const isExpiringSoon = document.expiryDate && !isExpired && new Date(document.expiryDate) <= new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
+  const hasReminders = document.reminder30 || document.reminder60 || document.reminder90 || document.reminder6m || document.reminder1y;
 
   return (
     <div
@@ -1098,27 +1104,39 @@ const DocumentRow = ({ document, collateMode, selected, onToggle, onMoveRequest,
       onDragStart={onDragStart}
       className={cn(
         "grid gap-4 px-6 py-4 items-center hover:bg-secondary/50 transition-colors cursor-grab active:cursor-grabbing",
-        collateMode ? "grid-cols-[32px_1fr_160px_120px_80px_100px]" : "grid-cols-12",
-        selected && "bg-gold/5"
+        collateMode ? "grid-cols-[32px_1fr_120px_100px_60px_80px_80px_90px]" : "grid-cols-[1fr_120px_100px_60px_80px_80px_90px]",
+        selected && "bg-gold/5",
+        isExpired && "opacity-50"
       )}
     >
       {collateMode && (
         <Checkbox checked={selected} onCheckedChange={onToggle} />
       )}
-      <div className={cn("flex items-center gap-3", !collateMode && "col-span-5")}>
+      <div className="flex items-center gap-3 min-w-0">
         {getIcon()}
-        <span className="font-medium text-foreground truncate">{document.name}</span>
+        <span className={cn("font-medium truncate", isExpired ? "text-muted-foreground line-through" : "text-foreground")}>{document.name}</span>
+        {isExpired && <span className="shrink-0 text-[10px] px-1.5 py-0.5 rounded bg-destructive/10 text-destructive font-medium">EXPIRED</span>}
+        {hasReminders && !isExpired && <Bell className="w-3.5 h-3.5 text-gold shrink-0" title="Reminders set" />}
       </div>
-      <div className={!collateMode ? "col-span-2" : ""}>
+      <div>
         <span className="text-sm text-muted-foreground">{catLabel}</span>
       </div>
-      <div className={!collateMode ? "col-span-2" : ""}>
+      <div>
         <span className="text-sm text-muted-foreground">{document.date}</span>
       </div>
-      <div className={!collateMode ? "col-span-1" : ""}>
+      <div>
+        <span className="text-xs text-muted-foreground">v{document.version || 1}</span>
+      </div>
+      <div>
+        <span className={cn("text-xs", isExpiringSoon ? "text-warning font-medium" : "text-muted-foreground")}>
+          {isExpiringSoon && <AlertTriangle className="w-3 h-3 inline mr-0.5" />}
+          {expiryStr}
+        </span>
+      </div>
+      <div>
         <span className="text-sm text-muted-foreground">{document.size}</span>
       </div>
-      <div className={cn("flex items-center justify-end gap-1", !collateMode && "col-span-2")}>
+      <div className="flex items-center justify-end gap-1">
         <button title="Move to folder" onClick={() => onMoveRequest(document.id)} className="p-2 hover:bg-secondary rounded-lg transition-colors"><FolderInput className="w-4 h-4 text-muted-foreground" /></button>
         <button className="p-2 hover:bg-secondary rounded-lg transition-colors"><Eye className="w-4 h-4 text-muted-foreground" /></button>
         <button className="p-2 hover:bg-secondary rounded-lg transition-colors"><Download className="w-4 h-4 text-muted-foreground" /></button>
