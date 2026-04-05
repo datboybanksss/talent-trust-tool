@@ -213,6 +213,9 @@ const EstateCalculator = () => {
                   <ResultRow label="Income Replacement for Dependants" value={estimate.incomeReplacement} />
                   <ResultRow label="Education Fund" value={estimate.educationFund} />
                   <ResultRow label="Funeral Costs" value={estimate.funeralCosts} />
+                  {estimate.propertyTransferCosts.total > 0 && (
+                    <ResultRow label="Property Transfer Costs" value={estimate.propertyTransferCosts.total} />
+                  )}
                 </div>
 
                 <div className="border-t border-border pt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
