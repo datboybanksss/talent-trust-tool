@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Calculator, Shield, Heart, AlertTriangle, CheckCircle2, FileText, ChevronRight, ChevronLeft, Home } from "lucide-react";
-import { EstimatorState, getDefaultState, computeInsuranceEstimate, formatZAR } from "@/utils/estateCalculations";
+import { Calculator, Shield, Heart, AlertTriangle, CheckCircle2, FileText, ChevronRight, ChevronLeft, Home, Plus, Trash2 } from "lucide-react";
+import { EstimatorState, TransferProperty, getDefaultState, computeInsuranceEstimate, formatZAR } from "@/utils/estateCalculations";
 import { generateEstateReport } from "@/utils/estateCalculatorPdf";
 import { toast } from "@/hooks/use-toast";
 
@@ -182,12 +182,70 @@ const EstateCalculator = () => {
                   />
                 </div>
                 <p className="text-xs text-muted-foreground mb-3">
-                  If property needs to be transferred to a beneficiary or spouse on death, transfer costs apply (transfer duty, conveyancing, rates clearance).
+                  If properties need to be transferred to beneficiaries or spouse on death, transfer costs apply per property.
                 </p>
                 {state.financial.propertyTransferNeeded && (
-                  <div className="space-y-2">
-                    <Label>Property Value to Transfer (R)</Label>
-                    <Input type="number" value={state.financial.propertyValue || ''} onChange={e => updateFinancial('propertyValue', Number(e.target.value))} placeholder="e.g. 5000000" />
+                  <div className="space-y-3">
+                    {state.financial.transferProperties.map((prop, idx) => (
+                      <div key={prop.id} className="grid grid-cols-[1.5fr_1fr_auto] gap-2 items-end">
+                        <div className="space-y-1">
+                          <Label className="text-xs">Property {idx + 1} Description</Label>
+                          <Input
+                            className="h-9"
+                            value={prop.description}
+                            onChange={e => {
+                              const updated = state.financial.transferProperties.map(p =>
+                                p.id === prop.id ? { ...p, description: e.target.value } : p
+                              );
+                              updateFinancial('transferProperties', updated);
+                            }}
+                            placeholder="e.g. Primary residence, Holiday home"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-xs">Value (R)</Label>
+                          <Input
+                            className="h-9"
+                            type="number"
+                            value={prop.value || ''}
+                            onChange={e => {
+                              const updated = state.financial.transferProperties.map(p =>
+                                p.id === prop.id ? { ...p, value: Number(e.target.value) } : p
+                              );
+                              updateFinancial('transferProperties', updated);
+                            }}
+                            placeholder="e.g. 5000000"
+                          />
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9"
+                          onClick={() => {
+                            const updated = state.financial.transferProperties.filter(p => p.id !== prop.id);
+                            updateFinancial('transferProperties', updated);
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4 text-destructive" />
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const newProp: TransferProperty = { id: crypto.randomUUID(), description: '', value: 0 };
+                        updateFinancial('transferProperties', [...state.financial.transferProperties, newProp]);
+                      }}
+                      className="gap-1"
+                    >
+                      <Plus className="w-4 h-4" /> Add Property
+                    </Button>
+                    {state.financial.transferProperties.length > 0 && (
+                      <p className="text-xs text-muted-foreground text-right">
+                        Combined property value: {formatZAR(state.financial.transferProperties.reduce((s, p) => s + p.value, 0))}
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
@@ -213,8 +271,8 @@ const EstateCalculator = () => {
                   <ResultRow label="Income Replacement for Dependants" value={estimate.incomeReplacement} />
                   <ResultRow label="Education Fund" value={estimate.educationFund} />
                   <ResultRow label="Funeral Costs" value={estimate.funeralCosts} />
-                  {estimate.propertyTransferCosts.total > 0 && (
-                    <ResultRow label="Property Transfer Costs" value={estimate.propertyTransferCosts.total} />
+                  {estimate.propertyTransfer.combinedTotal > 0 && (
+                    <ResultRow label="Property Transfer Costs" value={estimate.propertyTransfer.combinedTotal} />
                   )}
                 </div>
 
@@ -312,32 +370,44 @@ const EstateCalculator = () => {
             </Card>
 
             {/* Property Transfer Breakdown */}
-            {estimate.propertyTransferCosts.total > 0 && (
+            {estimate.propertyTransfer.combinedTotal > 0 && (
               <Card>
                 <CardHeader>
                   <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
                     <Home className="w-4 h-4" /> Property Transfer Cost Breakdown
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
-                    <div className="p-3 rounded-lg bg-secondary">
-                      <p className="text-xs text-muted-foreground">Transfer Duty</p>
-                      <p className="text-lg font-bold">{formatZAR(estimate.propertyTransferCosts.transferDuty)}</p>
+                <CardContent className="space-y-4">
+                  {estimate.propertyTransfer.properties.map((prop, idx) => (
+                    <div key={idx}>
+                      <p className="text-sm font-medium text-foreground mb-2">{prop.description} — {formatZAR(prop.value)}</p>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-center">
+                        <div className="p-2 rounded-lg bg-secondary">
+                          <p className="text-xs text-muted-foreground">Transfer Duty</p>
+                          <p className="text-sm font-bold">{formatZAR(prop.costs.transferDuty)}</p>
+                        </div>
+                        <div className="p-2 rounded-lg bg-secondary">
+                          <p className="text-xs text-muted-foreground">Conveyancing</p>
+                          <p className="text-sm font-bold">{formatZAR(prop.costs.conveyancingFees)}</p>
+                        </div>
+                        <div className="p-2 rounded-lg bg-secondary">
+                          <p className="text-xs text-muted-foreground">Rates Clearance</p>
+                          <p className="text-sm font-bold">{formatZAR(prop.costs.ratesClearance)}</p>
+                        </div>
+                        <div className="p-2 rounded-lg bg-primary/10">
+                          <p className="text-xs text-muted-foreground">Subtotal</p>
+                          <p className="text-sm font-bold text-primary">{formatZAR(prop.costs.total)}</p>
+                        </div>
+                      </div>
                     </div>
-                    <div className="p-3 rounded-lg bg-secondary">
-                      <p className="text-xs text-muted-foreground">Conveyancing Fees</p>
-                      <p className="text-lg font-bold">{formatZAR(estimate.propertyTransferCosts.conveyancingFees)}</p>
+                  ))}
+                  {estimate.propertyTransfer.properties.length > 1 && (
+                    <div className="border-t border-border pt-3 text-right">
+                      <span className="text-sm font-semibold text-foreground">
+                        Combined Transfer Total: {formatZAR(estimate.propertyTransfer.combinedTotal)}
+                      </span>
                     </div>
-                    <div className="p-3 rounded-lg bg-secondary">
-                      <p className="text-xs text-muted-foreground">Rates Clearance</p>
-                      <p className="text-lg font-bold">{formatZAR(estimate.propertyTransferCosts.ratesClearance)}</p>
-                    </div>
-                    <div className="p-3 rounded-lg bg-primary/10">
-                      <p className="text-xs text-muted-foreground font-semibold">Total Transfer</p>
-                      <p className="text-lg font-bold text-primary">{formatZAR(estimate.propertyTransferCosts.total)}</p>
-                    </div>
-                  </div>
+                  )}
                 </CardContent>
               </Card>
             )}

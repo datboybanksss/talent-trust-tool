@@ -72,7 +72,7 @@ export const generateEstateReport = (state: EstimatorState) => {
       ["Income Replacement for Dependants", formatZAR(estimate.incomeReplacement)],
       ["Education Fund", formatZAR(estimate.educationFund)],
       ["Funeral Costs", formatZAR(estimate.funeralCosts)],
-      ...(estimate.propertyTransferCosts.total > 0 ? [["Property Transfer Costs", formatZAR(estimate.propertyTransferCosts.total)]] : []),
+      ...(estimate.propertyTransfer.combinedTotal > 0 ? [["Property Transfer Costs", formatZAR(estimate.propertyTransfer.combinedTotal)]] : []),
       ["TOTAL NEED", formatZAR(estimate.totalDeathNeed)],
       ["Existing Life Cover", formatZAR(estimate.existingLifeCover)],
       ["SHORTFALL", estimate.lifeShortfall > 0 ? formatZAR(estimate.lifeShortfall) : "Adequately covered"],
@@ -82,6 +82,25 @@ export const generateEstateReport = (state: EstimatorState) => {
     headStyles: { fillColor: [30, 58, 38] },
   });
   y = (doc as any).lastAutoTable.finalY + 10;
+
+  // Property Transfer Detail
+  if (estimate.propertyTransfer.properties.length > 0) {
+    addHeader("Property Transfer Cost Breakdown");
+    const propData = estimate.propertyTransfer.properties.map(p => [
+      p.description, formatZAR(p.value), formatZAR(p.costs.transferDuty),
+      formatZAR(p.costs.conveyancingFees), formatZAR(p.costs.total),
+    ]);
+    propData.push(["COMBINED TOTAL", "", "", "", formatZAR(estimate.propertyTransfer.combinedTotal)]);
+    autoTable(doc, {
+      startY: y,
+      head: [["Property", "Value", "Transfer Duty", "Conveyancing", "Total Cost"]],
+      body: propData,
+      margin: { left: margin, right: margin },
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [30, 58, 38] },
+    });
+    y = (doc as any).lastAutoTable.finalY + 10;
+  }
 
   // Disability Cover
   addHeader("3. Estimated Disability Cover Need (Permanent Disability)");
