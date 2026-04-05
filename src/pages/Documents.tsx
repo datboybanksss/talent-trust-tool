@@ -1116,7 +1116,7 @@ const DocumentRow = ({ document, collateMode, selected, onToggle, onMoveRequest,
         {getIcon()}
         <span className={cn("font-medium truncate", isExpired ? "text-muted-foreground line-through" : "text-foreground")}>{document.name}</span>
         {isExpired && <span className="shrink-0 text-[10px] px-1.5 py-0.5 rounded bg-destructive/10 text-destructive font-medium">EXPIRED</span>}
-        {hasReminders && !isExpired && <Bell className="w-3.5 h-3.5 text-gold shrink-0" title="Reminders set" />}
+        {hasReminders && !isExpired && <span title="Reminders set"><Bell className="w-3.5 h-3.5 text-gold shrink-0" /></span>}
       </div>
       <div>
         <span className="text-sm text-muted-foreground">{catLabel}</span>
