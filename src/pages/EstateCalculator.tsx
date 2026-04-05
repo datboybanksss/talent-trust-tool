@@ -27,7 +27,7 @@ const EstateCalculator = () => {
   };
 
   return (
-    <DashboardLayout>
+    <DashboardLayout title="Estate Planning & Income Calculator" subtitle="For professional athletes, entertainers, and their financial advisers">
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
