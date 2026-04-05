@@ -103,10 +103,13 @@ const LifeFilePage = () => {
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
   const [documentDialogOpen, setDocumentDialogOpen] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [assetDialogOpen, setAssetDialogOpen] = useState(false);
+  const [assetDialogCategory, setAssetDialogCategory] = useState<"insurance" | "investment">("insurance");
   const [editingBeneficiary, setEditingBeneficiary] = useState<Beneficiary | null>(null);
   const [editingContact, setEditingContact] = useState<EmergencyContact | null>(null);
   const [editingDocument, setEditingDocument] = useState<LifeFileDocument | null>(null);
   const [editingShare, setEditingShare] = useState<LifeFileShare | null>(null);
+  const [editingAsset, setEditingAsset] = useState<LifeFileAsset | null>(null);
 
   // Delete confirmation
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
