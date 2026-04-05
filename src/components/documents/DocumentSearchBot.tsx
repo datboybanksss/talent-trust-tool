@@ -91,10 +91,22 @@ const DocumentSearchBot = ({ className }: DocumentSearchBotProps) => {
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [voiceLang, setVoiceLang] = useState("en-US");
   const recognitionRef = useRef<any>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  const VOICE_LANGUAGES = [
+    { code: "en-US", label: "English" },
+    { code: "pt-BR", label: "Português" },
+    { code: "fr-FR", label: "Français" },
+    { code: "af-ZA", label: "Afrikaans" },
+    { code: "st-ZA", label: "Sesotho" },
+    { code: "zu-ZA", label: "isiZulu" },
+    { code: "xh-ZA", label: "isiXhosa" },
+    { code: "zh-CN", label: "中文" },
+  ];
 
   const supportsVoice = typeof window !== "undefined" && ("SpeechRecognition" in window || "webkitSpeechRecognition" in window);
 
@@ -110,7 +122,7 @@ const DocumentSearchBot = ({ className }: DocumentSearchBotProps) => {
     }
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
-    recognition.lang = "en-US";
+    recognition.lang = voiceLang;
     recognition.interimResults = true;
     recognition.continuous = false;
     recognitionRef.current = recognition;
@@ -126,7 +138,7 @@ const DocumentSearchBot = ({ className }: DocumentSearchBotProps) => {
     };
     recognition.start();
     setIsListening(true);
-  }, [isListening, supportsVoice, toast]);
+  }, [isListening, supportsVoice, toast, voiceLang]);
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -283,16 +295,29 @@ const DocumentSearchBot = ({ className }: DocumentSearchBotProps) => {
             className="flex-1 bg-secondary rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50"
           />
           {supportsVoice && (
-            <Button
-              type="button"
-              size="icon"
-              variant={isListening ? "destructive" : "outline"}
-              onClick={toggleVoice}
-              disabled={isStreaming}
-              className="rounded-xl shrink-0"
-            >
-              {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-            </Button>
+            <div className="flex items-center gap-1 shrink-0">
+              <select
+                value={voiceLang}
+                onChange={(e) => setVoiceLang(e.target.value)}
+                disabled={isStreaming || isListening}
+                className="h-9 rounded-lg border border-border bg-secondary text-xs text-foreground px-1.5 focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50"
+                title="Voice language"
+              >
+                {VOICE_LANGUAGES.map((l) => (
+                  <option key={l.code} value={l.code}>{l.label}</option>
+                ))}
+              </select>
+              <Button
+                type="button"
+                size="icon"
+                variant={isListening ? "destructive" : "outline"}
+                onClick={toggleVoice}
+                disabled={isStreaming}
+                className="rounded-xl"
+              >
+                {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+              </Button>
+            </div>
           )}
           <Button type="submit" size="icon" disabled={!input.trim() || isStreaming} className="rounded-xl shrink-0">
             <Send className="w-4 h-4" />
