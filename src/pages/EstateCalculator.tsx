@@ -311,7 +311,37 @@ const EstateCalculator = () => {
               </CardContent>
             </Card>
 
-            {/* Disclaimer */}
+            {/* Property Transfer Breakdown */}
+            {estimate.propertyTransferCosts.total > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
+                    <Home className="w-4 h-4" /> Property Transfer Cost Breakdown
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
+                    <div className="p-3 rounded-lg bg-secondary">
+                      <p className="text-xs text-muted-foreground">Transfer Duty</p>
+                      <p className="text-lg font-bold">{formatZAR(estimate.propertyTransferCosts.transferDuty)}</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-secondary">
+                      <p className="text-xs text-muted-foreground">Conveyancing Fees</p>
+                      <p className="text-lg font-bold">{formatZAR(estimate.propertyTransferCosts.conveyancingFees)}</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-secondary">
+                      <p className="text-xs text-muted-foreground">Rates Clearance</p>
+                      <p className="text-lg font-bold">{formatZAR(estimate.propertyTransferCosts.ratesClearance)}</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-primary/10">
+                      <p className="text-xs text-muted-foreground font-semibold">Total Transfer</p>
+                      <p className="text-lg font-bold text-primary">{formatZAR(estimate.propertyTransferCosts.total)}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             <Card className="border-warning/50 bg-warning/5">
               <CardContent className="pt-6">
                 <div className="flex items-start gap-3">
