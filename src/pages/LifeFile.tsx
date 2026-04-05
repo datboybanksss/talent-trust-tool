@@ -272,6 +272,21 @@ const LifeFilePage = () => {
     toast({ title: "Access revoked" });
   };
 
+  // Asset handlers
+  const handleAddAsset = async (data: any) => {
+    if (!userId) return;
+    await createLifeFileAsset({ ...data, user_id: userId });
+    await loadData(userId);
+    toast({ title: "Asset registered" });
+  };
+
+  const handleUpdateAsset = async (data: any) => {
+    if (!editingAsset || !userId) return;
+    await updateLifeFileAsset(editingAsset.id, data);
+    await loadData(userId);
+    toast({ title: "Asset updated" });
+  };
+
   // Delete handler
   const handleDelete = async () => {
     if (!deleteTarget || !userId) return;
@@ -289,6 +304,9 @@ const LifeFilePage = () => {
           break;
         case "share":
           await deleteLifeFileShare(deleteTarget.id);
+          break;
+        case "asset":
+          await deleteLifeFileAsset(deleteTarget.id);
           break;
       }
       await loadData(userId);
