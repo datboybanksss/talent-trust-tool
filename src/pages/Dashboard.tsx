@@ -3,7 +3,7 @@ import { useProfile } from "@/hooks/useProfile";
 import CurrentTierBadge from "@/components/subscription/CurrentTierBadge";
 import StatsCard from "@/components/dashboard/StatsCard";
 import PropertyInvestments from "@/components/dashboard/PropertyInvestments";
-import FranchiseInvestments from "@/components/dashboard/FranchiseInvestments";
+
 import FinancialOverview from "@/components/dashboard/FinancialOverview";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,7 +15,7 @@ import {
   Calendar,
   Clock,
   Home,
-  Store,
+  
   Trophy,
   Palette,
   Music,
@@ -89,10 +89,6 @@ const Dashboard = () => {
             <Home className="w-4 h-4 mr-2" />
             Property Investment Opportunities
           </TabsTrigger>
-          <TabsTrigger value="franchise">
-            <Store className="w-4 h-4 mr-2" />
-            Franchise Investment Opportunities
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
@@ -164,9 +160,6 @@ const Dashboard = () => {
           <PropertyInvestments />
         </TabsContent>
 
-        <TabsContent value="franchise">
-          <FranchiseInvestments />
-        </TabsContent>
       </Tabs>
     </DashboardLayout>
   );
