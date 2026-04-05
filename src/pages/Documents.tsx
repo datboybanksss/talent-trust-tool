@@ -329,67 +329,84 @@ interface DocumentItem {
   category: string;
   date: string;
   size: string;
+  expiryDate?: string;
+  reminder30?: boolean;
+  reminder60?: boolean;
+  reminder90?: boolean;
+  reminder6m?: boolean;
+  reminder1y?: boolean;
+  notifyEmail?: string;
+  version?: number;
+  isExpired?: boolean;
 }
+
+const REMINDER_OPTIONS = [
+  { key: "reminder30" as const, label: "30 Days Before" },
+  { key: "reminder60" as const, label: "60 Days Before" },
+  { key: "reminder90" as const, label: "90 Days Before" },
+  { key: "reminder6m" as const, label: "6 Months Before" },
+  { key: "reminder1y" as const, label: "1 Year Before" },
+];
 
 const initialDocuments: DocumentItem[] = [
   // Personal ID
-  { id: "1", name: "Passport - John Doe.pdf", type: "pdf", category: "passport", date: "Mar 1, 2026", size: "1.8 MB" },
-  { id: "2", name: "Passport - Jane Doe (Spouse).pdf", type: "pdf", category: "passport", date: "Mar 1, 2026", size: "1.7 MB" },
-  { id: "3", name: "Passport - Child 1.pdf", type: "pdf", category: "child_passport", date: "Feb 20, 2026", size: "1.5 MB" },
-  { id: "4", name: "ID Document - John Doe.jpg", type: "image", category: "id_document", date: "Dec 20, 2025", size: "3.1 MB" },
-  { id: "5", name: "ID Document - Jane Doe.jpg", type: "image", category: "id_document", date: "Dec 20, 2025", size: "2.9 MB" },
-  { id: "6", name: "Birth Certificate - John Doe.pdf", type: "pdf", category: "birth_certificate", date: "Jan 5, 1990", size: "620 KB" },
+  { id: "1", name: "Passport - John Doe.pdf", type: "pdf", category: "passport", date: "Mar 1, 2026", size: "1.8 MB", expiryDate: "2031-03-01", version: 1 },
+  { id: "2", name: "Passport - Jane Doe (Spouse).pdf", type: "pdf", category: "passport", date: "Mar 1, 2026", size: "1.7 MB", expiryDate: "2031-03-01", version: 1 },
+  { id: "3", name: "Passport - Child 1.pdf", type: "pdf", category: "child_passport", date: "Feb 20, 2026", size: "1.5 MB", expiryDate: "2031-02-20", version: 1 },
+  { id: "4", name: "ID Document - John Doe.jpg", type: "image", category: "id_document", date: "Dec 20, 2025", size: "3.1 MB", version: 1 },
+  { id: "5", name: "ID Document - Jane Doe.jpg", type: "image", category: "id_document", date: "Dec 20, 2025", size: "2.9 MB", version: 1 },
+  { id: "6", name: "Birth Certificate - John Doe.pdf", type: "pdf", category: "birth_certificate", date: "Jan 5, 1990", size: "620 KB", version: 1 },
   // Marriage & Family
-  { id: "7", name: "Marriage Certificate.pdf", type: "pdf", category: "marriage_certificate", date: "Jun 15, 2020", size: "980 KB" },
-  { id: "8", name: "Antenuptial Contract (ANC).pdf", type: "pdf", category: "marriage_agreement", date: "Jun 10, 2020", size: "1.4 MB" },
+  { id: "7", name: "Marriage Certificate.pdf", type: "pdf", category: "marriage_certificate", date: "Jun 15, 2020", size: "980 KB", version: 1 },
+  { id: "8", name: "Antenuptial Contract (ANC).pdf", type: "pdf", category: "marriage_agreement", date: "Jun 10, 2020", size: "1.4 MB", version: 1 },
   // Children
-  { id: "9", name: "Birth Certificate - Child 1.pdf", type: "pdf", category: "child_birth_cert", date: "Sep 5, 2022", size: "650 KB" },
-  { id: "10", name: "School Enrolment Letter.pdf", type: "pdf", category: "child_school", date: "Jan 12, 2026", size: "420 KB" },
-  { id: "11", name: "Immunisation Card - Child 1.pdf", type: "pdf", category: "child_medical", date: "Oct 1, 2022", size: "380 KB" },
+  { id: "9", name: "Birth Certificate - Child 1.pdf", type: "pdf", category: "child_birth_cert", date: "Sep 5, 2022", size: "650 KB", version: 1 },
+  { id: "10", name: "School Enrolment Letter.pdf", type: "pdf", category: "child_school", date: "Jan 12, 2026", size: "420 KB", version: 1 },
+  { id: "11", name: "Immunisation Card - Child 1.pdf", type: "pdf", category: "child_medical", date: "Oct 1, 2022", size: "380 KB", version: 1 },
   // Academic
-  { id: "12", name: "BCom Honours Degree.pdf", type: "pdf", category: "degree", date: "Dec 1, 2018", size: "1.1 MB" },
-  { id: "13", name: "Matric Certificate.pdf", type: "pdf", category: "matric", date: "Dec 1, 2014", size: "890 KB" },
-  { id: "14", name: "FIFA Coaching Badge.pdf", type: "pdf", category: "professional_cert", date: "Aug 20, 2023", size: "750 KB" },
+  { id: "12", name: "BCom Honours Degree.pdf", type: "pdf", category: "degree", date: "Dec 1, 2018", size: "1.1 MB", version: 1 },
+  { id: "13", name: "Matric Certificate.pdf", type: "pdf", category: "matric", date: "Dec 1, 2014", size: "890 KB", version: 1 },
+  { id: "14", name: "FIFA Coaching Badge.pdf", type: "pdf", category: "professional_cert", date: "Aug 20, 2023", size: "750 KB", expiryDate: "2027-08-20", version: 1 },
   // Finance
-  { id: "15", name: "FNB Cheque Account Statement.pdf", type: "pdf", category: "finance_banking", date: "Mar 1, 2026", size: "2.4 MB" },
-  { id: "16", name: "Investment Portfolio - Allan Gray.pdf", type: "pdf", category: "finance_investments", date: "Feb 28, 2026", size: "3.2 MB" },
-  { id: "17", name: "Pension Fund Statement.pdf", type: "pdf", category: "finance_pension", date: "Jan 31, 2026", size: "1.6 MB" },
-  { id: "18", name: "Life Insurance Policy - Discovery.pdf", type: "pdf", category: "finance_life_insurance", date: "Jan 15, 2026", size: "2.1 MB" },
-  { id: "19", name: "Medical Aid - Discovery Health.pdf", type: "pdf", category: "finance_medical_aid", date: "Jan 1, 2026", size: "1.4 MB" },
-  { id: "20", name: "JSE Share Portfolio.pdf", type: "pdf", category: "finance_stocks", date: "Feb 15, 2026", size: "1.8 MB" },
-  { id: "21", name: "Crypto Wallet Holdings - Luno.pdf", type: "pdf", category: "finance_crypto", date: "Mar 3, 2026", size: "540 KB" },
-  { id: "22", name: "Home Loan Agreement - Nedbank.pdf", type: "pdf", category: "finance_credit", date: "Apr 5, 2024", size: "2.6 MB" },
+  { id: "15", name: "FNB Cheque Account Statement.pdf", type: "pdf", category: "finance_banking", date: "Mar 1, 2026", size: "2.4 MB", version: 1 },
+  { id: "16", name: "Investment Portfolio - Allan Gray.pdf", type: "pdf", category: "finance_investments", date: "Feb 28, 2026", size: "3.2 MB", version: 1 },
+  { id: "17", name: "Pension Fund Statement.pdf", type: "pdf", category: "finance_pension", date: "Jan 31, 2026", size: "1.6 MB", version: 1 },
+  { id: "18", name: "Life Insurance Policy - Discovery.pdf", type: "pdf", category: "finance_life_insurance", date: "Jan 15, 2026", size: "2.1 MB", expiryDate: "2027-01-15", version: 1 },
+  { id: "19", name: "Medical Aid - Discovery Health.pdf", type: "pdf", category: "finance_medical_aid", date: "Jan 1, 2026", size: "1.4 MB", expiryDate: "2027-01-01", version: 1 },
+  { id: "20", name: "JSE Share Portfolio.pdf", type: "pdf", category: "finance_stocks", date: "Feb 15, 2026", size: "1.8 MB", version: 1 },
+  { id: "21", name: "Crypto Wallet Holdings - Luno.pdf", type: "pdf", category: "finance_crypto", date: "Mar 3, 2026", size: "540 KB", version: 1 },
+  { id: "22", name: "Home Loan Agreement - Nedbank.pdf", type: "pdf", category: "finance_credit", date: "Apr 5, 2024", size: "2.6 MB", version: 1 },
   // Health
-  { id: "23", name: "Annual Check-Up Report 2025.pdf", type: "pdf", category: "medical_records", date: "Nov 20, 2025", size: "1.3 MB" },
-  { id: "24", name: "Specialist Report - Orthopaedic.pdf", type: "pdf", category: "medical_specialist", date: "Sep 15, 2025", size: "980 KB" },
-  { id: "25", name: "Dental X-Ray Results.pdf", type: "pdf", category: "medical_dental", date: "Aug 10, 2025", size: "2.2 MB" },
+  { id: "23", name: "Annual Check-Up Report 2025.pdf", type: "pdf", category: "medical_records", date: "Nov 20, 2025", size: "1.3 MB", version: 1 },
+  { id: "24", name: "Specialist Report - Orthopaedic.pdf", type: "pdf", category: "medical_specialist", date: "Sep 15, 2025", size: "980 KB", version: 1 },
+  { id: "25", name: "Dental X-Ray Results.pdf", type: "pdf", category: "medical_dental", date: "Aug 10, 2025", size: "2.2 MB", version: 1 },
   // Housing
-  { id: "26", name: "Title Deed - Sandton Property.pdf", type: "pdf", category: "title_deed", date: "Apr 5, 2024", size: "3.8 MB" },
-  { id: "27", name: "Bond Statement - Nedbank.pdf", type: "pdf", category: "bond_statement", date: "Mar 1, 2026", size: "1.1 MB" },
-  { id: "28", name: "Rates Account - CoJ.pdf", type: "pdf", category: "rates_account", date: "Feb 28, 2026", size: "450 KB" },
-  { id: "29", name: "Homeowners Insurance - Santam.pdf", type: "pdf", category: "homeowners_insurance", date: "Jan 1, 2026", size: "1.8 MB" },
+  { id: "26", name: "Title Deed - Sandton Property.pdf", type: "pdf", category: "title_deed", date: "Apr 5, 2024", size: "3.8 MB", version: 1 },
+  { id: "27", name: "Bond Statement - Nedbank.pdf", type: "pdf", category: "bond_statement", date: "Mar 1, 2026", size: "1.1 MB", version: 1 },
+  { id: "28", name: "Rates Account - CoJ.pdf", type: "pdf", category: "rates_account", date: "Feb 28, 2026", size: "450 KB", version: 1 },
+  { id: "29", name: "Homeowners Insurance - Santam.pdf", type: "pdf", category: "homeowners_insurance", date: "Jan 1, 2026", size: "1.8 MB", expiryDate: "2027-01-01", version: 1 },
   // Vehicles
-  { id: "30", name: "Vehicle Registration - BMW X5.pdf", type: "pdf", category: "vehicle_registration", date: "Nov 10, 2025", size: "1.2 MB" },
-  { id: "31", name: "Vehicle Insurance - Outsurance.pdf", type: "pdf", category: "vehicle_insurance", date: "Nov 10, 2025", size: "980 KB" },
-  { id: "32", name: "Driver's License - John Doe.jpg", type: "image", category: "drivers_license", date: "Mar 15, 2024", size: "1.5 MB" },
+  { id: "30", name: "Vehicle Registration - BMW X5.pdf", type: "pdf", category: "vehicle_registration", date: "Nov 10, 2025", size: "1.2 MB", expiryDate: "2026-11-10", version: 1 },
+  { id: "31", name: "Vehicle Insurance - Outsurance.pdf", type: "pdf", category: "vehicle_insurance", date: "Nov 10, 2025", size: "980 KB", expiryDate: "2026-11-10", version: 1 },
+  { id: "32", name: "Driver's License - John Doe.jpg", type: "image", category: "drivers_license", date: "Mar 15, 2024", size: "1.5 MB", expiryDate: "2029-03-15", version: 1 },
   // Work
-  { id: "33", name: "Employment Contract - Current.pdf", type: "pdf", category: "employment_contract", date: "Jan 15, 2025", size: "2.8 MB" },
-  { id: "34", name: "Payslip - March 2026.pdf", type: "pdf", category: "payslip", date: "Mar 1, 2026", size: "320 KB" },
-  { id: "35", name: "Work Permit - UK.pdf", type: "pdf", category: "work_permit", date: "Jun 1, 2025", size: "1.9 MB" },
-  { id: "36", name: "Reference Letter - Previous Employer.pdf", type: "pdf", category: "reference_letter", date: "Dec 20, 2024", size: "450 KB" },
+  { id: "33", name: "Employment Contract - Current.pdf", type: "pdf", category: "employment_contract", date: "Jan 15, 2025", size: "2.8 MB", expiryDate: "2028-01-15", version: 1 },
+  { id: "34", name: "Payslip - March 2026.pdf", type: "pdf", category: "payslip", date: "Mar 1, 2026", size: "320 KB", version: 1 },
+  { id: "35", name: "Work Permit - UK.pdf", type: "pdf", category: "work_permit", date: "Jun 1, 2025", size: "1.9 MB", expiryDate: "2027-06-01", version: 1 },
+  { id: "36", name: "Reference Letter - Previous Employer.pdf", type: "pdf", category: "reference_letter", date: "Dec 20, 2024", size: "450 KB", version: 1 },
   // Contracts
-  { id: "37", name: "Sponsorship Agreement - Nike.pdf", type: "pdf", category: "sponsorship", date: "Dec 15, 2025", size: "4.5 MB" },
-  { id: "38", name: "Agent Management Agreement.pdf", type: "pdf", category: "agent_agreement", date: "Jan 5, 2026", size: "3.1 MB" },
+  { id: "37", name: "Sponsorship Agreement - Nike.pdf", type: "pdf", category: "sponsorship", date: "Dec 15, 2025", size: "4.5 MB", expiryDate: "2028-12-15", version: 1 },
+  { id: "38", name: "Agent Management Agreement.pdf", type: "pdf", category: "agent_agreement", date: "Jan 5, 2026", size: "3.1 MB", expiryDate: "2029-01-05", version: 1 },
   // Tax
-  { id: "39", name: "Tax Clearance Certificate.pdf", type: "pdf", category: "tax_clearance", date: "Dec 10, 2025", size: "890 KB" },
-  { id: "40", name: "IRP5 - 2025 Tax Year.pdf", type: "pdf", category: "irp5", date: "Jul 15, 2025", size: "1.1 MB" },
+  { id: "39", name: "Tax Clearance Certificate.pdf", type: "pdf", category: "tax_clearance", date: "Dec 10, 2025", size: "890 KB", expiryDate: "2026-12-10", version: 1 },
+  { id: "40", name: "IRP5 - 2025 Tax Year.pdf", type: "pdf", category: "irp5", date: "Jul 15, 2025", size: "1.1 MB", version: 1 },
   // Company
-  { id: "41", name: "Memorandum of Incorporation.pdf", type: "pdf", category: "moi", date: "Jan 15, 2026", size: "2.4 MB" },
-  { id: "42", name: "CIPC Registration Certificate.pdf", type: "pdf", category: "cipc_registration", date: "Jan 10, 2026", size: "1.2 MB" },
-  { id: "43", name: "Director Resolution - Bank Account.docx", type: "doc", category: "director_resolution", date: "Jan 8, 2026", size: "156 KB" },
+  { id: "41", name: "Memorandum of Incorporation.pdf", type: "pdf", category: "moi", date: "Jan 15, 2026", size: "2.4 MB", version: 1 },
+  { id: "42", name: "CIPC Registration Certificate.pdf", type: "pdf", category: "cipc_registration", date: "Jan 10, 2026", size: "1.2 MB", version: 1 },
+  { id: "43", name: "Director Resolution - Bank Account.docx", type: "doc", category: "director_resolution", date: "Jan 8, 2026", size: "156 KB", version: 1 },
   // Compliance
-  { id: "44", name: "FICA - Proof of Address.pdf", type: "pdf", category: "fica", date: "Feb 1, 2026", size: "680 KB" },
-  { id: "45", name: "B-BBEE Certificate.pdf", type: "pdf", category: "bbbee", date: "Mar 1, 2026", size: "520 KB" },
+  { id: "44", name: "FICA - Proof of Address.pdf", type: "pdf", category: "fica", date: "Feb 1, 2026", size: "680 KB", version: 1 },
+  { id: "45", name: "B-BBEE Certificate.pdf", type: "pdf", category: "bbbee", date: "Mar 1, 2026", size: "520 KB", expiryDate: "2027-03-01", version: 1 },
 ];
 
 /* ------------------------------------------------------------------ */
