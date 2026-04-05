@@ -1,4 +1,5 @@
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import DocumentSearchBot from "@/components/documents/DocumentSearchBot";
 import { Button } from "@/components/ui/button";
 import {
   FolderLock,
