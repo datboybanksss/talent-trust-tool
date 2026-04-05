@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Calculator, Shield, Heart, AlertTriangle, CheckCircle2, FileText, ChevronRight, ChevronLeft } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Calculator, Shield, Heart, AlertTriangle, CheckCircle2, FileText, ChevronRight, ChevronLeft, Home } from "lucide-react";
 import { EstimatorState, getDefaultState, computeInsuranceEstimate, formatZAR } from "@/utils/estateCalculations";
 import { generateEstateReport } from "@/utils/estateCalculatorPdf";
 import { toast } from "@/hooks/use-toast";
@@ -167,6 +168,29 @@ const EstateCalculator = () => {
                 <Label>Assumed Inflation Rate (%)</Label>
                 <Input type="number" value={state.financial.inflationRate} onChange={e => updateFinancial('inflationRate', Number(e.target.value))} min={0} max={20} step={0.5} />
               </div>
+
+              {/* Property Transfer Section */}
+              <div className="md:col-span-2 border-t border-border pt-4 mt-2">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Home className="w-4 h-4 text-primary" />
+                    <Label className="text-sm font-semibold">Property Transfer on Death</Label>
+                  </div>
+                  <Switch
+                    checked={state.financial.propertyTransferNeeded}
+                    onCheckedChange={v => updateFinancial('propertyTransferNeeded', v)}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground mb-3">
+                  If property needs to be transferred to a beneficiary or spouse on death, transfer costs apply (transfer duty, conveyancing, rates clearance).
+                </p>
+                {state.financial.propertyTransferNeeded && (
+                  <div className="space-y-2">
+                    <Label>Property Value to Transfer (R)</Label>
+                    <Input type="number" value={state.financial.propertyValue || ''} onChange={e => updateFinancial('propertyValue', Number(e.target.value))} placeholder="e.g. 5000000" />
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
         )}
@@ -189,6 +213,9 @@ const EstateCalculator = () => {
                   <ResultRow label="Income Replacement for Dependants" value={estimate.incomeReplacement} />
                   <ResultRow label="Education Fund" value={estimate.educationFund} />
                   <ResultRow label="Funeral Costs" value={estimate.funeralCosts} />
+                  {estimate.propertyTransferCosts.total > 0 && (
+                    <ResultRow label="Property Transfer Costs" value={estimate.propertyTransferCosts.total} />
+                  )}
                 </div>
 
                 <div className="border-t border-border pt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -284,7 +311,37 @@ const EstateCalculator = () => {
               </CardContent>
             </Card>
 
-            {/* Disclaimer */}
+            {/* Property Transfer Breakdown */}
+            {estimate.propertyTransferCosts.total > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
+                    <Home className="w-4 h-4" /> Property Transfer Cost Breakdown
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
+                    <div className="p-3 rounded-lg bg-secondary">
+                      <p className="text-xs text-muted-foreground">Transfer Duty</p>
+                      <p className="text-lg font-bold">{formatZAR(estimate.propertyTransferCosts.transferDuty)}</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-secondary">
+                      <p className="text-xs text-muted-foreground">Conveyancing Fees</p>
+                      <p className="text-lg font-bold">{formatZAR(estimate.propertyTransferCosts.conveyancingFees)}</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-secondary">
+                      <p className="text-xs text-muted-foreground">Rates Clearance</p>
+                      <p className="text-lg font-bold">{formatZAR(estimate.propertyTransferCosts.ratesClearance)}</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-primary/10">
+                      <p className="text-xs text-muted-foreground font-semibold">Total Transfer</p>
+                      <p className="text-lg font-bold text-primary">{formatZAR(estimate.propertyTransferCosts.total)}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             <Card className="border-warning/50 bg-warning/5">
               <CardContent className="pt-6">
                 <div className="flex items-start gap-3">

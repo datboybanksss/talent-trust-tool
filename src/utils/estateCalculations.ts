@@ -20,11 +20,21 @@ export interface FinancialDetails {
   educationCosts: number;
   funeralCosts: number;
   inflationRate: number;
+  propertyValue: number;
+  propertyTransferNeeded: boolean;
 }
 
 export interface EstimatorState {
   personal: PersonalDetails;
   financial: FinancialDetails;
+}
+
+export interface PropertyTransferCosts {
+  transferDuty: number;
+  conveyancingFees: number;
+  ratesClearance: number;
+  deedsOfficeFees: number;
+  total: number;
 }
 
 export interface InsuranceEstimate {
@@ -34,6 +44,7 @@ export interface InsuranceEstimate {
   incomeReplacement: number;
   educationFund: number;
   funeralCosts: number;
+  propertyTransferCosts: PropertyTransferCosts;
   totalDeathNeed: number;
   existingLifeCover: number;
   lifeShortfall: number;
@@ -77,6 +88,41 @@ const capitaliseAnnuity = (annualAmount: number, years: number, inflationRate: n
   return total;
 };
 
+// SA Transfer Duty (2024 rates)
+const computeTransferDuty = (propertyValue: number): number => {
+  if (propertyValue <= 1_100_000) return 0;
+  if (propertyValue <= 1_512_500) return (propertyValue - 1_100_000) * 0.03;
+  if (propertyValue <= 2_117_500) return 12_375 + (propertyValue - 1_512_500) * 0.06;
+  if (propertyValue <= 2_722_500) return 48_675 + (propertyValue - 2_117_500) * 0.08;
+  if (propertyValue <= 12_100_000) return 97_075 + (propertyValue - 2_722_500) * 0.11;
+  return 1_128_600 + (propertyValue - 12_100_000) * 0.13;
+};
+
+// Conveyancing fees (SA guideline scale, simplified)
+const computeConveyancingFees = (propertyValue: number): number => {
+  if (propertyValue <= 0) return 0;
+  if (propertyValue <= 500_000) return 8_500;
+  if (propertyValue <= 1_000_000) return 12_500;
+  if (propertyValue <= 2_000_000) return 18_000;
+  if (propertyValue <= 5_000_000) return 30_000;
+  if (propertyValue <= 10_000_000) return 45_000;
+  return 65_000;
+};
+
+const computePropertyTransferCosts = (propertyValue: number): PropertyTransferCosts => {
+  const transferDuty = computeTransferDuty(propertyValue);
+  const conveyancingFees = computeConveyancingFees(propertyValue);
+  const ratesClearance = Math.max(2_000, propertyValue * 0.001);
+  const deedsOfficeFees = 1_500;
+  return {
+    transferDuty,
+    conveyancingFees,
+    ratesClearance,
+    deedsOfficeFees,
+    total: transferDuty + conveyancingFees + ratesClearance + deedsOfficeFees,
+  };
+};
+
 export const computeInsuranceEstimate = (state: EstimatorState): InsuranceEstimate => {
   const { personal, financial } = state;
   const flags: string[] = [];
@@ -94,8 +140,11 @@ export const computeInsuranceEstimate = (state: EstimatorState): InsuranceEstima
   const incomeReplacement = capitaliseAnnuity(annualExpenses, personal.dependantsDependencyYears, financial.inflationRate);
   const educationFund = financial.educationCosts;
   const funeralCosts = financial.funeralCosts;
+  const propertyTransferCosts = financial.propertyTransferNeeded
+    ? computePropertyTransferCosts(financial.propertyValue)
+    : { transferDuty: 0, conveyancingFees: 0, ratesClearance: 0, deedsOfficeFees: 0, total: 0 };
 
-  const totalDeathNeed = estateCostsTotal + debtSettlement + incomeReplacement + educationFund + funeralCosts;
+  const totalDeathNeed = estateCostsTotal + debtSettlement + incomeReplacement + educationFund + funeralCosts + propertyTransferCosts.total;
   const lifeShortfall = Math.max(0, totalDeathNeed - financial.existingLifeCover);
 
   // --- DISABILITY COVER ---
@@ -111,6 +160,7 @@ export const computeInsuranceEstimate = (state: EstimatorState): InsuranceEstima
   if (financial.totalDebts > financial.totalAssets * 0.5) flags.push('High debt-to-asset ratio increases risk');
   if (personal.numberOfDependants > 0 && financial.existingLifeCover === 0) flags.push('Dependants are unprotected — no existing life cover');
   if (personal.remainingCareerYears <= 5) flags.push('Short remaining career — plan for income transition');
+  if (financial.propertyTransferNeeded && propertyTransferCosts.total > 0) flags.push('Property transfer costs add to your estate liquidity needs');
 
   return {
     estateCosts: { executorFees, estateDuty, adminCosts, total: estateCostsTotal },
@@ -118,6 +168,7 @@ export const computeInsuranceEstimate = (state: EstimatorState): InsuranceEstima
     incomeReplacement,
     educationFund,
     funeralCosts,
+    propertyTransferCosts,
     totalDeathNeed,
     existingLifeCover: financial.existingLifeCover,
     lifeShortfall,
@@ -154,5 +205,7 @@ export const getDefaultState = (): EstimatorState => ({
     educationCosts: 0,
     funeralCosts: 50000,
     inflationRate: 6,
+    propertyValue: 0,
+    propertyTransferNeeded: false,
   },
 });
