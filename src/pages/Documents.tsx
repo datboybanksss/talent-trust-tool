@@ -1018,6 +1018,88 @@ const Documents = () => {
             </div>
           )}
 
+          {/* Tax Compliance Panel – shown when in Tax folder */}
+          {isTaxFolder && (
+            <div className="mb-6 bg-card rounded-2xl border border-border shadow-soft p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Bell className="w-5 h-5 text-primary" />
+                  <h3 className="font-semibold text-foreground">Tax Compliance Checker</h3>
+                </div>
+                <Tabs value={taxComplianceTab} onValueChange={(v) => setTaxComplianceTab(v as "personal" | "business")}>
+                  <TabsList className="h-8">
+                    <TabsTrigger value="personal" className="text-xs h-7 px-3">Personal</TabsTrigger>
+                    <TabsTrigger value="business" className="text-xs h-7 px-3">Business</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
+
+              {/* Summary stats */}
+              <div className="grid grid-cols-3 gap-3 mb-4">
+                <div className="bg-secondary/50 rounded-xl p-3 flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <FileText className="w-4 h-4 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-lg font-bold text-foreground">{taxRequiredDocs.length - taxMissingDocs.length}</p>
+                    <p className="text-[10px] text-muted-foreground">Uploaded</p>
+                  </div>
+                </div>
+                <div className="bg-secondary/50 rounded-xl p-3 flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center">
+                    <CheckCircle2 className="w-4 h-4 text-green-500" />
+                  </div>
+                  <div>
+                    <p className="text-lg font-bold text-foreground">{taxRequiredDocs.length - taxMissingDocs.length}/{taxRequiredDocs.length}</p>
+                    <p className="text-[10px] text-muted-foreground">Required</p>
+                  </div>
+                </div>
+                <div className="bg-secondary/50 rounded-xl p-3 flex items-center gap-3">
+                  <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", taxMissingDocs.length > 0 ? "bg-destructive/10" : "bg-green-500/10")}>
+                    {taxMissingDocs.length > 0 ? <AlertTriangle className="w-4 h-4 text-destructive" /> : <CheckCircle2 className="w-4 h-4 text-green-500" />}
+                  </div>
+                  <div>
+                    <p className="text-lg font-bold text-foreground">{taxMissingDocs.length}</p>
+                    <p className="text-[10px] text-muted-foreground">Missing</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Missing docs list */}
+              {taxMissingDocs.length > 0 && (
+                <div className="bg-destructive/5 border border-destructive/20 rounded-xl p-4">
+                  <p className="text-sm text-muted-foreground mb-3">
+                    The following {taxComplianceTab} tax documents are required but haven't been uploaded:
+                  </p>
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                    {taxMissingDocs.map((doc) => (
+                      <div
+                        key={doc.type}
+                        className="flex items-center gap-2 bg-background/60 rounded-lg px-3 py-2 cursor-pointer hover:bg-background transition-colors"
+                        onClick={() => {
+                          setUploadForm((prev) => ({ ...prev, category: doc.type, title: doc.label }));
+                          setIsUploadOpen(true);
+                        }}
+                      >
+                        <AlertTriangle className="w-3.5 h-3.5 text-destructive shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-xs font-medium text-foreground truncate">{doc.label}</p>
+                          <p className="text-[10px] text-muted-foreground truncate">{doc.description}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {taxMissingDocs.length === 0 && (
+                <div className="flex items-center gap-2 text-green-600 bg-green-500/5 rounded-xl px-4 py-3">
+                  <CheckCircle2 className="w-5 h-5" />
+                  <span className="text-sm font-medium">All required {taxComplianceTab} tax documents are uploaded!</span>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Documents Table */}
           <div className="bg-card rounded-2xl border border-border shadow-soft overflow-hidden">
             <div className={cn("grid gap-4 px-6 py-3 bg-secondary text-sm font-medium text-muted-foreground", collateMode ? "grid-cols-[32px_1fr_120px_100px_60px_80px_80px_90px]" : "grid-cols-[1fr_120px_100px_60px_80px_80px_90px]")}>
