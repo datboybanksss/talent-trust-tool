@@ -443,7 +443,7 @@ const Documents = () => {
   const [profileType, setProfileType] = useState<ProfileType>("athlete");
   const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({});
   const [searchQuery, setSearchQuery] = useState("");
-  const [uploadForm, setUploadForm] = useState({ title: "", category: "", file: null as File | null });
+  const [uploadForm, setUploadForm] = useState({ title: "", category: "", file: null as File | null, expiryDate: "", reminder30: false, reminder60: false, reminder90: false, reminder6m: false, reminder1y: false, notifyEmail: "" });
 
   // Collate state
   const [collateMode, setCollateMode] = useState(false);
