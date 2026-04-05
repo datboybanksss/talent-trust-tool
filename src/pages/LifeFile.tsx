@@ -114,7 +114,7 @@ const LifeFilePage = () => {
   // Delete confirmation
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{
-    type: "beneficiary" | "contact" | "document" | "share";
+    type: "beneficiary" | "contact" | "document" | "share" | "asset";
     id: string;
     name: string;
   } | null>(null);
