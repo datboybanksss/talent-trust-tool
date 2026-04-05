@@ -492,12 +492,21 @@ export type Database = {
           file_name: string | null
           file_url: string | null
           id: string
+          is_expired: boolean
           last_reviewed_at: string | null
           notes: string | null
+          notify_email: string | null
+          reminder_1_year: boolean
+          reminder_30_days: boolean
+          reminder_6_months: boolean
+          reminder_60_days: boolean
+          reminder_90_days: boolean
+          reminder_sent_at: Json | null
           status: string
           title: string
           updated_at: string
           user_id: string
+          version: number
         }
         Insert: {
           created_at?: string
@@ -506,12 +515,21 @@ export type Database = {
           file_name?: string | null
           file_url?: string | null
           id?: string
+          is_expired?: boolean
           last_reviewed_at?: string | null
           notes?: string | null
+          notify_email?: string | null
+          reminder_1_year?: boolean
+          reminder_30_days?: boolean
+          reminder_6_months?: boolean
+          reminder_60_days?: boolean
+          reminder_90_days?: boolean
+          reminder_sent_at?: Json | null
           status?: string
           title: string
           updated_at?: string
           user_id: string
+          version?: number
         }
         Update: {
           created_at?: string
@@ -520,12 +538,21 @@ export type Database = {
           file_name?: string | null
           file_url?: string | null
           id?: string
+          is_expired?: boolean
           last_reviewed_at?: string | null
           notes?: string | null
+          notify_email?: string | null
+          reminder_1_year?: boolean
+          reminder_30_days?: boolean
+          reminder_6_months?: boolean
+          reminder_60_days?: boolean
+          reminder_90_days?: boolean
+          reminder_sent_at?: Json | null
           status?: string
           title?: string
           updated_at?: string
           user_id?: string
+          version?: number
         }
         Relationships: []
       }
