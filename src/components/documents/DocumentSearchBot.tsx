@@ -295,16 +295,29 @@ const DocumentSearchBot = ({ className }: DocumentSearchBotProps) => {
             className="flex-1 bg-secondary rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50"
           />
           {supportsVoice && (
-            <Button
-              type="button"
-              size="icon"
-              variant={isListening ? "destructive" : "outline"}
-              onClick={toggleVoice}
-              disabled={isStreaming}
-              className="rounded-xl shrink-0"
-            >
-              {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-            </Button>
+            <div className="flex items-center gap-1 shrink-0">
+              <select
+                value={voiceLang}
+                onChange={(e) => setVoiceLang(e.target.value)}
+                disabled={isStreaming || isListening}
+                className="h-9 rounded-lg border border-border bg-secondary text-xs text-foreground px-1.5 focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50"
+                title="Voice language"
+              >
+                {VOICE_LANGUAGES.map((l) => (
+                  <option key={l.code} value={l.code}>{l.label}</option>
+                ))}
+              </select>
+              <Button
+                type="button"
+                size="icon"
+                variant={isListening ? "destructive" : "outline"}
+                onClick={toggleVoice}
+                disabled={isStreaming}
+                className="rounded-xl"
+              >
+                {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+              </Button>
+            </div>
           )}
           <Button type="submit" size="icon" disabled={!input.trim() || isStreaming} className="rounded-xl shrink-0">
             <Send className="w-4 h-4" />
