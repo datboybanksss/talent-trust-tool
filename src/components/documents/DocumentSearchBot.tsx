@@ -91,10 +91,22 @@ const DocumentSearchBot = ({ className }: DocumentSearchBotProps) => {
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [voiceLang, setVoiceLang] = useState("en-US");
   const recognitionRef = useRef<any>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  const VOICE_LANGUAGES = [
+    { code: "en-US", label: "English" },
+    { code: "pt-BR", label: "Português" },
+    { code: "fr-FR", label: "Français" },
+    { code: "af-ZA", label: "Afrikaans" },
+    { code: "st-ZA", label: "Sesotho" },
+    { code: "zu-ZA", label: "isiZulu" },
+    { code: "xh-ZA", label: "isiXhosa" },
+    { code: "zh-CN", label: "中文" },
+  ];
 
   const supportsVoice = typeof window !== "undefined" && ("SpeechRecognition" in window || "webkitSpeechRecognition" in window);
 
@@ -110,7 +122,7 @@ const DocumentSearchBot = ({ className }: DocumentSearchBotProps) => {
     }
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
-    recognition.lang = "en-US";
+    recognition.lang = voiceLang;
     recognition.interimResults = true;
     recognition.continuous = false;
     recognitionRef.current = recognition;
@@ -126,7 +138,7 @@ const DocumentSearchBot = ({ className }: DocumentSearchBotProps) => {
     };
     recognition.start();
     setIsListening(true);
-  }, [isListening, supportsVoice, toast]);
+  }, [isListening, supportsVoice, toast, voiceLang]);
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
