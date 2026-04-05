@@ -1,11 +1,8 @@
-// Retirement Calculator - South African Context for Athletes & Entertainers
+// Retirement Calculator - South African Context
 
 export interface RetirementPersonal {
-  profession: 'athlete' | 'entertainer' | 'hybrid';
-  field: string;
   currentAge: number;
   retirementAge: number; // default 60
-  remainingCareerYears: number;
 }
 
 export interface RetirementFinancial {
