@@ -43,6 +43,17 @@ export interface PropertyTransferCosts {
   total: number;
 }
 
+export interface PropertyTransferDetail {
+  description: string;
+  value: number;
+  costs: PropertyTransferCosts;
+}
+
+export interface PropertyTransferSummary {
+  properties: PropertyTransferDetail[];
+  combinedTotal: number;
+}
+
 export interface InsuranceEstimate {
   // Death cover
   estateCosts: { executorFees: number; estateDuty: number; adminCosts: number; total: number };
