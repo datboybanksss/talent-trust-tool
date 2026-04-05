@@ -966,13 +966,15 @@ const Documents = () => {
 
           {/* Documents Table */}
           <div className="bg-card rounded-2xl border border-border shadow-soft overflow-hidden">
-            <div className={cn("grid gap-4 px-6 py-3 bg-secondary text-sm font-medium text-muted-foreground", collateMode ? "grid-cols-[32px_1fr_160px_120px_80px_100px]" : "grid-cols-12")}>
+            <div className={cn("grid gap-4 px-6 py-3 bg-secondary text-sm font-medium text-muted-foreground", collateMode ? "grid-cols-[32px_1fr_120px_100px_60px_80px_80px_90px]" : "grid-cols-[1fr_120px_100px_60px_80px_80px_90px]")}>
               {collateMode && <div />}
-              <div className={collateMode ? "" : "col-span-5"}>Name</div>
-              <div className={collateMode ? "" : "col-span-2"}>Category</div>
-              <div className={collateMode ? "" : "col-span-2"}>Date</div>
-              <div className={collateMode ? "" : "col-span-1"}>Size</div>
-              <div className={cn(collateMode ? "text-right" : "col-span-2 text-right")}>Actions</div>
+              <div>Name</div>
+              <div>Category</div>
+              <div>Date</div>
+              <div>Ver</div>
+              <div>Expiry</div>
+              <div>Size</div>
+              <div className="text-right">Actions</div>
             </div>
 
             <div className="divide-y divide-border max-h-[50vh] overflow-y-auto">
