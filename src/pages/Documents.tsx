@@ -508,6 +508,8 @@ const Documents = () => {
   const dragDocId = useRef<string | null>(null);
 
   // Batch assign state
+  // Tax compliance state
+  const [taxComplianceTab, setTaxComplianceTab] = useState<"personal" | "business">("personal");
   const [batchCategory, setBatchCategory] = useState("");
 
   // Custom folders state
