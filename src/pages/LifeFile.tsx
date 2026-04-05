@@ -26,6 +26,7 @@ import {
   Share2,
   FileDown,
   Scale,
+  Landmark,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -34,6 +35,7 @@ import {
   LifeFileDocument,
   DOCUMENT_TYPES,
 } from "@/types/lifeFile";
+import { LifeFileAsset } from "@/types/lifeFileAsset";
 import {
   fetchBeneficiaries,
   createBeneficiary,
@@ -50,6 +52,12 @@ import {
   uploadLifeFileDocument,
 } from "@/services/lifeFileService";
 import {
+  fetchLifeFileAssets,
+  createLifeFileAsset,
+  updateLifeFileAsset,
+  deleteLifeFileAsset,
+} from "@/services/lifeFileAssetService";
+import {
   fetchLifeFileShares,
   createLifeFileShare,
   updateLifeFileShare,
@@ -63,6 +71,8 @@ import DocumentDialog from "@/components/life-file/DocumentDialog";
 import ShareLifeFileDialog from "@/components/life-file/ShareLifeFileDialog";
 import ShareList from "@/components/life-file/ShareList";
 import TrustsWillsFolder from "@/components/life-file/TrustsWillsFolder";
+import AssetRegistryTab from "@/components/life-file/AssetRegistryTab";
+import AssetRegistryDialog from "@/components/life-file/AssetRegistryDialog";
 import { generateLifeFilePDF } from "@/utils/lifeFilePdfExport";
 import {
   AlertDialog,
