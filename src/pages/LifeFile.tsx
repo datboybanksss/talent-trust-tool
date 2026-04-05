@@ -872,7 +872,14 @@ const LifeFilePage = () => {
         existingShare={editingShare}
       />
 
-      {/* Delete Confirmation */}
+      <AssetRegistryDialog
+        open={assetDialogOpen}
+        onOpenChange={setAssetDialogOpen}
+        onSubmit={editingAsset ? handleUpdateAsset : handleAddAsset}
+        asset={editingAsset}
+        defaultCategory={assetDialogCategory}
+      />
+
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
