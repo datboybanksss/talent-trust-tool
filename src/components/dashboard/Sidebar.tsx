@@ -16,7 +16,6 @@ import {
   AtSign,
   Heart,
   Home,
-  Store,
   CircleDollarSign,
   FileSpreadsheet,
   
