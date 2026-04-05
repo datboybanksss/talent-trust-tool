@@ -249,12 +249,12 @@ const EstateCalculator = () => {
 
             {/* Flags / Warnings */}
             {estimate.flags.length > 0 && (
-              <Card className="border-amber-300/50">
+              <Card className="border-warning/50">
                 <CardContent className="pt-6 space-y-2">
                   {estimate.flags.map((flag, i) => (
                     <div key={i} className="flex items-center gap-2 text-sm">
-                      <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-                      <span className="text-amber-800">{flag}</span>
+                      <AlertTriangle className="w-4 h-4 text-warning shrink-0" />
+                      <span className="text-muted-foreground">{flag}</span>
                     </div>
                   ))}
                 </CardContent>
