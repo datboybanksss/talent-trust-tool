@@ -271,8 +271,8 @@ const EstateCalculator = () => {
                   <ResultRow label="Income Replacement for Dependants" value={estimate.incomeReplacement} />
                   <ResultRow label="Education Fund" value={estimate.educationFund} />
                   <ResultRow label="Funeral Costs" value={estimate.funeralCosts} />
-                  {estimate.propertyTransferCosts.total > 0 && (
-                    <ResultRow label="Property Transfer Costs" value={estimate.propertyTransferCosts.total} />
+                  {estimate.propertyTransfer.combinedTotal > 0 && (
+                    <ResultRow label="Property Transfer Costs" value={estimate.propertyTransfer.combinedTotal} />
                   )}
                 </div>
 
@@ -370,32 +370,44 @@ const EstateCalculator = () => {
             </Card>
 
             {/* Property Transfer Breakdown */}
-            {estimate.propertyTransferCosts.total > 0 && (
+            {estimate.propertyTransfer.combinedTotal > 0 && (
               <Card>
                 <CardHeader>
                   <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
                     <Home className="w-4 h-4" /> Property Transfer Cost Breakdown
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
-                    <div className="p-3 rounded-lg bg-secondary">
-                      <p className="text-xs text-muted-foreground">Transfer Duty</p>
-                      <p className="text-lg font-bold">{formatZAR(estimate.propertyTransferCosts.transferDuty)}</p>
+                <CardContent className="space-y-4">
+                  {estimate.propertyTransfer.properties.map((prop, idx) => (
+                    <div key={idx}>
+                      <p className="text-sm font-medium text-foreground mb-2">{prop.description} — {formatZAR(prop.value)}</p>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-center">
+                        <div className="p-2 rounded-lg bg-secondary">
+                          <p className="text-xs text-muted-foreground">Transfer Duty</p>
+                          <p className="text-sm font-bold">{formatZAR(prop.costs.transferDuty)}</p>
+                        </div>
+                        <div className="p-2 rounded-lg bg-secondary">
+                          <p className="text-xs text-muted-foreground">Conveyancing</p>
+                          <p className="text-sm font-bold">{formatZAR(prop.costs.conveyancingFees)}</p>
+                        </div>
+                        <div className="p-2 rounded-lg bg-secondary">
+                          <p className="text-xs text-muted-foreground">Rates Clearance</p>
+                          <p className="text-sm font-bold">{formatZAR(prop.costs.ratesClearance)}</p>
+                        </div>
+                        <div className="p-2 rounded-lg bg-primary/10">
+                          <p className="text-xs text-muted-foreground">Subtotal</p>
+                          <p className="text-sm font-bold text-primary">{formatZAR(prop.costs.total)}</p>
+                        </div>
+                      </div>
                     </div>
-                    <div className="p-3 rounded-lg bg-secondary">
-                      <p className="text-xs text-muted-foreground">Conveyancing Fees</p>
-                      <p className="text-lg font-bold">{formatZAR(estimate.propertyTransferCosts.conveyancingFees)}</p>
+                  ))}
+                  {estimate.propertyTransfer.properties.length > 1 && (
+                    <div className="border-t border-border pt-3 text-right">
+                      <span className="text-sm font-semibold text-foreground">
+                        Combined Transfer Total: {formatZAR(estimate.propertyTransfer.combinedTotal)}
+                      </span>
                     </div>
-                    <div className="p-3 rounded-lg bg-secondary">
-                      <p className="text-xs text-muted-foreground">Rates Clearance</p>
-                      <p className="text-lg font-bold">{formatZAR(estimate.propertyTransferCosts.ratesClearance)}</p>
-                    </div>
-                    <div className="p-3 rounded-lg bg-primary/10">
-                      <p className="text-xs text-muted-foreground font-semibold">Total Transfer</p>
-                      <p className="text-lg font-bold text-primary">{formatZAR(estimate.propertyTransferCosts.total)}</p>
-                    </div>
-                  </div>
+                  )}
                 </CardContent>
               </Card>
             )}
