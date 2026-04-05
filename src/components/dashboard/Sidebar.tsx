@@ -146,7 +146,7 @@ const navItems = [
   { icon: Users, label: "My Advisors", href: "/dashboard/advisors" },
   { icon: FileCheck, label: "My Compliance Reminders", href: "/dashboard/compliance", badge: 3 },
   { icon: CircleDollarSign, label: "My Monthly Budget", href: "/dashboard/budget" },
-  { icon: Receipt, label: "My Payslip & Tax Documents", href: "/dashboard/payslip-tax" },
+  
   { icon: FolderLock, label: "My Important Documents", href: "/dashboard/documents" },
   { icon: Home, label: "Property Investment Opportunities", href: "/dashboard/property-investments" },
   { icon: Store, label: "Franchise Investment Opportunities", href: "/dashboard/franchise-investments" },
