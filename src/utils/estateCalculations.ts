@@ -10,6 +10,12 @@ export interface PersonalDetails {
   dependantsDependencyYears: number;
 }
 
+export interface TransferProperty {
+  id: string;
+  description: string;
+  value: number;
+}
+
 export interface FinancialDetails {
   monthlyIncome: number;
   monthlyExpenses: number;
@@ -20,8 +26,8 @@ export interface FinancialDetails {
   educationCosts: number;
   funeralCosts: number;
   inflationRate: number;
-  propertyValue: number;
   propertyTransferNeeded: boolean;
+  transferProperties: TransferProperty[];
 }
 
 export interface EstimatorState {
