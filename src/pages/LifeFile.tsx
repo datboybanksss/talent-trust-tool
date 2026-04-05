@@ -96,6 +96,7 @@ const LifeFilePage = () => {
   const [contacts, setContacts] = useState<EmergencyContact[]>([]);
   const [documents, setDocuments] = useState<LifeFileDocument[]>([]);
   const [shares, setShares] = useState<LifeFileShare[]>([]);
+  const [assets, setAssets] = useState<LifeFileAsset[]>([]);
 
   // Dialog states
   const [beneficiaryDialogOpen, setBeneficiaryDialogOpen] = useState(false);
