@@ -548,8 +548,43 @@ const Documents = () => {
     if (!uploadForm.title.trim()) { toast({ title: "Error", description: "Please enter a document title", variant: "destructive" }); return; }
     if (!uploadForm.category) { toast({ title: "Error", description: "Please select a category", variant: "destructive" }); return; }
     if (!uploadForm.file) { toast({ title: "Error", description: "Please select a file to upload", variant: "destructive" }); return; }
-    toast({ title: "Success", description: `"${uploadForm.title}" uploaded to ${DOCUMENT_CATEGORIES.find((c) => c.value === uploadForm.category)?.label || uploadForm.category}` });
-    setUploadForm({ title: "", category: "", file: null });
+
+    // Mark existing documents with same category as expired (version control)
+    const matchingDocs = docs.filter((d) => d.category === uploadForm.category && !d.isExpired);
+    const highestVersion = matchingDocs.reduce((max, d) => Math.max(max, d.version || 1), 0);
+
+    if (matchingDocs.length > 0) {
+      setDocs((prev) => prev.map((d) =>
+        d.category === uploadForm.category && !d.isExpired
+          ? { ...d, isExpired: true }
+          : d
+      ));
+    }
+
+    const newDoc: DocumentItem = {
+      id: String(Date.now()),
+      name: uploadForm.file.name,
+      type: uploadForm.file.name.endsWith(".pdf") ? "pdf" : uploadForm.file.name.match(/\.(jpg|jpeg|png)$/i) ? "image" : "doc",
+      category: uploadForm.category,
+      date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+      size: `${(uploadForm.file.size / (1024 * 1024)).toFixed(1)} MB`,
+      expiryDate: uploadForm.expiryDate || undefined,
+      reminder30: uploadForm.reminder30,
+      reminder60: uploadForm.reminder60,
+      reminder90: uploadForm.reminder90,
+      reminder6m: uploadForm.reminder6m,
+      reminder1y: uploadForm.reminder1y,
+      notifyEmail: uploadForm.notifyEmail || undefined,
+      version: highestVersion + 1,
+      isExpired: false,
+    };
+
+    setDocs((prev) => [...prev, newDoc]);
+
+    const catLabel = allCategories.find((c) => c.value === uploadForm.category)?.label || uploadForm.category;
+    const expiredMsg = matchingDocs.length > 0 ? ` (${matchingDocs.length} previous version(s) marked as expired)` : "";
+    toast({ title: "Success", description: `"${uploadForm.title}" v${newDoc.version} uploaded to ${catLabel}${expiredMsg}` });
+    setUploadForm({ title: "", category: "", file: null, expiryDate: "", reminder30: false, reminder60: false, reminder90: false, reminder6m: false, reminder1y: false, notifyEmail: "" });
     setIsUploadOpen(false);
   };
 
