@@ -61,7 +61,7 @@ export interface InsuranceEstimate {
   incomeReplacement: number;
   educationFund: number;
   funeralCosts: number;
-  propertyTransferCosts: PropertyTransferCosts;
+  propertyTransfer: PropertyTransferSummary;
   totalDeathNeed: number;
   existingLifeCover: number;
   lifeShortfall: number;
@@ -157,11 +157,24 @@ export const computeInsuranceEstimate = (state: EstimatorState): InsuranceEstima
   const incomeReplacement = capitaliseAnnuity(annualExpenses, personal.dependantsDependencyYears, financial.inflationRate);
   const educationFund = financial.educationCosts;
   const funeralCosts = financial.funeralCosts;
-  const propertyTransferCosts = financial.propertyTransferNeeded
-    ? computePropertyTransferCosts(financial.propertyValue)
-    : { transferDuty: 0, conveyancingFees: 0, ratesClearance: 0, deedsOfficeFees: 0, total: 0 };
 
-  const totalDeathNeed = estateCostsTotal + debtSettlement + incomeReplacement + educationFund + funeralCosts + propertyTransferCosts.total;
+  // Property transfers
+  let propertyTransfer: PropertyTransferSummary = { properties: [], combinedTotal: 0 };
+  if (financial.propertyTransferNeeded && financial.transferProperties.length > 0) {
+    const properties = financial.transferProperties
+      .filter(p => p.value > 0)
+      .map(p => ({
+        description: p.description || 'Unnamed property',
+        value: p.value,
+        costs: computePropertyTransferCosts(p.value),
+      }));
+    propertyTransfer = {
+      properties,
+      combinedTotal: properties.reduce((sum, p) => sum + p.costs.total, 0),
+    };
+  }
+
+  const totalDeathNeed = estateCostsTotal + debtSettlement + incomeReplacement + educationFund + funeralCosts + propertyTransfer.combinedTotal;
   const lifeShortfall = Math.max(0, totalDeathNeed - financial.existingLifeCover);
 
   // --- DISABILITY COVER ---
@@ -177,7 +190,7 @@ export const computeInsuranceEstimate = (state: EstimatorState): InsuranceEstima
   if (financial.totalDebts > financial.totalAssets * 0.5) flags.push('High debt-to-asset ratio increases risk');
   if (personal.numberOfDependants > 0 && financial.existingLifeCover === 0) flags.push('Dependants are unprotected — no existing life cover');
   if (personal.remainingCareerYears <= 5) flags.push('Short remaining career — plan for income transition');
-  if (financial.propertyTransferNeeded && propertyTransferCosts.total > 0) flags.push('Property transfer costs add to your estate liquidity needs');
+  if (financial.propertyTransferNeeded && propertyTransfer.combinedTotal > 0) flags.push('Property transfer costs add to your estate liquidity needs');
 
   return {
     estateCosts: { executorFees, estateDuty, adminCosts, total: estateCostsTotal },
@@ -185,7 +198,7 @@ export const computeInsuranceEstimate = (state: EstimatorState): InsuranceEstima
     incomeReplacement,
     educationFund,
     funeralCosts,
-    propertyTransferCosts,
+    propertyTransfer,
     totalDeathNeed,
     existingLifeCover: financial.existingLifeCover,
     lifeShortfall,
@@ -222,7 +235,7 @@ export const getDefaultState = (): EstimatorState => ({
     educationCosts: 0,
     funeralCosts: 50000,
     inflationRate: 6,
-    propertyValue: 0,
     propertyTransferNeeded: false,
+    transferProperties: [],
   },
 });
