@@ -175,7 +175,7 @@ const EstateCalculator = () => {
         {step === 2 && (
           <div className="space-y-6">
             {/* Life Cover Estimate */}
-            <Card className={estimate.lifeShortfall > 0 ? 'border-destructive/30' : 'border-emerald-500/30'}>
+            <Card className={estimate.lifeShortfall > 0 ? 'border-destructive/30' : 'border-accent/30'}>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Heart className="w-5 h-5 text-destructive" />
@@ -200,11 +200,11 @@ const EstateCalculator = () => {
                     <p className="text-xs text-muted-foreground">Existing Cover</p>
                     <p className="text-xl font-bold text-primary">{formatZAR(estimate.existingLifeCover)}</p>
                   </div>
-                  <div className={`p-4 rounded-lg text-center ${estimate.lifeShortfall > 0 ? 'bg-destructive/10' : 'bg-emerald-500/10'}`}>
+          <div className={`p-4 rounded-lg text-center ${estimate.lifeShortfall > 0 ? 'bg-destructive/10' : 'bg-accent/20'}`}>
                     <p className="text-xs text-muted-foreground font-semibold">
                       {estimate.lifeShortfall > 0 ? 'Shortfall' : 'Covered'}
                     </p>
-                    <p className={`text-xl font-bold ${estimate.lifeShortfall > 0 ? 'text-destructive' : 'text-emerald-600'}`}>
+                    <p className={`text-xl font-bold ${estimate.lifeShortfall > 0 ? 'text-destructive' : 'text-accent-foreground'}`}>
                       {estimate.lifeShortfall > 0 ? formatZAR(estimate.lifeShortfall) : '✓ Adequate'}
                     </p>
                   </div>
@@ -213,7 +213,7 @@ const EstateCalculator = () => {
             </Card>
 
             {/* Disability Cover Estimate */}
-            <Card className={estimate.disabilityShortfall > 0 ? 'border-destructive/30' : 'border-emerald-500/30'}>
+            <Card className={estimate.disabilityShortfall > 0 ? 'border-destructive/30' : 'border-accent/30'}>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
                   <Shield className="w-5 h-5 text-primary" />
@@ -235,11 +235,11 @@ const EstateCalculator = () => {
                     <p className="text-xs text-muted-foreground">Existing Cover</p>
                     <p className="text-xl font-bold text-primary">{formatZAR(estimate.existingDisabilityCover)}</p>
                   </div>
-                  <div className={`p-4 rounded-lg text-center ${estimate.disabilityShortfall > 0 ? 'bg-destructive/10' : 'bg-emerald-500/10'}`}>
+          <div className={`p-4 rounded-lg text-center ${estimate.disabilityShortfall > 0 ? 'bg-destructive/10' : 'bg-accent/20'}`}>
                     <p className="text-xs text-muted-foreground font-semibold">
                       {estimate.disabilityShortfall > 0 ? 'Shortfall' : 'Covered'}
                     </p>
-                    <p className={`text-xl font-bold ${estimate.disabilityShortfall > 0 ? 'text-destructive' : 'text-emerald-600'}`}>
+                    <p className={`text-xl font-bold ${estimate.disabilityShortfall > 0 ? 'text-destructive' : 'text-accent-foreground'}`}>
                       {estimate.disabilityShortfall > 0 ? formatZAR(estimate.disabilityShortfall) : '✓ Adequate'}
                     </p>
                   </div>
