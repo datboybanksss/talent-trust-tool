@@ -24,6 +24,7 @@ import {
   Bell,
   Clock,
   AlertTriangle,
+  CheckCircle2,
 } from "lucide-react";
 import { useState, useCallback, useMemo, useRef } from "react";
 import { cn } from "@/lib/utils";
