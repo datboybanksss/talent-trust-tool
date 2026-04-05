@@ -1,9 +1,15 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { RetirementState, computeRetirementEstimate } from "./retirementCalculations";
+import { RetirementState, computeRetirementEstimate, RetirementEstimate } from "./retirementCalculations";
 import { formatZAR } from "./estateCalculations";
 
-export const generateRetirementReport = (state: RetirementState) => {
+interface SavedScenario {
+  label: string;
+  state: RetirementState;
+  estimate: RetirementEstimate;
+}
+
+export const generateRetirementReport = (state: RetirementState, scenarios?: SavedScenario[]) => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const margin = 14;
@@ -99,13 +105,70 @@ export const generateRetirementReport = (state: RetirementState) => {
     estimate.flags.forEach(flag => addText(`⚠ ${flag}`));
   }
 
-  // Disclaimer
+  // Illustrative Solutions
+  if (estimate.savingsShortfall > 0) {
+    addHeader("5. Illustrative Solutions");
+    addText(`Based on your estimated shortfall of ${formatZAR(estimate.savingsShortfall)}, the following products may help bridge the gap:`);
+    autoTable(doc, {
+      startY: y,
+      head: [["Product", "Description"]],
+      body: [
+        ["Retirement Annuity (RA)", "Tax-deductible contributions to build your retirement corpus. Ideal for closing the savings gap."],
+        ["Living Annuity", "Flexible income drawdown at retirement. Choose between 2.5% - 17.5% of your investment annually."],
+        ["Tax-Free Savings Account", "Contribute up to R36,000/year (R500,000 lifetime) with no tax on growth or withdrawals."],
+        ["Endowment Policy", "Medium- to long-term savings vehicle with tax advantages for supplementing retirement savings."],
+      ],
+      margin: { left: margin, right: margin },
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [30, 58, 38] },
+      columnStyles: { 0: { cellWidth: 45 } },
+    });
+    y = (doc as any).lastAutoTable.finalY + 10;
+  }
+
+  // Scenario Comparison
+  if (scenarios && scenarios.length === 2) {
+    doc.addPage();
+    y = 20;
+    addHeader("Scenario Comparison");
+    autoTable(doc, {
+      startY: y,
+      head: [["Metric", scenarios[0].label, scenarios[1].label]],
+      body: [
+        ["Retirement Age", `${scenarios[0].state.personal.retirementAge}`, `${scenarios[1].state.personal.retirementAge}`],
+        ["Years to Retirement", `${scenarios[0].estimate.yearsToRetirement}`, `${scenarios[1].estimate.yearsToRetirement}`],
+        ["Monthly Contribution", formatZAR(scenarios[0].state.financial.monthlyContribution), formatZAR(scenarios[1].state.financial.monthlyContribution)],
+        ["Corpus Needed", formatZAR(scenarios[0].estimate.retirementCorpusNeeded), formatZAR(scenarios[1].estimate.retirementCorpusNeeded)],
+        ["Projected Savings", formatZAR(scenarios[0].estimate.projectedSavingsAtRetirement), formatZAR(scenarios[1].estimate.projectedSavingsAtRetirement)],
+        ["Shortfall", scenarios[0].estimate.savingsShortfall > 0 ? formatZAR(scenarios[0].estimate.savingsShortfall) : "On Track", scenarios[1].estimate.savingsShortfall > 0 ? formatZAR(scenarios[1].estimate.savingsShortfall) : "On Track"],
+        ["Extra Monthly Needed", formatZAR(scenarios[0].estimate.additionalMonthlySavingNeeded), formatZAR(scenarios[1].estimate.additionalMonthlySavingNeeded)],
+        ["Projected Monthly Income", formatZAR(scenarios[0].estimate.projectedMonthlyIncomeFromSavings), formatZAR(scenarios[1].estimate.projectedMonthlyIncomeFromSavings)],
+        ["Income Replacement", `${scenarios[0].estimate.incomeReplacementRatio.toFixed(0)}%`, `${scenarios[1].estimate.incomeReplacementRatio.toFixed(0)}%`],
+      ],
+      margin: { left: margin, right: margin },
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [30, 58, 38] },
+    });
+    y = (doc as any).lastAutoTable.finalY + 10;
+  }
+
+  // CTA
   if (y > 250) { doc.addPage(); y = 20; }
+  doc.setFillColor(30, 58, 38);
+  doc.roundedRect(margin, y, pageWidth - margin * 2, 20, 3, 3, 'F');
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(255, 255, 255);
+  doc.text("Speak to a Certified Financial Planner (CFP®) for personalised advice.", margin + 6, y + 12);
+  y += 28;
+
+  // Disclaimer
+  if (y > 260) { doc.addPage(); y = 20; }
   doc.setDrawColor(200, 160, 50);
   doc.setLineWidth(0.5);
   doc.line(margin, y, pageWidth - margin, y);
   y += 6;
-  addText("DISCLAIMER: This calculator is illustrative only and does not constitute financial, tax, or legal advice. Consult a qualified financial adviser before making decisions based on these projections.");
+  addText("DISCLAIMER: This calculator is illustrative only and does not constitute financial, tax, or legal advice. Outcomes are sensitive to market performance, inflation, and personal circumstances. Consult a certified financial planner before making decisions based on these projections.");
 
   const totalPages = doc.getNumberOfPages();
   for (let i = 1; i <= totalPages; i++) {
