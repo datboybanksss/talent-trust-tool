@@ -37,9 +37,6 @@ export interface RetirementEstimate {
   projectedMonthlyIncomeFromSavings: number;
   incomeReplacementRatio: number; // % of current income
 
-  // Career transition
-  postCareerGapYears: number; // years between career end and retirement
-  careerEndAge: number;
 
   flags: string[];
 }
