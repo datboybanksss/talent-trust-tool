@@ -148,7 +148,7 @@ const navItems = [
   
   { icon: FolderLock, label: "My Important Documents", href: "/dashboard/documents" },
   { icon: Home, label: "Property Investment Opportunities", href: "/dashboard/property-investments" },
-  { icon: Store, label: "Franchise Investment Opportunities", href: "/dashboard/franchise-investments" },
+  
   { icon: FileSpreadsheet, label: "Apply for Funding", href: "/dashboard/apply-for-funding" },
   { icon: Mail, label: "Email Log", href: "/dashboard/emails" },
   { icon: Share2, label: "Sharing", href: "/dashboard/sharing" },

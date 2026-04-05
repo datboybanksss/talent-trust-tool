@@ -71,7 +71,7 @@ const App = () => (
             <Route path="/dashboard/sharing" element={<ProtectedRoute><Sharing /></ProtectedRoute>} />
             <Route path="/dashboard/social-media" element={<ProtectedRoute><SocialMedia /></ProtectedRoute>} />
             <Route path="/dashboard/property-investments" element={<ProtectedRoute><PropertyInvestments /></ProtectedRoute>} />
-            <Route path="/dashboard/franchise-investments" element={<ProtectedRoute><FranchiseInvestments /></ProtectedRoute>} />
+            
             
             <Route path="/dashboard/payslip-tax" element={<Navigate to="/dashboard/documents" replace />} />
             <Route path="/dashboard/budget" element={<ProtectedRoute><MonthlyBudgetPage /></ProtectedRoute>} />
