@@ -160,9 +160,6 @@ const Dashboard = () => {
           <PropertyInvestments />
         </TabsContent>
 
-        <TabsContent value="franchise">
-          <FranchiseInvestments />
-        </TabsContent>
       </Tabs>
     </DashboardLayout>
   );
