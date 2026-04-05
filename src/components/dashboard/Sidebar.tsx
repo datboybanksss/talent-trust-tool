@@ -150,7 +150,7 @@ const navItems = [
   { icon: Home, label: "Property Investment Opportunities", href: "/dashboard/property-investments" },
   
   { icon: FileSpreadsheet, label: "Apply for Funding", href: "/dashboard/apply-for-funding" },
-  { icon: Calculator, label: "Estate & Income Calculator", href: "/dashboard/estate-calculator" },
+  { icon: Calculator, label: "Insurance Needs Estimator", href: "/dashboard/estate-calculator" },
   { icon: Mail, label: "Email Log", href: "/dashboard/emails" },
   { icon: Share2, label: "Sharing", href: "/dashboard/sharing" },
   { icon: Bell, label: "Reminders", href: "/dashboard/reminders", badge: 5 },
