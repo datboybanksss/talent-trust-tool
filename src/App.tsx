@@ -28,7 +28,7 @@ import PropertyInvestments from "./pages/PropertyInvestments";
 import FranchiseInvestments from "./pages/FranchiseInvestments";
 
 import MonthlyBudgetPage from "./pages/MonthlyBudget";
-import PayslipTaxDocuments from "./pages/PayslipTaxDocuments";
+import { Navigate } from "react-router-dom";
 import ApplyForFunding from "./pages/ApplyForFunding";
 import ContractManager from "./pages/ContractManager";
 import EndorsementTracker from "./pages/EndorsementTracker";
