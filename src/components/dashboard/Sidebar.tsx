@@ -19,7 +19,7 @@ import {
   Store,
   CircleDollarSign,
   FileSpreadsheet,
-  Receipt,
+  
   Trophy,
   Palette,
   FileText,
