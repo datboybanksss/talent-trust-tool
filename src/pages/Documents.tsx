@@ -578,6 +578,12 @@ const Documents = () => {
     return list;
   }, [selectedFolder, searchQuery, docs]);
 
+  // Tax compliance: compute missing required documents
+  const isTaxFolder = selectedFolder === "tax" || (SUBFOLDER_MAP.tax || []).some((sf) => sf.id === selectedFolder);
+  const taxRequiredDocs = REQUIRED_TAX_DOCS[taxComplianceTab];
+  const taxUploadedTypes = docs.filter((d) => !d.isExpired).map((d) => d.category);
+  const taxMissingDocs = taxRequiredDocs.filter((r) => !taxUploadedTypes.includes(r.type));
+
   /* Upload handlers */
   const handleDragOver = useCallback((e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }, []);
   const handleDragLeave = useCallback((e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false); }, []);
