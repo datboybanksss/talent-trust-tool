@@ -1,10 +1,8 @@
-// Insurance Needs Estimator - South African Context
+// Estate Planning Calculator - South African Context
 
 export interface PersonalDetails {
-  profession: 'athlete' | 'entertainer' | 'hybrid';
-  field: string;
   currentAge: number;
-  remainingCareerYears: number;
+  remainingWorkingYears: number;
   maritalStatus: 'single' | 'married-in-community' | 'married-out-community' | 'married-out-accrual' | 'divorced' | 'widowed';
   numberOfDependants: number;
   dependantsDependencyYears: number;
