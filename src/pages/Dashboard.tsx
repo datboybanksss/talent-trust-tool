@@ -3,7 +3,7 @@ import { useProfile } from "@/hooks/useProfile";
 import CurrentTierBadge from "@/components/subscription/CurrentTierBadge";
 import StatsCard from "@/components/dashboard/StatsCard";
 import PropertyInvestments from "@/components/dashboard/PropertyInvestments";
-import FranchiseInvestments from "@/components/dashboard/FranchiseInvestments";
+
 import FinancialOverview from "@/components/dashboard/FinancialOverview";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
