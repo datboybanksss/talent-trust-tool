@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,7 @@ import { mockGuardianAccess } from "@/data/mockGuardianData";
 import { SHAREABLE_SECTIONS, type GuardianAccess } from "@/types/guardianAccess";
 import { format, parseISO } from "date-fns";
 import { toast } from "sonner";
+import InviteGuardianDialog from "./InviteGuardianDialog";
 
 const statusConfig: Record<string, { color: "default" | "secondary" | "destructive"; icon: React.ElementType }> = {
   active: { color: "default", icon: CheckCircle2 },
@@ -16,6 +18,7 @@ const statusConfig: Record<string, { color: "default" | "secondary" | "destructi
 
 const GuardianAccessTab = () => {
   const guardians = mockGuardianAccess;
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   const handleRevoke = (g: GuardianAccess) => {
     toast.success(`Access for ${g.guardianName} has been revoked (demo).`);
@@ -28,10 +31,12 @@ const GuardianAccessTab = () => {
           <h2 className="text-lg font-semibold text-foreground">Guardian Access</h2>
           <p className="text-xs text-muted-foreground">Manage who has oversight of your profile</p>
         </div>
-        <Button size="sm" onClick={() => toast.info("Invite Guardian flow coming soon.")}>
+        <Button size="sm" onClick={() => setDialogOpen(true)}>
           <UserPlus className="w-4 h-4 mr-1" /> Invite Guardian
         </Button>
       </div>
+
+      <InviteGuardianDialog open={dialogOpen} onOpenChange={setDialogOpen} />
 
       {guardians.map((g) => {
         const cfg = statusConfig[g.status] || statusConfig.expired;
