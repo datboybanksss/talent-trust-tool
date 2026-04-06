@@ -18,6 +18,7 @@ import {
   Heart,
   Home,
   CircleDollarSign,
+  Plug,
   FileSpreadsheet,
   Calculator,
   Trophy,
@@ -155,6 +156,7 @@ const navItems = [
   { icon: Mail, label: "Email Log", href: "/dashboard/emails" },
   { icon: Share2, label: "Sharing", href: "/dashboard/sharing" },
   { icon: ShieldCheck, label: "Guardian & Minor Protection", href: "/dashboard/guardian" },
+  { icon: Plug, label: "Financial Integrations", href: "/dashboard/integrations" },
   { icon: Bell, label: "Reminders", href: "/dashboard/reminders", badge: 5 },
 ];
 

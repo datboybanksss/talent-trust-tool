@@ -78,7 +78,7 @@ const FinancialIntegrations = () => {
   };
 
   return (
-    <DashboardLayout>
+    <DashboardLayout title="Financial Integrations" subtitle="Connect your accounts for a unified financial view">
       <div className="space-y-6 max-w-6xl">
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-4">

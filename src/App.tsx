@@ -41,6 +41,7 @@ import Pricing from "./pages/Pricing";
 import Contact from "./pages/Contact";
 import EstateCalculator from "./pages/EstateCalculator";
 import GuardianManagement from "./pages/GuardianManagement";
+import FinancialIntegrations from "./pages/FinancialIntegrations";
 
 const queryClient = new QueryClient();
 
@@ -87,6 +88,7 @@ const App = () => (
             <Route path="/executive-overview" element={<ProtectedRoute><ExecutiveOverview /></ProtectedRoute>} />
             <Route path="/dashboard/estate-calculator" element={<ProtectedRoute><EstateCalculator /></ProtectedRoute>} />
             <Route path="/dashboard/guardian" element={<ProtectedRoute><GuardianManagement /></ProtectedRoute>} />
+            <Route path="/dashboard/integrations" element={<ProtectedRoute><FinancialIntegrations /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
