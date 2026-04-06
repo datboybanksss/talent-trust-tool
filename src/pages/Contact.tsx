@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,12 +11,13 @@ import { Link } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 
 const Contact = () => {
+  const [searchParams] = useSearchParams();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone: "",
-    enquiryType: "",
-    message: "",
+    enquiryType: searchParams.get("type") || "",
+    message: searchParams.get("message") || "",
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -152,6 +154,7 @@ const Contact = () => {
                         <SelectContent>
                           <SelectItem value="demo">Book a Demo</SelectItem>
                           <SelectItem value="pricing">Pricing Question</SelectItem>
+                          <SelectItem value="financial_planning">Financial Planning / CFP® Consultation</SelectItem>
                           <SelectItem value="athlete">Athlete Enquiry</SelectItem>
                           <SelectItem value="artist">Artist Enquiry</SelectItem>
                           <SelectItem value="agent">Agent / Manager Enquiry</SelectItem>
