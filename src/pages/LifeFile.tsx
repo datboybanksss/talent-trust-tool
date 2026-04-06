@@ -491,7 +491,6 @@ const LifeFilePage = () => {
               setAssets((prev) => [...prev, ...withUser]);
               toast({ title: `${imported.length} account${imported.length > 1 ? "s" : ""} imported to Asset Registry` });
             }}
-            }}
           />
         </TabsContent>
 
