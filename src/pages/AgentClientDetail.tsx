@@ -107,6 +107,8 @@ const MOCK_CLIENTS: Record<string, any> = {
       { id: "dl4", brand: "Fashion Nova", type: "Collaboration", value: "R3,500,000", start: "2026-02-01", end: "2026-07-31", status: "negotiating" },
     ],
     stats: { contractsActive: 3, totalDealValue: "R56,500,000", complianceScore: 95, documentsCount: 5 },
+    serviceActive: true, lastDataSync: "2026-04-06T09:00:00Z",
+    commissionRate: 5, commissionEarned: "R2,825,000",
   },
 };
 
