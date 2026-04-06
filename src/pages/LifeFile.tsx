@@ -388,27 +388,42 @@ const LifeFilePage = () => {
       </div>
 
       {/* Actions Row */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Lock className="w-4 h-4" />
           <span>All Life File data is encrypted and only accessible by you</span>
         </div>
-        <Button
-          variant="outline"
-          onClick={() => {
-            generateLifeFilePDF({
-              beneficiaries,
-              emergencyContacts: contacts,
-              documents,
-              assets,
-              userName: "John Doe", // TODO: Replace with actual user name from auth
-            });
-            toast({ title: "PDF downloaded successfully" });
-          }}
-        >
-          <FileDown className="w-4 h-4" />
-          Export PDF
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => {
+              const params = new URLSearchParams({
+                type: "financial_planning",
+                message: "I would like to request a Financial Shortfall Review based on my Life File asset registry. Please advise on suitable financial products to address any gaps in my cover.",
+              });
+              navigate(`/contact?${params.toString()}`);
+            }}
+          >
+            <Users className="w-4 h-4" />
+            Contact a CFP®
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              generateLifeFilePDF({
+                beneficiaries,
+                emergencyContacts: contacts,
+                documents,
+                assets,
+                userName: "John Doe",
+              });
+              toast({ title: "PDF downloaded successfully" });
+            }}
+          >
+            <FileDown className="w-4 h-4" />
+            Export PDF
+          </Button>
+        </div>
       </div>
 
       {/* Tabs */}
