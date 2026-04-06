@@ -484,12 +484,13 @@ const LifeFilePage = () => {
               const withUser = imported.map((a) => ({
                 ...a,
                 id: crypto.randomUUID(),
-                user_id: user?.id || "",
+                user_id: userId || "",
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString(),
               })) as any[];
               setAssets((prev) => [...prev, ...withUser]);
-              toast.success(`${imported.length} account${imported.length > 1 ? "s" : ""} imported to Asset Registry`);
+              toast({ title: `${imported.length} account${imported.length > 1 ? "s" : ""} imported to Asset Registry` });
+            }}
             }}
           />
         </TabsContent>
