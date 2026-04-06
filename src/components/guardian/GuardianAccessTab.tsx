@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,7 @@ import { mockGuardianAccess } from "@/data/mockGuardianData";
 import { SHAREABLE_SECTIONS, type GuardianAccess } from "@/types/guardianAccess";
 import { format, parseISO } from "date-fns";
 import { toast } from "sonner";
+import InviteGuardianDialog from "./InviteGuardianDialog";
 
 const statusConfig: Record<string, { color: "default" | "secondary" | "destructive"; icon: React.ElementType }> = {
   active: { color: "default", icon: CheckCircle2 },
