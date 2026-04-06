@@ -10,7 +10,16 @@ import {
   Building,
   BadgeDollarSign,
   Users,
+  Plug,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  LifeFileAsset,
+  INSURANCE_TYPES,
+  INVESTMENT_TYPES,
+  PREMIUM_FREQUENCIES,
+} from "@/types/lifeFileAsset";
+import ImportFromIntegrationsDialog from "./ImportFromIntegrationsDialog";
 import { cn } from "@/lib/utils";
 import {
   LifeFileAsset,
