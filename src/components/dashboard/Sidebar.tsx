@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { 
   Shield, 
+  ShieldCheck,
   LayoutDashboard, 
   User, 
   FileCheck, 

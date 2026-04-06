@@ -14,15 +14,6 @@ const GuardianManagement = () => {
   return (
     <DashboardLayout title="Guardian & Minor Protection" subtitle="GDPR & POPIA-compliant guardian access management">
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-2">
-            <Shield className="w-6 h-6 text-primary" />
-            Guardian & Minor Protection
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            GDPR & POPIA-compliant guardian access management for minors
-          </p>
-        </div>
 
         {/* Age-appropriate transparency notice */}
         <div className="bg-info/10 border border-info/30 rounded-xl p-4">
