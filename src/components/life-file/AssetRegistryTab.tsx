@@ -20,13 +20,6 @@ import {
   PREMIUM_FREQUENCIES,
 } from "@/types/lifeFileAsset";
 import ImportFromIntegrationsDialog from "./ImportFromIntegrationsDialog";
-import { cn } from "@/lib/utils";
-import {
-  LifeFileAsset,
-  INSURANCE_TYPES,
-  INVESTMENT_TYPES,
-  PREMIUM_FREQUENCIES,
-} from "@/types/lifeFileAsset";
 
 interface AssetRegistryTabProps {
   assets: LifeFileAsset[];
