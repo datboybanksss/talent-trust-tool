@@ -488,7 +488,148 @@ const AgentClientDetail = () => {
             </Card>
           </TabsContent>
 
-          {/* ─── Documents Tab ─── */}
+          {/* ─── Life File Tab ─── */}
+          <TabsContent value="lifefile">
+            {!isServiceActive ? (
+              <Card className="border-destructive/30">
+                <CardContent className="py-12 text-center space-y-3">
+                  <WifiOff className="w-10 h-10 text-destructive mx-auto" />
+                  <h3 className="text-lg font-semibold text-foreground">Service Inactive</h3>
+                  <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                    Live data access is disconnected. Re-activate servicing for {client.name} to view their Life File, download reports, and earn CFP® referral commission.
+                  </p>
+                  <Button onClick={() => handleToggleService(true)} className="mt-2">
+                    <Wifi className="w-4 h-4 mr-2" /> Re-activate Service
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {/* Life File Actions */}
+                <div className="flex flex-wrap gap-3">
+                  <Button onClick={handleDownloadLifeFile} className="bg-primary text-primary-foreground">
+                    <Download className="w-4 h-4 mr-2" /> Download Life File PDF
+                  </Button>
+                  <Button variant="outline" onClick={handleContactCFP}>
+                    <PhoneCall className="w-4 h-4 mr-2" /> Contact a CFP® (Earn Commission)
+                  </Button>
+                </div>
+
+                {/* Commission Info */}
+                <Card className="border-primary/20 bg-primary/5">
+                  <CardContent className="py-4">
+                    <div className="flex items-center gap-3">
+                      <DollarSign className="w-5 h-5 text-primary shrink-0" />
+                      <div>
+                        <p className="text-sm font-medium text-foreground">CFP® Referral Commission</p>
+                        <p className="text-xs text-muted-foreground">
+                          Earn {client.commissionRate}% commission on financial products recommended through CFP® referrals.
+                          Total earned to date: <span className="font-semibold text-primary">{client.commissionEarned}</span>
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Life File Summary */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Estate Planning Snapshot</CardTitle>
+                    <CardDescription>Overview of {client.name}'s Life File</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {[
+                        { label: "Beneficiaries", value: lifeFileSummary.beneficiaryCount, sub: lifeFileSummary.allocationComplete ? "100% allocated" : `${lifeFileSummary.totalAllocation}% allocated` },
+                        { label: "Emergency Contacts", value: lifeFileSummary.contactCount, sub: "On record" },
+                        { label: "Documents", value: `${lifeFileSummary.completedDocs}/${lifeFileSummary.documentCount}`, sub: `${lifeFileSummary.needsAttention} need attention` },
+                        { label: "Insurance Policies", value: lifeFileSummary.insurancePolicies, sub: `R${(lifeFileSummary.totalInsuranceCover / 1000000).toFixed(1)}M cover` },
+                      ].map((item, i) => (
+                        <div key={i} className="p-3 rounded-lg bg-muted/50 text-center">
+                          <p className="text-2xl font-display font-bold text-foreground">{item.value}</p>
+                          <p className="text-xs font-medium text-foreground">{item.label}</p>
+                          <p className="text-[10px] text-muted-foreground">{item.sub}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Insurance Policies */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Insurance Policies</CardTitle>
+                    <CardDescription>
+                      {mockAssets.filter(a => a.asset_category === "insurance").length} active policies · Total cover: R{(lifeFileSummary.totalInsuranceCover / 1000000).toFixed(1)}M
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Type</TableHead>
+                          <TableHead>Institution</TableHead>
+                          <TableHead>Cover Amount</TableHead>
+                          <TableHead className="hidden md:table-cell">Premium</TableHead>
+                          <TableHead className="hidden md:table-cell">Beneficiaries</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {mockAssets.filter(a => a.asset_category === "insurance").map(asset => (
+                          <TableRow key={asset.id}>
+                            <TableCell className="font-medium">{getTypeLabel("insurance", asset.asset_type)}</TableCell>
+                            <TableCell>{asset.institution}</TableCell>
+                            <TableCell className="font-semibold">R{(asset.amount || 0).toLocaleString()}</TableCell>
+                            <TableCell className="hidden md:table-cell text-muted-foreground">
+                              {asset.premium_or_contribution ? `R${asset.premium_or_contribution.toLocaleString()}/m` : "—"}
+                            </TableCell>
+                            <TableCell className="hidden md:table-cell text-xs text-muted-foreground">{asset.beneficiary_names || "—"}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+
+                {/* Investments */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Investments</CardTitle>
+                    <CardDescription>
+                      {mockAssets.filter(a => a.asset_category === "investment").length} active investments · Total value: R{(lifeFileSummary.totalInvestmentValue / 1000000).toFixed(1)}M
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Type</TableHead>
+                          <TableHead>Institution</TableHead>
+                          <TableHead>Value</TableHead>
+                          <TableHead className="hidden md:table-cell">Contribution</TableHead>
+                          <TableHead className="hidden md:table-cell">Beneficiaries</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {mockAssets.filter(a => a.asset_category === "investment").map(asset => (
+                          <TableRow key={asset.id}>
+                            <TableCell className="font-medium">{getTypeLabel("investment", asset.asset_type)}</TableCell>
+                            <TableCell>{asset.institution}</TableCell>
+                            <TableCell className="font-semibold">R{(asset.amount || 0).toLocaleString()}</TableCell>
+                            <TableCell className="hidden md:table-cell text-muted-foreground">
+                              {asset.premium_or_contribution ? `R${asset.premium_or_contribution.toLocaleString()}/m` : "Lump sum"}
+                            </TableCell>
+                            <TableCell className="hidden md:table-cell text-xs text-muted-foreground">{asset.beneficiary_names || "—"}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </TabsContent>
+
           <TabsContent value="documents">
             <Card>
               <CardHeader>
