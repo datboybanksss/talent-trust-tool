@@ -356,6 +356,43 @@ const AgentClientDetail = () => {
       </header>
 
       <div className="container py-6 max-w-6xl mx-auto space-y-6">
+        {/* Service Status Banner */}
+        {!isPending && (
+          <Card className={`border ${isServiceActive ? "border-green-300 bg-green-50 dark:bg-green-950/20" : "border-destructive/50 bg-destructive/5"}`}>
+            <CardContent className="py-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {isServiceActive ? (
+                  <Wifi className="w-5 h-5 text-green-600 shrink-0" />
+                ) : (
+                  <WifiOff className="w-5 h-5 text-destructive shrink-0" />
+                )}
+                <div>
+                  <p className={`text-sm font-medium ${isServiceActive ? "text-green-800 dark:text-green-200" : "text-destructive"}`}>
+                    {isServiceActive ? "Actively Servicing — Live Data Connected" : "Service Inactive — Live Data Disconnected"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {isServiceActive
+                      ? `Last synced: ${client.lastDataSync ? format(new Date(client.lastDataSync), "MMM d, yyyy 'at' h:mm a") : "Just now"} · Commission rate: ${client.commissionRate}%`
+                      : "Re-activate servicing to restore live data feed and resume commission accrual."}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 shrink-0">
+                {isServiceActive && (
+                  <Badge variant="outline" className="text-green-700 border-green-200 bg-green-500/10">
+                    <DollarSign className="w-3 h-3 mr-1" />
+                    {client.commissionEarned} earned
+                  </Badge>
+                )}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Service</span>
+                  <Switch checked={isServiceActive} onCheckedChange={handleToggleService} />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {isPending && (
           <Card className="border-amber-300 bg-amber-50 dark:bg-amber-950/20">
             <CardContent className="py-4 flex items-center gap-3">
@@ -376,10 +413,10 @@ const AgentClientDetail = () => {
             { icon: Shield, label: "Compliance", value: `${client.stats.complianceScore}%`, color: "text-blue-600" },
             { icon: Globe, label: "Social Reach", value: client.socialFollowers, color: "text-purple-600" },
           ].map((stat, i) => (
-            <Card key={i} className="border-border/50">
+            <Card key={i} className={`border-border/50 ${!isServiceActive ? "opacity-50" : ""}`}>
               <CardContent className="p-4">
                 <stat.icon className={`w-4 h-4 ${stat.color} mb-2`} />
-                <p className="text-xl font-display font-bold text-foreground">{stat.value}</p>
+                <p className="text-xl font-display font-bold text-foreground">{isServiceActive ? stat.value : "—"}</p>
                 <p className="text-xs text-muted-foreground">{stat.label}</p>
               </CardContent>
             </Card>
@@ -388,9 +425,12 @@ const AgentClientDetail = () => {
 
         {/* Tabs */}
         <Tabs defaultValue="deals" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="deals" className="text-xs sm:text-sm">
               <Handshake className="w-4 h-4 mr-1.5 hidden sm:inline" /> Deals
+            </TabsTrigger>
+            <TabsTrigger value="lifefile" className="text-xs sm:text-sm">
+              <HeartPulse className="w-4 h-4 mr-1.5 hidden sm:inline" /> Life File
             </TabsTrigger>
             <TabsTrigger value="documents" className="text-xs sm:text-sm">
               <FileText className="w-4 h-4 mr-1.5 hidden sm:inline" /> Documents
