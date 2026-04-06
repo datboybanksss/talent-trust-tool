@@ -134,9 +134,53 @@ const AgentClientDetail = () => {
   const [selectedReportSections, setSelectedReportSections] = useState<string[]>([
     "bio", "deals", "stats", "documents",
   ]);
+  const [serviceActive, setServiceActive] = useState<boolean>(true);
 
   const client = MOCK_CLIENTS[clientId || ""] || PENDING_FALLBACK(clientId || "1");
   const isPending = client.status === "pending";
+  const isServiceActive = !isPending && (serviceActive ?? client.serviceActive);
+
+  // Life File mock data for the client
+  const lifeFileSummary = getLifeFileSummary(mockBeneficiaries, mockEmergencyContacts, mockDocuments, mockAssets);
+
+  const handleToggleService = (checked: boolean) => {
+    setServiceActive(checked);
+    toast({
+      title: checked ? "Service Activated" : "Service Deactivated",
+      description: checked
+        ? `Live data feed restored for ${client.name}. You will continue earning commission on CFP® referrals.`
+        : `Live data feed disconnected for ${client.name}. Commission accrual paused.`,
+      variant: checked ? "default" : "destructive",
+    });
+  };
+
+  const handleDownloadLifeFile = () => {
+    if (!isServiceActive) {
+      toast({ title: "Access Denied", description: "Activate servicing to download client Life File reports.", variant: "destructive" });
+      return;
+    }
+    generateLifeFilePDF({
+      beneficiaries: mockBeneficiaries,
+      emergencyContacts: mockEmergencyContacts,
+      documents: mockDocuments,
+      assets: mockAssets,
+      userName: client.name,
+    });
+    toast({ title: "Life File PDF Generated", description: `Full Life File report for ${client.name} downloaded.` });
+  };
+
+  const handleContactCFP = () => {
+    const params = new URLSearchParams({
+      type: "financial_planning",
+      message: `Agent referral — Financial Shortfall Review requested on behalf of client: ${client.name}.\n\nClient type: ${client.type === "athlete" ? `Athlete — ${client.sport}` : `Artist — ${client.discipline}`}\nMarket value: ${client.marketValue}\n\nPlease contact the agent to discuss commission structure and client needs.`,
+    });
+    navigate(`/contact?${params.toString()}`);
+  };
+
+  const getTypeLabel = (category: string, type: string) => {
+    const list = category === "insurance" ? INSURANCE_TYPES : INVESTMENT_TYPES;
+    return list.find((t) => t.value === type)?.label || type;
+  };
 
   const toggleReportSection = (section: string) => {
     setSelectedReportSections((prev) =>
