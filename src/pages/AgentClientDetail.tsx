@@ -7,15 +7,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft, FileText, Bell, Handshake, BarChart3, User, Download,
   Calendar, DollarSign, Shield, Clock, CheckCircle2, AlertTriangle,
-  Trophy, Music, TrendingUp, MapPin, Phone, Mail, Globe, Star
+  Trophy, Music, TrendingUp, MapPin, Phone, Mail, Globe, Star,
+  Briefcase, WifiOff, Wifi, HeartPulse, PhoneCall
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
+import { mockBeneficiaries, mockEmergencyContacts, mockDocuments, mockAssets, getLifeFileSummary } from "@/data/mockLifeFileData";
+import { generateLifeFilePDF } from "@/utils/lifeFilePdfExport";
+import { INSURANCE_TYPES, INVESTMENT_TYPES } from "@/types/lifeFileAsset";
 
 // ─── Mock Client Data ───────────────────────────────────────────────
 const MOCK_CLIENTS: Record<string, any> = {
@@ -48,6 +53,8 @@ const MOCK_CLIENTS: Record<string, any> = {
       { id: "dl5", brand: "Kolisi Foundation", type: "NPO", value: "—", start: "2020-01-01", end: "ongoing", status: "active" },
     ],
     stats: { contractsActive: 4, totalDealValue: "R32,200,000", complianceScore: 92, documentsCount: 6 },
+    serviceActive: true, lastDataSync: "2026-04-06T08:30:00Z",
+    commissionRate: 5, commissionEarned: "R1,610,000",
   },
   "2": {
     id: "2", name: "Zozibini Tunzi", email: "zozi@example.com", phone: "+27 82 345 6789",
@@ -72,6 +79,8 @@ const MOCK_CLIENTS: Record<string, any> = {
       { id: "dl3", brand: "Netflix SA", type: "Production Deal", value: "R4,500,000", start: "2026-01-01", end: "2026-12-31", status: "negotiating" },
     ],
     stats: { contractsActive: 2, totalDealValue: "$500K + R4.5M", complianceScore: 88, documentsCount: 4 },
+    serviceActive: true, lastDataSync: "2026-04-06T06:15:00Z",
+    commissionRate: 5, commissionEarned: "R225,000",
   },
   "4": {
     id: "4", name: "Tyla Seethal", email: "tyla@example.com", phone: "+27 84 567 8901",
@@ -98,6 +107,8 @@ const MOCK_CLIENTS: Record<string, any> = {
       { id: "dl4", brand: "Fashion Nova", type: "Collaboration", value: "R3,500,000", start: "2026-02-01", end: "2026-07-31", status: "negotiating" },
     ],
     stats: { contractsActive: 3, totalDealValue: "R56,500,000", complianceScore: 95, documentsCount: 5 },
+    serviceActive: true, lastDataSync: "2026-04-06T09:00:00Z",
+    commissionRate: 5, commissionEarned: "R2,825,000",
   },
 };
 
@@ -113,6 +124,7 @@ const PENDING_FALLBACK = (id: string) => ({
   bio: id === "3" ? "Premier fast bowler. ICC No.1 ranked bowler." : "Legendary Springbok lock. World Cup winner.",
   documents: [], reminders: [], deals: [],
   stats: { contractsActive: 0, totalDealValue: "—", complianceScore: 0, documentsCount: 0 },
+  serviceActive: false, lastDataSync: null, commissionRate: 0, commissionEarned: "R0",
 });
 
 const AgentClientDetail = () => {
@@ -122,9 +134,53 @@ const AgentClientDetail = () => {
   const [selectedReportSections, setSelectedReportSections] = useState<string[]>([
     "bio", "deals", "stats", "documents",
   ]);
+  const [serviceActive, setServiceActive] = useState<boolean>(true);
 
   const client = MOCK_CLIENTS[clientId || ""] || PENDING_FALLBACK(clientId || "1");
   const isPending = client.status === "pending";
+  const isServiceActive = !isPending && (serviceActive ?? client.serviceActive);
+
+  // Life File mock data for the client
+  const lifeFileSummary = getLifeFileSummary(mockBeneficiaries, mockEmergencyContacts, mockDocuments, mockAssets);
+
+  const handleToggleService = (checked: boolean) => {
+    setServiceActive(checked);
+    toast({
+      title: checked ? "Service Activated" : "Service Deactivated",
+      description: checked
+        ? `Live data feed restored for ${client.name}. You will continue earning commission on CFP® referrals.`
+        : `Live data feed disconnected for ${client.name}. Commission accrual paused.`,
+      variant: checked ? "default" : "destructive",
+    });
+  };
+
+  const handleDownloadLifeFile = () => {
+    if (!isServiceActive) {
+      toast({ title: "Access Denied", description: "Activate servicing to download client Life File reports.", variant: "destructive" });
+      return;
+    }
+    generateLifeFilePDF({
+      beneficiaries: mockBeneficiaries,
+      emergencyContacts: mockEmergencyContacts,
+      documents: mockDocuments,
+      assets: mockAssets,
+      userName: client.name,
+    });
+    toast({ title: "Life File PDF Generated", description: `Full Life File report for ${client.name} downloaded.` });
+  };
+
+  const handleContactCFP = () => {
+    const params = new URLSearchParams({
+      type: "financial_planning",
+      message: `Agent referral — Financial Shortfall Review requested on behalf of client: ${client.name}.\n\nClient type: ${client.type === "athlete" ? `Athlete — ${client.sport}` : `Artist — ${client.discipline}`}\nMarket value: ${client.marketValue}\n\nPlease contact the agent to discuss commission structure and client needs.`,
+    });
+    navigate(`/contact?${params.toString()}`);
+  };
+
+  const getTypeLabel = (category: string, type: string) => {
+    const list = category === "insurance" ? INSURANCE_TYPES : INVESTMENT_TYPES;
+    return list.find((t) => t.value === type)?.label || type;
+  };
 
   const toggleReportSection = (section: string) => {
     setSelectedReportSections((prev) =>
@@ -300,6 +356,43 @@ const AgentClientDetail = () => {
       </header>
 
       <div className="container py-6 max-w-6xl mx-auto space-y-6">
+        {/* Service Status Banner */}
+        {!isPending && (
+          <Card className={`border ${isServiceActive ? "border-green-300 bg-green-50 dark:bg-green-950/20" : "border-destructive/50 bg-destructive/5"}`}>
+            <CardContent className="py-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {isServiceActive ? (
+                  <Wifi className="w-5 h-5 text-green-600 shrink-0" />
+                ) : (
+                  <WifiOff className="w-5 h-5 text-destructive shrink-0" />
+                )}
+                <div>
+                  <p className={`text-sm font-medium ${isServiceActive ? "text-green-800 dark:text-green-200" : "text-destructive"}`}>
+                    {isServiceActive ? "Actively Servicing — Live Data Connected" : "Service Inactive — Live Data Disconnected"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {isServiceActive
+                      ? `Last synced: ${client.lastDataSync ? format(new Date(client.lastDataSync), "MMM d, yyyy 'at' h:mm a") : "Just now"} · Commission rate: ${client.commissionRate}%`
+                      : "Re-activate servicing to restore live data feed and resume commission accrual."}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 shrink-0">
+                {isServiceActive && (
+                  <Badge variant="outline" className="text-green-700 border-green-200 bg-green-500/10">
+                    <DollarSign className="w-3 h-3 mr-1" />
+                    {client.commissionEarned} earned
+                  </Badge>
+                )}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">Service</span>
+                  <Switch checked={isServiceActive} onCheckedChange={handleToggleService} />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {isPending && (
           <Card className="border-amber-300 bg-amber-50 dark:bg-amber-950/20">
             <CardContent className="py-4 flex items-center gap-3">
@@ -320,10 +413,10 @@ const AgentClientDetail = () => {
             { icon: Shield, label: "Compliance", value: `${client.stats.complianceScore}%`, color: "text-blue-600" },
             { icon: Globe, label: "Social Reach", value: client.socialFollowers, color: "text-purple-600" },
           ].map((stat, i) => (
-            <Card key={i} className="border-border/50">
+            <Card key={i} className={`border-border/50 ${!isServiceActive ? "opacity-50" : ""}`}>
               <CardContent className="p-4">
                 <stat.icon className={`w-4 h-4 ${stat.color} mb-2`} />
-                <p className="text-xl font-display font-bold text-foreground">{stat.value}</p>
+                <p className="text-xl font-display font-bold text-foreground">{isServiceActive ? stat.value : "—"}</p>
                 <p className="text-xs text-muted-foreground">{stat.label}</p>
               </CardContent>
             </Card>
@@ -332,9 +425,12 @@ const AgentClientDetail = () => {
 
         {/* Tabs */}
         <Tabs defaultValue="deals" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="deals" className="text-xs sm:text-sm">
               <Handshake className="w-4 h-4 mr-1.5 hidden sm:inline" /> Deals
+            </TabsTrigger>
+            <TabsTrigger value="lifefile" className="text-xs sm:text-sm">
+              <HeartPulse className="w-4 h-4 mr-1.5 hidden sm:inline" /> Life File
             </TabsTrigger>
             <TabsTrigger value="documents" className="text-xs sm:text-sm">
               <FileText className="w-4 h-4 mr-1.5 hidden sm:inline" /> Documents
@@ -392,7 +488,148 @@ const AgentClientDetail = () => {
             </Card>
           </TabsContent>
 
-          {/* ─── Documents Tab ─── */}
+          {/* ─── Life File Tab ─── */}
+          <TabsContent value="lifefile">
+            {!isServiceActive ? (
+              <Card className="border-destructive/30">
+                <CardContent className="py-12 text-center space-y-3">
+                  <WifiOff className="w-10 h-10 text-destructive mx-auto" />
+                  <h3 className="text-lg font-semibold text-foreground">Service Inactive</h3>
+                  <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                    Live data access is disconnected. Re-activate servicing for {client.name} to view their Life File, download reports, and earn CFP® referral commission.
+                  </p>
+                  <Button onClick={() => handleToggleService(true)} className="mt-2">
+                    <Wifi className="w-4 h-4 mr-2" /> Re-activate Service
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {/* Life File Actions */}
+                <div className="flex flex-wrap gap-3">
+                  <Button onClick={handleDownloadLifeFile} className="bg-primary text-primary-foreground">
+                    <Download className="w-4 h-4 mr-2" /> Download Life File PDF
+                  </Button>
+                  <Button variant="outline" onClick={handleContactCFP}>
+                    <PhoneCall className="w-4 h-4 mr-2" /> Contact a CFP® (Earn Commission)
+                  </Button>
+                </div>
+
+                {/* Commission Info */}
+                <Card className="border-primary/20 bg-primary/5">
+                  <CardContent className="py-4">
+                    <div className="flex items-center gap-3">
+                      <DollarSign className="w-5 h-5 text-primary shrink-0" />
+                      <div>
+                        <p className="text-sm font-medium text-foreground">CFP® Referral Commission</p>
+                        <p className="text-xs text-muted-foreground">
+                          Earn {client.commissionRate}% commission on financial products recommended through CFP® referrals.
+                          Total earned to date: <span className="font-semibold text-primary">{client.commissionEarned}</span>
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Life File Summary */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Estate Planning Snapshot</CardTitle>
+                    <CardDescription>Overview of {client.name}'s Life File</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      {[
+                        { label: "Beneficiaries", value: lifeFileSummary.beneficiaryCount, sub: lifeFileSummary.allocationComplete ? "100% allocated" : `${lifeFileSummary.totalAllocation}% allocated` },
+                        { label: "Emergency Contacts", value: lifeFileSummary.contactCount, sub: "On record" },
+                        { label: "Documents", value: `${lifeFileSummary.completedDocs}/${lifeFileSummary.documentCount}`, sub: `${lifeFileSummary.needsAttention} need attention` },
+                        { label: "Insurance Policies", value: lifeFileSummary.insurancePolicies, sub: `R${(lifeFileSummary.totalInsuranceCover / 1000000).toFixed(1)}M cover` },
+                      ].map((item, i) => (
+                        <div key={i} className="p-3 rounded-lg bg-muted/50 text-center">
+                          <p className="text-2xl font-display font-bold text-foreground">{item.value}</p>
+                          <p className="text-xs font-medium text-foreground">{item.label}</p>
+                          <p className="text-[10px] text-muted-foreground">{item.sub}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Insurance Policies */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Insurance Policies</CardTitle>
+                    <CardDescription>
+                      {mockAssets.filter(a => a.asset_category === "insurance").length} active policies · Total cover: R{(lifeFileSummary.totalInsuranceCover / 1000000).toFixed(1)}M
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Type</TableHead>
+                          <TableHead>Institution</TableHead>
+                          <TableHead>Cover Amount</TableHead>
+                          <TableHead className="hidden md:table-cell">Premium</TableHead>
+                          <TableHead className="hidden md:table-cell">Beneficiaries</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {mockAssets.filter(a => a.asset_category === "insurance").map(asset => (
+                          <TableRow key={asset.id}>
+                            <TableCell className="font-medium">{getTypeLabel("insurance", asset.asset_type)}</TableCell>
+                            <TableCell>{asset.institution}</TableCell>
+                            <TableCell className="font-semibold">R{(asset.amount || 0).toLocaleString()}</TableCell>
+                            <TableCell className="hidden md:table-cell text-muted-foreground">
+                              {asset.premium_or_contribution ? `R${asset.premium_or_contribution.toLocaleString()}/m` : "—"}
+                            </TableCell>
+                            <TableCell className="hidden md:table-cell text-xs text-muted-foreground">{asset.beneficiary_names || "—"}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+
+                {/* Investments */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Investments</CardTitle>
+                    <CardDescription>
+                      {mockAssets.filter(a => a.asset_category === "investment").length} active investments · Total value: R{(lifeFileSummary.totalInvestmentValue / 1000000).toFixed(1)}M
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Type</TableHead>
+                          <TableHead>Institution</TableHead>
+                          <TableHead>Value</TableHead>
+                          <TableHead className="hidden md:table-cell">Contribution</TableHead>
+                          <TableHead className="hidden md:table-cell">Beneficiaries</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {mockAssets.filter(a => a.asset_category === "investment").map(asset => (
+                          <TableRow key={asset.id}>
+                            <TableCell className="font-medium">{getTypeLabel("investment", asset.asset_type)}</TableCell>
+                            <TableCell>{asset.institution}</TableCell>
+                            <TableCell className="font-semibold">R{(asset.amount || 0).toLocaleString()}</TableCell>
+                            <TableCell className="hidden md:table-cell text-muted-foreground">
+                              {asset.premium_or_contribution ? `R${asset.premium_or_contribution.toLocaleString()}/m` : "Lump sum"}
+                            </TableCell>
+                            <TableCell className="hidden md:table-cell text-xs text-muted-foreground">{asset.beneficiary_names || "—"}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </TabsContent>
+
           <TabsContent value="documents">
             <Card>
               <CardHeader>
