@@ -7,15 +7,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft, FileText, Bell, Handshake, BarChart3, User, Download,
   Calendar, DollarSign, Shield, Clock, CheckCircle2, AlertTriangle,
-  Trophy, Music, TrendingUp, MapPin, Phone, Mail, Globe, Star
+  Trophy, Music, TrendingUp, MapPin, Phone, Mail, Globe, Star,
+  Briefcase, WifiOff, Wifi, HeartPulse, PhoneCall
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
+import { mockBeneficiaries, mockEmergencyContacts, mockDocuments, mockAssets, getLifeFileSummary } from "@/data/mockLifeFileData";
+import { generateLifeFilePDF } from "@/utils/lifeFilePdfExport";
+import { INSURANCE_TYPES, INVESTMENT_TYPES } from "@/types/lifeFileAsset";
 
 // ─── Mock Client Data ───────────────────────────────────────────────
 const MOCK_CLIENTS: Record<string, any> = {
