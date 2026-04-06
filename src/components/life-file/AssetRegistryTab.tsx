@@ -38,11 +38,58 @@ const formatCurrency = (amount: number, currency: string) =>
 
 const AssetRegistryTab = ({ assets, onAdd, onEdit, onDelete, onImportFromIntegrations }: AssetRegistryTabProps) => {
   const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [shortfallExpanded, setShortfallExpanded] = useState(false);
   const insurances = assets.filter((a) => a.asset_category === "insurance");
   const investments = assets.filter((a) => a.asset_category === "investment");
 
   const totalInsuranceCover = insurances.reduce((s, a) => s + (a.amount || 0), 0);
   const totalInvestmentValue = investments.reduce((s, a) => s + (a.amount || 0), 0);
+
+  // Shortfall analysis against SA benchmarks
+  const activeIns = insurances.filter(a => a.status === "active");
+  const activeInv = investments.filter(a => a.status === "active");
+
+  const shortfalls = [
+    {
+      area: "Life Cover",
+      current: activeIns.filter(a => ["life", "credit_life"].includes(a.asset_type)).reduce((s, a) => s + (a.amount || 0), 0),
+      recommended: 5_000_000,
+      products: ["Term Life Insurance", "Whole Life Insurance"],
+    },
+    {
+      area: "Disability / Income Protection",
+      current: activeIns.filter(a => a.asset_type === "disability").reduce((s, a) => s + (a.amount || 0), 0),
+      recommended: 2_000_000,
+      products: ["Income Protection Policy", "Disability Lump-Sum Cover"],
+    },
+    {
+      area: "Key-Man Cover",
+      current: activeIns.filter(a => a.asset_type === "keyman").reduce((s, a) => s + (a.amount || 0), 0),
+      recommended: 3_000_000,
+      products: ["Key-Man Insurance Policy"],
+    },
+    {
+      area: "Funeral Cover",
+      current: activeIns.filter(a => a.asset_type === "funeral").reduce((s, a) => s + (a.amount || 0), 0),
+      recommended: 50_000,
+      products: ["Funeral Cover Policy"],
+    },
+    {
+      area: "Retirement Savings",
+      current: activeInv.filter(a => ["retirement_annuity", "pension_fund", "provident_fund", "preservation_fund", "living_annuity"].includes(a.asset_type)).reduce((s, a) => s + (a.amount || 0), 0),
+      recommended: 8_000_000,
+      products: ["Retirement Annuity (RA)", "Pension / Provident Fund"],
+    },
+    {
+      area: "Investment Portfolio",
+      current: activeInv.reduce((s, a) => s + (a.amount || 0), 0),
+      recommended: 3_000_000,
+      products: ["Tax-Free Savings", "Unit Trust", "Offshore Investment"],
+    },
+  ].map(s => ({ ...s, gap: Math.max(0, s.recommended - s.current) }));
+
+  const gaps = shortfalls.filter(s => s.gap > 0);
+  const adequateCount = shortfalls.length - gaps.length;
 
   const getTypeLabel = (category: string, type: string) => {
     const list = category === "insurance" ? INSURANCE_TYPES : INVESTMENT_TYPES;
