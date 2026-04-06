@@ -480,6 +480,17 @@ const LifeFilePage = () => {
               setDeleteTarget({ type: "asset", id: asset.id, name: `${asset.institution} - ${asset.asset_type}` });
               setDeleteDialogOpen(true);
             }}
+            onImportFromIntegrations={(imported) => {
+              const withUser = imported.map((a) => ({
+                ...a,
+                id: crypto.randomUUID(),
+                user_id: userId || "",
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              })) as any[];
+              setAssets((prev) => [...prev, ...withUser]);
+              toast({ title: `${imported.length} account${imported.length > 1 ? "s" : ""} imported to Asset Registry` });
+            }}
           />
         </TabsContent>
 

@@ -10,6 +10,7 @@ import {
   Building,
   BadgeDollarSign,
   Users,
+  Plug,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -18,18 +19,21 @@ import {
   INVESTMENT_TYPES,
   PREMIUM_FREQUENCIES,
 } from "@/types/lifeFileAsset";
+import ImportFromIntegrationsDialog from "./ImportFromIntegrationsDialog";
 
 interface AssetRegistryTabProps {
   assets: LifeFileAsset[];
   onAdd: (category: "insurance" | "investment") => void;
   onEdit: (asset: LifeFileAsset) => void;
   onDelete: (asset: LifeFileAsset) => void;
+  onImportFromIntegrations?: (assets: Omit<LifeFileAsset, "id" | "created_at" | "updated_at">[]) => void;
 }
 
 const formatCurrency = (amount: number, currency: string) =>
   new Intl.NumberFormat("en-ZA", { style: "currency", currency }).format(amount);
 
-const AssetRegistryTab = ({ assets, onAdd, onEdit, onDelete }: AssetRegistryTabProps) => {
+const AssetRegistryTab = ({ assets, onAdd, onEdit, onDelete, onImportFromIntegrations }: AssetRegistryTabProps) => {
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
   const insurances = assets.filter((a) => a.asset_category === "insurance");
   const investments = assets.filter((a) => a.asset_category === "investment");
 
@@ -174,6 +178,22 @@ const AssetRegistryTab = ({ assets, onAdd, onEdit, onDelete }: AssetRegistryTabP
 
   return (
     <div className="space-y-6">
+      {/* Import from Integrations banner */}
+      {onImportFromIntegrations && (
+        <div className="flex items-center justify-between p-4 rounded-xl border border-primary/20 bg-primary/5">
+          <div className="flex items-center gap-3">
+            <Plug className="w-5 h-5 text-primary" />
+            <div>
+              <p className="text-sm font-medium text-foreground">Auto-populate from Financial Integrations</p>
+              <p className="text-xs text-muted-foreground">Import insurance & investment data from your connected accounts</p>
+            </div>
+          </div>
+          <Button variant="outline" size="sm" className="gap-2" onClick={() => setImportDialogOpen(true)}>
+            <Plug className="w-4 h-4" /> Import Accounts
+          </Button>
+        </div>
+      )}
+
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-card rounded-xl border border-border p-4 text-center">
@@ -238,6 +258,14 @@ const AssetRegistryTab = ({ assets, onAdd, onEdit, onDelete }: AssetRegistryTabP
           </div>
         </TabsContent>
       </Tabs>
+      {onImportFromIntegrations && (
+        <ImportFromIntegrationsDialog
+          open={importDialogOpen}
+          onOpenChange={setImportDialogOpen}
+          existingAssets={assets}
+          onImport={onImportFromIntegrations}
+        />
+      )}
     </div>
   );
 };
