@@ -400,6 +400,7 @@ const LifeFilePage = () => {
               beneficiaries,
               emergencyContacts: contacts,
               documents,
+              assets,
               userName: "John Doe", // TODO: Replace with actual user name from auth
             });
             toast({ title: "PDF downloaded successfully" });
