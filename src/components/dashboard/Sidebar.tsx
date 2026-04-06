@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useProfile } from "@/hooks/useProfile";
 import { 
   Shield, 
+  ShieldCheck,
   LayoutDashboard, 
   User, 
   FileCheck, 
@@ -153,6 +154,7 @@ const navItems = [
   { icon: Calculator, label: "Financial Calculators", href: "/dashboard/estate-calculator" },
   { icon: Mail, label: "Email Log", href: "/dashboard/emails" },
   { icon: Share2, label: "Sharing", href: "/dashboard/sharing" },
+  { icon: ShieldCheck, label: "Guardian & Minor Protection", href: "/dashboard/guardian" },
   { icon: Bell, label: "Reminders", href: "/dashboard/reminders", badge: 5 },
 ];
 
