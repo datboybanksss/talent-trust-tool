@@ -53,6 +53,8 @@ const MOCK_CLIENTS: Record<string, any> = {
       { id: "dl5", brand: "Kolisi Foundation", type: "NPO", value: "—", start: "2020-01-01", end: "ongoing", status: "active" },
     ],
     stats: { contractsActive: 4, totalDealValue: "R32,200,000", complianceScore: 92, documentsCount: 6 },
+    serviceActive: true, lastDataSync: "2026-04-06T08:30:00Z",
+    commissionRate: 5, commissionEarned: "R1,610,000",
   },
   "2": {
     id: "2", name: "Zozibini Tunzi", email: "zozi@example.com", phone: "+27 82 345 6789",
