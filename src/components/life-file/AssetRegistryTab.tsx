@@ -269,6 +269,87 @@ const AssetRegistryTab = ({ assets, onAdd, onEdit, onDelete, onImportFromIntegra
         </div>
       </div>
 
+      {/* Shortfall Alert Banner */}
+      {assets.length > 0 && (
+        <div className={cn(
+          "rounded-xl border p-4",
+          gaps.length > 0
+            ? "border-amber-300 bg-amber-50 dark:bg-amber-950/20"
+            : "border-green-300 bg-green-50 dark:bg-green-950/20"
+        )}>
+          <button
+            className="w-full flex items-center justify-between"
+            onClick={() => setShortfallExpanded(!shortfallExpanded)}
+          >
+            <div className="flex items-center gap-3">
+              {gaps.length > 0 ? (
+                <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
+              ) : (
+                <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0" />
+              )}
+              <div className="text-left">
+                <p className={cn("text-sm font-semibold", gaps.length > 0 ? "text-amber-800 dark:text-amber-200" : "text-green-800 dark:text-green-200")}>
+                  {gaps.length > 0
+                    ? `${gaps.length} shortfall${gaps.length > 1 ? "s" : ""} detected against recommended benchmarks`
+                    : `All ${adequateCount} areas meet recommended benchmarks`}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {gaps.length > 0
+                    ? `${adequateCount} of ${shortfalls.length} areas adequate · Tap to view details`
+                    : "Based on illustrative South African financial planning benchmarks"}
+                </p>
+              </div>
+            </div>
+            {shortfallExpanded ? (
+              <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0" />
+            ) : (
+              <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />
+            )}
+          </button>
+
+          {shortfallExpanded && (
+            <div className="mt-4 space-y-2">
+              {shortfalls.map((s, i) => (
+                <div
+                  key={i}
+                  className={cn(
+                    "flex items-center justify-between p-3 rounded-lg text-sm",
+                    s.gap > 0 ? "bg-amber-100/50 dark:bg-amber-900/20" : "bg-green-100/50 dark:bg-green-900/20"
+                  )}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    {s.gap > 0 ? (
+                      <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                    ) : (
+                      <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0" />
+                    )}
+                    <div className="min-w-0">
+                      <p className="font-medium text-foreground">{s.area}</p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {formatCurrency(s.current, "ZAR")} of {formatCurrency(s.recommended, "ZAR")} recommended
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0 ml-3">
+                    {s.gap > 0 ? (
+                      <div>
+                        <p className="font-semibold text-amber-700 dark:text-amber-300">{formatCurrency(s.gap, "ZAR")}</p>
+                        <p className="text-[10px] text-muted-foreground">shortfall</p>
+                      </div>
+                    ) : (
+                      <p className="font-medium text-green-700 dark:text-green-300">✓ Adequate</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+              <p className="text-[10px] text-muted-foreground pt-2 italic">
+                ⚠ Illustrative benchmarks only. Contact a Certified Financial Planner (CFP®) for a personalised needs analysis.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
       <Tabs defaultValue="insurance">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="insurance" className="flex items-center gap-2">
