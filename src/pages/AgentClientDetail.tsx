@@ -79,6 +79,8 @@ const MOCK_CLIENTS: Record<string, any> = {
       { id: "dl3", brand: "Netflix SA", type: "Production Deal", value: "R4,500,000", start: "2026-01-01", end: "2026-12-31", status: "negotiating" },
     ],
     stats: { contractsActive: 2, totalDealValue: "$500K + R4.5M", complianceScore: 88, documentsCount: 4 },
+    serviceActive: true, lastDataSync: "2026-04-06T06:15:00Z",
+    commissionRate: 5, commissionEarned: "R225,000",
   },
   "4": {
     id: "4", name: "Tyla Seethal", email: "tyla@example.com", phone: "+27 84 567 8901",
