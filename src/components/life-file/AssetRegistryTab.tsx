@@ -11,6 +11,10 @@ import {
   BadgeDollarSign,
   Users,
   Plug,
+  AlertTriangle,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
