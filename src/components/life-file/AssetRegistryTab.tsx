@@ -26,12 +26,14 @@ interface AssetRegistryTabProps {
   onAdd: (category: "insurance" | "investment") => void;
   onEdit: (asset: LifeFileAsset) => void;
   onDelete: (asset: LifeFileAsset) => void;
+  onImportFromIntegrations?: (assets: Omit<LifeFileAsset, "id" | "created_at" | "updated_at">[]) => void;
 }
 
 const formatCurrency = (amount: number, currency: string) =>
   new Intl.NumberFormat("en-ZA", { style: "currency", currency }).format(amount);
 
-const AssetRegistryTab = ({ assets, onAdd, onEdit, onDelete }: AssetRegistryTabProps) => {
+const AssetRegistryTab = ({ assets, onAdd, onEdit, onDelete, onImportFromIntegrations }: AssetRegistryTabProps) => {
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
   const insurances = assets.filter((a) => a.asset_category === "insurance");
   const investments = assets.filter((a) => a.asset_category === "investment");
 
