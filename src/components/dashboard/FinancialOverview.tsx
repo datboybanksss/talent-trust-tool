@@ -20,8 +20,12 @@ import {
   Info,
   LineChart,
   CircleDollarSign,
+  Plug,
+  CheckCircle2,
+  AlertCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Link } from "react-router-dom";
 import FinancialCharts from "./FinancialCharts";
 import MonthlyBudget from "./MonthlyBudget";
 
@@ -102,9 +106,20 @@ const FinancialOverview = () => {
             Demo data • Last refreshed: {lastRefresh}
           </p>
         </div>
-        <Button variant="outline" size="sm" className="gap-2">
-          <RefreshCw className="w-4 h-4" /> Refresh
-        </Button>
+        <div className="flex gap-2">
+          <Link to="/dashboard/integrations">
+            <Button variant="outline" size="sm" className="gap-2">
+              <Plug className="w-4 h-4" /> Integrations
+              <Badge variant="secondary" className="text-xs ml-1 gap-1">
+                <CheckCircle2 className="w-3 h-3 text-emerald-500" /> 9
+                <AlertCircle className="w-3 h-3 text-destructive" /> 1
+              </Badge>
+            </Button>
+          </Link>
+          <Button variant="outline" size="sm" className="gap-2">
+            <RefreshCw className="w-4 h-4" /> Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Summary Cards */}
