@@ -12,7 +12,7 @@ const GuardianManagement = () => {
   const [activeTab, setActiveTab] = useState("overview");
 
   return (
-    <DashboardLayout>
+    <DashboardLayout title="Guardian & Minor Protection" subtitle="GDPR & POPIA-compliant guardian access management">
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-display font-bold text-foreground flex items-center gap-2">
