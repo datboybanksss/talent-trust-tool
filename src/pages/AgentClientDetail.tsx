@@ -124,6 +124,7 @@ const PENDING_FALLBACK = (id: string) => ({
   bio: id === "3" ? "Premier fast bowler. ICC No.1 ranked bowler." : "Legendary Springbok lock. World Cup winner.",
   documents: [], reminders: [], deals: [],
   stats: { contractsActive: 0, totalDealValue: "—", complianceScore: 0, documentsCount: 0 },
+  serviceActive: false, lastDataSync: null, commissionRate: 0, commissionEarned: "R0",
 });
 
 const AgentClientDetail = () => {
