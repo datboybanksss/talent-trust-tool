@@ -15,6 +15,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Shield, Lock, Mail, User, Briefcase, Building, Phone } from "lucide-react";
+import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 
 const signInSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
