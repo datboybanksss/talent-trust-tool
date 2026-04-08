@@ -183,11 +183,9 @@ const SocialMedia = () => {
       platform: "instagram",
       handle: "",
       email: "",
-      password: "",
       recoveryEmail: "",
       recoveryPhone: "",
       twoFactorEnabled: false,
-      twoFactorBackupCodes: "",
       notes: "",
       followerCount: "",
       verified: false,
@@ -209,11 +207,9 @@ const SocialMedia = () => {
       platform: formData.platform,
       handle: formData.handle,
       email: formData.email || undefined,
-      password: formData.password || undefined,
       recoveryEmail: formData.recoveryEmail || undefined,
       recoveryPhone: formData.recoveryPhone || undefined,
       twoFactorEnabled: formData.twoFactorEnabled,
-      twoFactorBackupCodes: formData.twoFactorBackupCodes || undefined,
       notes: formData.notes || undefined,
       followerCount: formData.followerCount ? parseInt(formData.followerCount) : undefined,
       verified: formData.verified,
@@ -236,11 +232,9 @@ const SocialMedia = () => {
       platform: account.platform,
       handle: account.handle,
       email: account.email || "",
-      password: account.password || "",
       recoveryEmail: account.recoveryEmail || "",
       recoveryPhone: account.recoveryPhone || "",
       twoFactorEnabled: account.twoFactorEnabled,
-      twoFactorBackupCodes: account.twoFactorBackupCodes || "",
       notes: account.notes || "",
       followerCount: account.followerCount?.toString() || "",
       verified: account.verified,
@@ -257,11 +251,9 @@ const SocialMedia = () => {
             platform: formData.platform,
             handle: formData.handle,
             email: formData.email || undefined,
-            password: formData.password || undefined,
             recoveryEmail: formData.recoveryEmail || undefined,
             recoveryPhone: formData.recoveryPhone || undefined,
             twoFactorEnabled: formData.twoFactorEnabled,
-            twoFactorBackupCodes: formData.twoFactorBackupCodes || undefined,
             notes: formData.notes || undefined,
             followerCount: formData.followerCount ? parseInt(formData.followerCount) : undefined,
             verified: formData.verified,
@@ -286,15 +278,8 @@ const SocialMedia = () => {
     });
   };
 
-  const togglePasswordVisibility = (id: string) => {
-    const newVisible = new Set(visiblePasswords);
-    if (newVisible.has(id)) {
-      newVisible.delete(id);
-    } else {
-      newVisible.add(id);
-    }
-    setVisiblePasswords(newVisible);
-  };
+
+
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -376,15 +361,8 @@ const SocialMedia = () => {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label>Password</Label>
-            <Input
-              type="password"
-              placeholder="Account password"
-              value={formData.password}
-              onChange={(e) => setFormData({...formData, password: e.target.value})}
-            />
-          </div>
+
+
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -421,17 +399,8 @@ const SocialMedia = () => {
             />
           </div>
 
-          {formData.twoFactorEnabled && (
-            <div className="space-y-2">
-              <Label>2FA Backup Codes</Label>
-              <Textarea
-                placeholder="Enter backup codes (comma separated)"
-                value={formData.twoFactorBackupCodes}
-                onChange={(e) => setFormData({...formData, twoFactorBackupCodes: e.target.value})}
-                rows={2}
-              />
-            </div>
-          )}
+
+
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
