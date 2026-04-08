@@ -1,5 +1,6 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import EmailVerificationGate from "@/components/auth/EmailVerificationGate";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -19,6 +20,10 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
   if (!user) {
     return <Navigate to="/auth" replace state={{ from: location }} />;
+  }
+
+  if (!user.email_confirmed_at) {
+    return <EmailVerificationGate />;
   }
 
   return <>{children}</>;
