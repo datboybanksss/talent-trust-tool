@@ -489,7 +489,9 @@ function matchesFolder(doc: DocumentItem, folderId: string): boolean {
 /* ------------------------------------------------------------------ */
 
 const Documents = () => {
-  const [docs, setDocs] = useState<DocumentItem[]>(initialDocuments);
+  const { user } = useAuth();
+  const [docs, setDocs] = useState<DocumentItem[]>([]);
+  const [docsLoading, setDocsLoading] = useState(true);
   const [selectedFolder, setSelectedFolder] = useState("all");
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
