@@ -98,7 +98,7 @@ const Auth = () => {
     } else {
       toast({
         title: "Account created!",
-        description: "Please check your email to verify your account before signing in.",
+        description: "A verification link has been sent to your email. Please check your inbox and spam/junk folder — you must verify before you can sign in.",
       });
       setActiveTab("signin");
       signUpForm.reset();
