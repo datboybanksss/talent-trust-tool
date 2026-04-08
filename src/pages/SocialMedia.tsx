@@ -541,7 +541,7 @@ const SocialMedia = () => {
             filteredAccounts.map((account) => {
               const config = platformConfig[account.platform] || platformConfig.instagram;
               const Icon = config.icon;
-              const isPasswordVisible = visiblePasswords.has(account.id);
+              
 
               return (
                 <div
@@ -606,32 +606,8 @@ const SocialMedia = () => {
                       </div>
                     )}
 
-                    {account.password && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Password</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-foreground font-mono">
-                            {isPasswordVisible ? account.password : "••••••••"}
-                          </span>
-                          <button 
-                            onClick={() => togglePasswordVisibility(account.id)}
-                            className="p-1 hover:bg-secondary rounded"
-                          >
-                            {isPasswordVisible ? (
-                              <EyeOff className="w-3 h-3 text-muted-foreground" />
-                            ) : (
-                              <Eye className="w-3 h-3 text-muted-foreground" />
-                            )}
-                          </button>
-                          <button 
-                            onClick={() => copyToClipboard(account.password!, "Password")}
-                            className="p-1 hover:bg-secondary rounded"
-                          >
-                            <Copy className="w-3 h-3 text-muted-foreground" />
-                          </button>
-                        </div>
-                      </div>
-                    )}
+
+
 
                     {/* Security Status */}
                     <div className="flex items-center justify-between pt-2 border-t border-border">
