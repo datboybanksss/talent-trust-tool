@@ -49,11 +49,9 @@ interface SocialAccount {
   platform: string;
   handle: string;
   email?: string;
-  password?: string;
   recoveryEmail?: string;
   recoveryPhone?: string;
   twoFactorEnabled: boolean;
-  twoFactorBackupCodes?: string;
   notes?: string;
   followerCount?: number;
   verified: boolean;
@@ -109,18 +107,14 @@ const SocialMedia = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<SocialAccount | null>(null);
-  const [visiblePasswords, setVisiblePasswords] = useState<Set<string>>(new Set());
-
   // Form state
   const [formData, setFormData] = useState({
     platform: "instagram",
     handle: "",
     email: "",
-    password: "",
     recoveryEmail: "",
     recoveryPhone: "",
     twoFactorEnabled: false,
-    twoFactorBackupCodes: "",
     notes: "",
     followerCount: "",
     verified: false,
@@ -133,9 +127,7 @@ const SocialMedia = () => {
       platform: "instagram",
       handle: "@johndoe_rugby",
       email: "john@email.com",
-      password: "SecurePass123!",
       twoFactorEnabled: true,
-      twoFactorBackupCodes: "ABC123, DEF456, GHI789",
       followerCount: 125000,
       verified: true,
       accountStatus: "active",
@@ -146,7 +138,6 @@ const SocialMedia = () => {
       platform: "twitter",
       handle: "@JohnDoeRugby",
       email: "john@email.com",
-      password: "TwitterPass456!",
       twoFactorEnabled: true,
       followerCount: 85000,
       verified: true,
@@ -157,7 +148,6 @@ const SocialMedia = () => {
       platform: "youtube",
       handle: "JohnDoeOfficial",
       email: "johndoe.youtube@email.com",
-      password: "YTPassword789!",
       recoveryEmail: "backup@email.com",
       twoFactorEnabled: true,
       followerCount: 50000,
@@ -170,7 +160,6 @@ const SocialMedia = () => {
       platform: "linkedin",
       handle: "johndoe-rugby",
       email: "john.professional@email.com",
-      password: "LinkedInSecure!",
       twoFactorEnabled: false,
       followerCount: 15000,
       verified: false,
@@ -181,7 +170,6 @@ const SocialMedia = () => {
       platform: "tiktok",
       handle: "@johndoe.rugby",
       email: "john@email.com",
-      password: "TikTokPass!",
       twoFactorEnabled: true,
       followerCount: 250000,
       verified: true,
