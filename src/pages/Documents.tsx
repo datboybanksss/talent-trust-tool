@@ -1376,7 +1376,7 @@ const DocumentRow = ({ document, collateMode, selected, onToggle, onMoveRequest,
         <button title="Move to folder" onClick={() => onMoveRequest(document.id)} className="p-2 hover:bg-secondary rounded-lg transition-colors"><FolderInput className="w-4 h-4 text-muted-foreground" /></button>
         <button className="p-2 hover:bg-secondary rounded-lg transition-colors"><Eye className="w-4 h-4 text-muted-foreground" /></button>
         <button className="p-2 hover:bg-secondary rounded-lg transition-colors"><Download className="w-4 h-4 text-muted-foreground" /></button>
-        <button className="p-2 hover:bg-secondary rounded-lg transition-colors"><Trash2 className="w-4 h-4 text-muted-foreground" /></button>
+        <button onClick={onDelete} className="p-2 hover:bg-secondary rounded-lg transition-colors"><Trash2 className="w-4 h-4 text-muted-foreground" /></button>
       </div>
     </div>
   );
