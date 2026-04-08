@@ -528,7 +528,46 @@ const Documents = () => {
   const [renameValue, setRenameValue] = useState("");
   const [folderNameOverrides, setFolderNameOverrides] = useState<Record<string, string>>({});
 
-  // All folders including custom ones
+  // Fetch documents from database
+  const fetchDocs = useCallback(async () => {
+    if (!user) return;
+    setDocsLoading(true);
+    const { data, error } = await supabase
+      .from("life_file_documents")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching documents:", error);
+    } else {
+      const mapped: DocumentItem[] = (data || []).map((d) => ({
+        id: d.id,
+        name: d.file_name || d.title,
+        type: (d.file_name?.endsWith(".pdf") ? "pdf" : d.file_name?.match(/\.(jpg|jpeg|png)$/i) ? "image" : "doc") as "pdf" | "doc" | "image",
+        category: d.document_type,
+        date: new Date(d.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+        size: "-",
+        expiryDate: d.expiry_date || undefined,
+        reminder30: d.reminder_30_days,
+        reminder60: d.reminder_60_days,
+        reminder90: d.reminder_90_days,
+        reminder6m: d.reminder_6_months,
+        reminder1y: d.reminder_1_year,
+        notifyEmail: d.notify_email || undefined,
+        version: d.version,
+        isExpired: d.is_expired,
+      }));
+      setDocs(mapped);
+    }
+    setDocsLoading(false);
+  }, [user]);
+
+  useEffect(() => {
+    fetchDocs();
+  }, [fetchDocs]);
+
+
   const allBaseFolders = useMemo(() => [...baseFolders, ...customFolders], [customFolders]);
 
   // All categories including custom
