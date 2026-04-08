@@ -125,6 +125,17 @@ const Auth = () => {
             </TabsList>
 
             <TabsContent value="signin">
+              <div className="space-y-4">
+                <GoogleSignInButton />
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-border" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card px-2 text-muted-foreground">or</span>
+                  </div>
+                </div>
+              </div>
               <Form {...signInForm}>
                 <form onSubmit={signInForm.handleSubmit(handleSignIn)} className="space-y-4">
                   <FormField
@@ -180,6 +191,17 @@ const Auth = () => {
             </TabsContent>
 
             <TabsContent value="signup">
+              <div className="space-y-4">
+                <GoogleSignInButton />
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-border" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card px-2 text-muted-foreground">or</span>
+                  </div>
+                </div>
+              </div>
               <Form {...signUpForm}>
                 <form onSubmit={signUpForm.handleSubmit(handleSignUp)} className="space-y-4">
                   <FormField
