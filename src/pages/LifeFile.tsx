@@ -75,13 +75,6 @@ import AssetRegistryTab from "@/components/life-file/AssetRegistryTab";
 import AssetRegistryDialog from "@/components/life-file/AssetRegistryDialog";
 import { generateLifeFilePDF } from "@/utils/lifeFilePdfExport";
 import {
-  mockBeneficiaries,
-  mockEmergencyContacts,
-  mockDocuments,
-  mockAssets,
-  mockShares,
-} from "@/data/mockLifeFileData";
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -155,12 +148,11 @@ const LifeFilePage = () => {
         fetchLifeFileShares(uid),
         fetchLifeFileAssets(uid),
       ]);
-      // Use mock data as fallback when no real data exists
-      setBeneficiaries((benefs && benefs.length > 0) ? benefs : mockBeneficiaries);
-      setContacts((conts && conts.length > 0) ? conts : mockEmergencyContacts);
-      setDocuments((docs && docs.length > 0) ? docs : mockDocuments);
-      setShares((shrs && shrs.length > 0) ? shrs : mockShares);
-      setAssets((assts && assts.length > 0) ? assts : mockAssets);
+      setBeneficiaries(benefs || []);
+      setContacts(conts || []);
+      setDocuments(docs || []);
+      setShares(shrs || []);
+      setAssets(assts || []);
     } catch (error) {
       console.error("Error loading Life File data:", error);
       toast({

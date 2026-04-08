@@ -27,7 +27,10 @@ import {
   AlertTriangle,
   CheckCircle2,
 } from "lucide-react";
-import { useState, useCallback, useMemo, useRef } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect } from "react";
+import { Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import {
   Dialog,
@@ -486,7 +489,9 @@ function matchesFolder(doc: DocumentItem, folderId: string): boolean {
 /* ------------------------------------------------------------------ */
 
 const Documents = () => {
-  const [docs, setDocs] = useState<DocumentItem[]>(initialDocuments);
+  const { user } = useAuth();
+  const [docs, setDocs] = useState<DocumentItem[]>([]);
+  const [docsLoading, setDocsLoading] = useState(true);
   const [selectedFolder, setSelectedFolder] = useState("all");
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -523,7 +528,46 @@ const Documents = () => {
   const [renameValue, setRenameValue] = useState("");
   const [folderNameOverrides, setFolderNameOverrides] = useState<Record<string, string>>({});
 
-  // All folders including custom ones
+  // Fetch documents from database
+  const fetchDocs = useCallback(async () => {
+    if (!user) return;
+    setDocsLoading(true);
+    const { data, error } = await supabase
+      .from("life_file_documents")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching documents:", error);
+    } else {
+      const mapped: DocumentItem[] = (data || []).map((d) => ({
+        id: d.id,
+        name: d.file_name || d.title,
+        type: (d.file_name?.endsWith(".pdf") ? "pdf" : d.file_name?.match(/\.(jpg|jpeg|png)$/i) ? "image" : "doc") as "pdf" | "doc" | "image",
+        category: d.document_type,
+        date: new Date(d.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+        size: "-",
+        expiryDate: d.expiry_date || undefined,
+        reminder30: d.reminder_30_days,
+        reminder60: d.reminder_60_days,
+        reminder90: d.reminder_90_days,
+        reminder6m: d.reminder_6_months,
+        reminder1y: d.reminder_1_year,
+        notifyEmail: d.notify_email || undefined,
+        version: d.version,
+        isExpired: d.is_expired,
+      }));
+      setDocs(mapped);
+    }
+    setDocsLoading(false);
+  }, [user]);
+
+  useEffect(() => {
+    fetchDocs();
+  }, [fetchDocs]);
+
+
   const allBaseFolders = useMemo(() => [...baseFolders, ...customFolders], [customFolders]);
 
   // All categories including custom
@@ -602,48 +646,63 @@ const Documents = () => {
     }
   }, []);
 
-  const handleUpload = () => {
+  const handleUpload = async () => {
     if (!uploadForm.title.trim()) { toast({ title: "Error", description: "Please enter a document title", variant: "destructive" }); return; }
     if (!uploadForm.category) { toast({ title: "Error", description: "Please select a category", variant: "destructive" }); return; }
     if (!uploadForm.file) { toast({ title: "Error", description: "Please select a file to upload", variant: "destructive" }); return; }
+    if (!user) return;
 
-    // Mark existing documents with same category as expired (version control)
+    // Upload file to storage
+    const filePath = `${user.id}/${Date.now()}-${uploadForm.file.name}`;
+    const { error: storageError } = await supabase.storage
+      .from("life-file-documents")
+      .upload(filePath, uploadForm.file);
+
+    if (storageError) {
+      console.error("Storage upload error:", storageError);
+      toast({ title: "Upload failed", description: storageError.message, variant: "destructive" });
+      return;
+    }
+
+    // Determine version
     const matchingDocs = docs.filter((d) => d.category === uploadForm.category && !d.isExpired);
     const highestVersion = matchingDocs.reduce((max, d) => Math.max(max, d.version || 1), 0);
 
+    // Mark old versions as expired in DB
     if (matchingDocs.length > 0) {
-      setDocs((prev) => prev.map((d) =>
-        d.category === uploadForm.category && !d.isExpired
-          ? { ...d, isExpired: true }
-          : d
-      ));
+      const matchingIds = matchingDocs.map((d) => d.id);
+      await supabase.from("life_file_documents").update({ is_expired: true }).in("id", matchingIds);
     }
 
-    const newDoc: DocumentItem = {
-      id: String(Date.now()),
-      name: uploadForm.file.name,
-      type: uploadForm.file.name.endsWith(".pdf") ? "pdf" : uploadForm.file.name.match(/\.(jpg|jpeg|png)$/i) ? "image" : "doc",
-      category: uploadForm.category,
-      date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
-      size: `${(uploadForm.file.size / (1024 * 1024)).toFixed(1)} MB`,
-      expiryDate: uploadForm.expiryDate || undefined,
-      reminder30: uploadForm.reminder30,
-      reminder60: uploadForm.reminder60,
-      reminder90: uploadForm.reminder90,
-      reminder6m: uploadForm.reminder6m,
-      reminder1y: uploadForm.reminder1y,
-      notifyEmail: uploadForm.notifyEmail || undefined,
+    // Insert DB row
+    const { error: insertError } = await supabase.from("life_file_documents").insert({
+      user_id: user.id,
+      title: uploadForm.title,
+      document_type: uploadForm.category,
+      file_url: filePath,
+      file_name: uploadForm.file.name,
+      status: "complete",
+      expiry_date: uploadForm.expiryDate || null,
+      reminder_30_days: uploadForm.reminder30,
+      reminder_60_days: uploadForm.reminder60,
+      reminder_90_days: uploadForm.reminder90,
+      reminder_6_months: uploadForm.reminder6m,
+      reminder_1_year: uploadForm.reminder1y,
+      notify_email: uploadForm.notifyEmail || null,
       version: highestVersion + 1,
-      isExpired: false,
-    };
+    });
 
-    setDocs((prev) => [...prev, newDoc]);
+    if (insertError) {
+      console.error("Insert error:", insertError);
+      toast({ title: "Error saving document", variant: "destructive" });
+      return;
+    }
 
     const catLabel = allCategories.find((c) => c.value === uploadForm.category)?.label || uploadForm.category;
-    const expiredMsg = matchingDocs.length > 0 ? ` (${matchingDocs.length} previous version(s) marked as expired)` : "";
-    toast({ title: "Success", description: `"${uploadForm.title}" v${newDoc.version} uploaded to ${catLabel}${expiredMsg}` });
+    toast({ title: "Success", description: `"${uploadForm.title}" uploaded to ${catLabel}` });
     setUploadForm({ title: "", category: "", file: null, expiryDate: "", reminder30: false, reminder60: false, reminder90: false, reminder6m: false, reminder1y: false, notifyEmail: "" });
     setIsUploadOpen(false);
+    await fetchDocs();
   };
 
   /* Collate handlers */
@@ -735,7 +794,42 @@ const Documents = () => {
     dragDocId.current = docId;
   }, []);
 
+  // Delete document from DB + storage
+  const handleDeleteDoc = useCallback(async (docId: string) => {
+    const doc = docs.find((d) => d.id === docId);
+    if (!doc) return;
+
+    // Try to find the file_url from DB to delete from storage
+    const { data: dbDoc } = await supabase
+      .from("life_file_documents")
+      .select("file_url")
+      .eq("id", docId)
+      .single();
+
+    if (dbDoc?.file_url) {
+      await supabase.storage.from("life-file-documents").remove([dbDoc.file_url]);
+    }
+
+    const { error } = await supabase.from("life_file_documents").delete().eq("id", docId);
+    if (error) {
+      toast({ title: "Error deleting document", variant: "destructive" });
+      return;
+    }
+    await fetchDocs();
+    toast({ title: "Document deleted" });
+  }, [docs, fetchDocs]);
+
   /* ---------------------------------------------------------------- */
+
+  if (docsLoading) {
+    return (
+      <DashboardLayout title="My Important Documents" subtitle="Securely store and manage all your important documents">
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout
@@ -1130,6 +1224,7 @@ const Documents = () => {
                   onToggle={() => toggleDocSelect(doc.id)}
                   onMoveRequest={(id) => { setMoveDocId(id); setMoveTarget(""); }}
                   onDragStart={(e) => handleDocDragStart(e, doc.id)}
+                  onDelete={() => handleDeleteDoc(doc.id)}
                   catLabel={allCategories.find((c) => c.value === doc.category)?.label || doc.category}
                 />
               ))}
@@ -1219,10 +1314,11 @@ interface DocumentRowProps {
   onToggle: () => void;
   onMoveRequest: (id: string) => void;
   onDragStart?: (e: React.DragEvent) => void;
+  onDelete?: () => void;
   catLabel: string;
 }
 
-const DocumentRow = ({ document, collateMode, selected, onToggle, onMoveRequest, onDragStart, catLabel }: DocumentRowProps) => {
+const DocumentRow = ({ document, collateMode, selected, onToggle, onMoveRequest, onDragStart, onDelete, catLabel }: DocumentRowProps) => {
   const getIcon = () => {
     switch (document.type) {
       case "pdf": return <FileText className="w-5 h-5 text-destructive" />;
@@ -1280,7 +1376,7 @@ const DocumentRow = ({ document, collateMode, selected, onToggle, onMoveRequest,
         <button title="Move to folder" onClick={() => onMoveRequest(document.id)} className="p-2 hover:bg-secondary rounded-lg transition-colors"><FolderInput className="w-4 h-4 text-muted-foreground" /></button>
         <button className="p-2 hover:bg-secondary rounded-lg transition-colors"><Eye className="w-4 h-4 text-muted-foreground" /></button>
         <button className="p-2 hover:bg-secondary rounded-lg transition-colors"><Download className="w-4 h-4 text-muted-foreground" /></button>
-        <button className="p-2 hover:bg-secondary rounded-lg transition-colors"><Trash2 className="w-4 h-4 text-muted-foreground" /></button>
+        <button onClick={onDelete} className="p-2 hover:bg-secondary rounded-lg transition-colors"><Trash2 className="w-4 h-4 text-muted-foreground" /></button>
       </div>
     </div>
   );
