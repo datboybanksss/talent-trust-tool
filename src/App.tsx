@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import AgentRoute from "@/components/AgentRoute";
+import AdminRoute from "@/components/AdminRoute";
 import Landing from "./pages/Landing";
 import AgentRegister from "./pages/AgentRegister";
 import AgentDashboard from "./pages/AgentDashboard";
