@@ -12,6 +12,7 @@ import AgentClientDetail from "./pages/AgentClientDetail";
 import AgentAthleteProfile from "./pages/AgentAthleteProfile";
 import ActivateProfile from "./pages/ActivateProfile";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import LifeFile from "./pages/LifeFile";
@@ -57,6 +58,7 @@ const App = () => (
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/agent-register" element={<AgentRegister />} />
             <Route path="/agent-dashboard" element={<ProtectedRoute><AgentDashboard /></ProtectedRoute>} />
             <Route path="/agent-dashboard/client/:clientId" element={<ProtectedRoute><AgentClientDetail /></ProtectedRoute>} />

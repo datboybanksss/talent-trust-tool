@@ -13,6 +13,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Shield, Lock, Mail, User, Trophy, Palette } from "lucide-react";
+import ForgotPasswordDialog from "@/components/auth/ForgotPasswordDialog";
 
 const signInSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -167,6 +168,9 @@ const Auth = () => {
                       </FormItem>
                     )}
                   />
+                  <div className="flex justify-end">
+                    <ForgotPasswordDialog />
+                  </div>
                   <Button type="submit" variant="gold" className="w-full" disabled={isLoading}>
                     {isLoading ? "Signing in..." : "Sign In"}
                   </Button>
