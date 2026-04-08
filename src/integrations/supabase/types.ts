@@ -847,11 +847,9 @@ export type Database = {
           handle: string
           id: string
           notes: string | null
-          password: string | null
           platform: string
           recovery_email: string | null
           recovery_phone: string | null
-          two_factor_backup_codes: string | null
           two_factor_enabled: boolean | null
           updated_at: string
           user_id: string
@@ -865,11 +863,9 @@ export type Database = {
           handle: string
           id?: string
           notes?: string | null
-          password?: string | null
           platform: string
           recovery_email?: string | null
           recovery_phone?: string | null
-          two_factor_backup_codes?: string | null
           two_factor_enabled?: boolean | null
           updated_at?: string
           user_id: string
@@ -883,11 +879,9 @@ export type Database = {
           handle?: string
           id?: string
           notes?: string | null
-          password?: string | null
           platform?: string
           recovery_email?: string | null
           recovery_phone?: string | null
-          two_factor_backup_codes?: string | null
           two_factor_enabled?: boolean | null
           updated_at?: string
           user_id?: string
