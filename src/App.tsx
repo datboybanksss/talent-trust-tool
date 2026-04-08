@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import AgentRoute from "@/components/AgentRoute";
+import AdminRoute from "@/components/AdminRoute";
 import Landing from "./pages/Landing";
 import AgentRegister from "./pages/AgentRegister";
 import AgentDashboard from "./pages/AgentDashboard";
@@ -60,9 +62,9 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/agent-register" element={<AgentRegister />} />
-            <Route path="/agent-dashboard" element={<ProtectedRoute><AgentDashboard /></ProtectedRoute>} />
-            <Route path="/agent-dashboard/client/:clientId" element={<ProtectedRoute><AgentClientDetail /></ProtectedRoute>} />
-            <Route path="/agent-dashboard/athlete/:athleteId" element={<ProtectedRoute><AgentAthleteProfile /></ProtectedRoute>} />
+            <Route path="/agent-dashboard" element={<AgentRoute><AgentDashboard /></AgentRoute>} />
+            <Route path="/agent-dashboard/client/:clientId" element={<AgentRoute><AgentClientDetail /></AgentRoute>} />
+            <Route path="/agent-dashboard/athlete/:athleteId" element={<AgentRoute><AgentAthleteProfile /></AgentRoute>} />
             <Route path="/activate/:token" element={<ActivateProfile />} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/dashboard/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
@@ -86,7 +88,7 @@ const App = () => (
             <Route path="/dashboard/royalties" element={<ProtectedRoute><RoyaltyTracker /></ProtectedRoute>} />
             <Route path="/dashboard/creative-portfolio" element={<ProtectedRoute><CreativePortfolio /></ProtectedRoute>} />
             <Route path="/client-type" element={<ClientType />} />
-            <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+            <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
             <Route path="/executive-overview" element={<ProtectedRoute><ExecutiveOverview /></ProtectedRoute>} />
             <Route path="/dashboard/estate-calculator" element={<ProtectedRoute><EstateCalculator /></ProtectedRoute>} />
             <Route path="/dashboard/guardian" element={<ProtectedRoute><GuardianManagement /></ProtectedRoute>} />

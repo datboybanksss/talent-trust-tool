@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useAuth } from "@/hooks/useAuth";
+import { useUserRole } from "@/hooks/useUserRole";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,22 +58,13 @@ const AgentRegister = () => {
     },
   });
 
+  const { dashboardPath, loading: roleLoading } = useUserRole();
+
   useEffect(() => {
-    if (user) {
-      // Check if user has an agent profile, redirect accordingly
-      const checkAgentProfile = async () => {
-        const { data } = await supabase
-          .from("agent_manager_profiles")
-          .select("id")
-          .eq("user_id", user.id)
-          .maybeSingle();
-        if (data) {
-          navigate("/agent-dashboard");
-        }
-      };
-      checkAgentProfile();
+    if (user && !roleLoading) {
+      navigate(dashboardPath);
     }
-  }, [user, navigate]);
+  }, [user, roleLoading, dashboardPath, navigate]);
 
   const handleSignIn = async (data: SignInFormData) => {
     setIsLoading(true);
