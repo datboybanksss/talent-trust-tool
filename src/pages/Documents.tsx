@@ -1224,6 +1224,7 @@ const Documents = () => {
                   onToggle={() => toggleDocSelect(doc.id)}
                   onMoveRequest={(id) => { setMoveDocId(id); setMoveTarget(""); }}
                   onDragStart={(e) => handleDocDragStart(e, doc.id)}
+                  onDelete={() => handleDeleteDoc(doc.id)}
                   catLabel={allCategories.find((c) => c.value === doc.category)?.label || doc.category}
                 />
               ))}
@@ -1313,10 +1314,11 @@ interface DocumentRowProps {
   onToggle: () => void;
   onMoveRequest: (id: string) => void;
   onDragStart?: (e: React.DragEvent) => void;
+  onDelete?: () => void;
   catLabel: string;
 }
 
-const DocumentRow = ({ document, collateMode, selected, onToggle, onMoveRequest, onDragStart, catLabel }: DocumentRowProps) => {
+const DocumentRow = ({ document, collateMode, selected, onToggle, onMoveRequest, onDragStart, onDelete, catLabel }: DocumentRowProps) => {
   const getIcon = () => {
     switch (document.type) {
       case "pdf": return <FileText className="w-5 h-5 text-destructive" />;
