@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Shield, Lock, Mail, User, Trophy, Palette } from "lucide-react";
 import ForgotPasswordDialog from "@/components/auth/ForgotPasswordDialog";
+import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 
 const signInSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
