@@ -647,9 +647,9 @@ const SocialMedia = () => {
             <div>
               <h4 className="font-semibold text-foreground mb-1">Security Notice</h4>
               <p className="text-sm text-muted-foreground">
-                Your credentials are stored securely and protected by row-level security. 
-                We recommend enabling two-factor authentication on all accounts and using unique passwords. 
-                Consider using a dedicated password manager for additional security.
+                We recommend enabling two-factor authentication on all accounts. 
+                Use a dedicated password manager (e.g. 1Password, Bitwarden) to store your login credentials securely — 
+                never store passwords in spreadsheets or notes.
               </p>
             </div>
           </div>
