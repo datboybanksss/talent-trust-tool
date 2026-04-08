@@ -39,6 +39,7 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("signin");
   const { user, signIn, signUp } = useAuth();
+  const { dashboardPath, loading: roleLoading } = useUserRole();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -53,10 +54,10 @@ const Auth = () => {
   });
 
   useEffect(() => {
-    if (user) {
-      navigate("/dashboard");
+    if (user && !roleLoading) {
+      navigate(dashboardPath);
     }
-  }, [user, navigate]);
+  }, [user, roleLoading, dashboardPath, navigate]);
 
   const handleSignIn = async (data: SignInFormData) => {
     setIsLoading(true);
