@@ -794,7 +794,42 @@ const Documents = () => {
     dragDocId.current = docId;
   }, []);
 
+  // Delete document from DB + storage
+  const handleDeleteDoc = useCallback(async (docId: string) => {
+    const doc = docs.find((d) => d.id === docId);
+    if (!doc) return;
+
+    // Try to find the file_url from DB to delete from storage
+    const { data: dbDoc } = await supabase
+      .from("life_file_documents")
+      .select("file_url")
+      .eq("id", docId)
+      .single();
+
+    if (dbDoc?.file_url) {
+      await supabase.storage.from("life-file-documents").remove([dbDoc.file_url]);
+    }
+
+    const { error } = await supabase.from("life_file_documents").delete().eq("id", docId);
+    if (error) {
+      toast({ title: "Error deleting document", variant: "destructive" });
+      return;
+    }
+    await fetchDocs();
+    toast({ title: "Document deleted" });
+  }, [docs, fetchDocs]);
+
   /* ---------------------------------------------------------------- */
+
+  if (docsLoading) {
+    return (
+      <DashboardLayout title="My Important Documents" subtitle="Securely store and manage all your important documents">
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout
