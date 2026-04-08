@@ -9,8 +9,6 @@ import {
   Youtube, 
   Linkedin,
   Plus,
-  Eye,
-  EyeOff,
   Edit3,
   Trash2,
   Copy,
