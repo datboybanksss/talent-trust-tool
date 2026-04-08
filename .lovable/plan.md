@@ -1,29 +1,20 @@
 
-
-## Task A3: Enforce Email Verification (with Existing User Alert)
+## Task C-urgent: Remove Plain-Text Password Storage from Social Media Accounts
 
 ### What
-Block unverified users from accessing protected routes. Show a verification gate with a "Resend verification email" option. Additionally, display a prominent alert banner for existing users who haven't verified yet, warning them they may lose access.
+The `social_media_accounts` table stores passwords in plain text — a critical security vulnerability. Remove the `password` column entirely and update the UI to no longer collect, display, or copy passwords.
 
 ### How
 
-1. **Create `EmailVerificationGate` component** (`src/components/auth/EmailVerificationGate.tsx`)
-   - Full-screen gate shown when `user.email_confirmed_at` is null
-   - Displays a warning banner: "Action Required: Verify your email to keep access to your account. Unverified accounts may be restricted."
-   - Personalised messaging for all user types (athletes, artists, agents, managers)
-   - "Resend verification email" button calling `supabase.auth.resend({ type: 'signup', email })`
-   - Cooldown timer to prevent spam clicks
-   - "Sign out" button to switch accounts
+1. **Database migration** — Drop the `password` column from `social_media_accounts`
+   - Also drop `two_factor_backup_codes` (another sensitive field stored in plain text)
 
-2. **Update `ProtectedRoute`** (`src/components/ProtectedRoute.tsx`)
-   - After confirming `user` exists, check `user.email_confirmed_at`
-   - If null, render `EmailVerificationGate` instead of children
-
-3. **Update sign-up success toast** (`src/pages/Auth.tsx`)
-   - Improve message clarity: mention checking spam folder and that access requires verification
+2. **Update `SocialMedia.tsx`** — Remove all password-related UI:
+   - Remove password field from add/edit forms
+   - Remove password display, toggle visibility, and copy-to-clipboard logic
+   - Remove backup codes display
+   - Add a note recommending users use a dedicated password manager instead
 
 ### Files
-- `src/components/auth/EmailVerificationGate.tsx` — new
-- `src/components/ProtectedRoute.tsx` — modified
-- `src/pages/Auth.tsx` — minor toast text update
-
+- `src/pages/SocialMedia.tsx` — modified (remove password UI)
+- Database migration — drop `password` and `two_factor_backup_codes` columns

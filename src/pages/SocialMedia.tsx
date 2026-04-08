@@ -9,8 +9,6 @@ import {
   Youtube, 
   Linkedin,
   Plus,
-  Eye,
-  EyeOff,
   Edit3,
   Trash2,
   Copy,
@@ -49,11 +47,9 @@ interface SocialAccount {
   platform: string;
   handle: string;
   email?: string;
-  password?: string;
   recoveryEmail?: string;
   recoveryPhone?: string;
   twoFactorEnabled: boolean;
-  twoFactorBackupCodes?: string;
   notes?: string;
   followerCount?: number;
   verified: boolean;
@@ -109,18 +105,14 @@ const SocialMedia = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<SocialAccount | null>(null);
-  const [visiblePasswords, setVisiblePasswords] = useState<Set<string>>(new Set());
-
   // Form state
   const [formData, setFormData] = useState({
     platform: "instagram",
     handle: "",
     email: "",
-    password: "",
     recoveryEmail: "",
     recoveryPhone: "",
     twoFactorEnabled: false,
-    twoFactorBackupCodes: "",
     notes: "",
     followerCount: "",
     verified: false,
@@ -133,9 +125,7 @@ const SocialMedia = () => {
       platform: "instagram",
       handle: "@johndoe_rugby",
       email: "john@email.com",
-      password: "SecurePass123!",
       twoFactorEnabled: true,
-      twoFactorBackupCodes: "ABC123, DEF456, GHI789",
       followerCount: 125000,
       verified: true,
       accountStatus: "active",
@@ -146,7 +136,6 @@ const SocialMedia = () => {
       platform: "twitter",
       handle: "@JohnDoeRugby",
       email: "john@email.com",
-      password: "TwitterPass456!",
       twoFactorEnabled: true,
       followerCount: 85000,
       verified: true,
@@ -157,7 +146,6 @@ const SocialMedia = () => {
       platform: "youtube",
       handle: "JohnDoeOfficial",
       email: "johndoe.youtube@email.com",
-      password: "YTPassword789!",
       recoveryEmail: "backup@email.com",
       twoFactorEnabled: true,
       followerCount: 50000,
@@ -170,7 +158,6 @@ const SocialMedia = () => {
       platform: "linkedin",
       handle: "johndoe-rugby",
       email: "john.professional@email.com",
-      password: "LinkedInSecure!",
       twoFactorEnabled: false,
       followerCount: 15000,
       verified: false,
@@ -181,7 +168,6 @@ const SocialMedia = () => {
       platform: "tiktok",
       handle: "@johndoe.rugby",
       email: "john@email.com",
-      password: "TikTokPass!",
       twoFactorEnabled: true,
       followerCount: 250000,
       verified: true,
@@ -195,11 +181,9 @@ const SocialMedia = () => {
       platform: "instagram",
       handle: "",
       email: "",
-      password: "",
       recoveryEmail: "",
       recoveryPhone: "",
       twoFactorEnabled: false,
-      twoFactorBackupCodes: "",
       notes: "",
       followerCount: "",
       verified: false,
@@ -221,11 +205,9 @@ const SocialMedia = () => {
       platform: formData.platform,
       handle: formData.handle,
       email: formData.email || undefined,
-      password: formData.password || undefined,
       recoveryEmail: formData.recoveryEmail || undefined,
       recoveryPhone: formData.recoveryPhone || undefined,
       twoFactorEnabled: formData.twoFactorEnabled,
-      twoFactorBackupCodes: formData.twoFactorBackupCodes || undefined,
       notes: formData.notes || undefined,
       followerCount: formData.followerCount ? parseInt(formData.followerCount) : undefined,
       verified: formData.verified,
@@ -248,11 +230,9 @@ const SocialMedia = () => {
       platform: account.platform,
       handle: account.handle,
       email: account.email || "",
-      password: account.password || "",
       recoveryEmail: account.recoveryEmail || "",
       recoveryPhone: account.recoveryPhone || "",
       twoFactorEnabled: account.twoFactorEnabled,
-      twoFactorBackupCodes: account.twoFactorBackupCodes || "",
       notes: account.notes || "",
       followerCount: account.followerCount?.toString() || "",
       verified: account.verified,
@@ -269,11 +249,9 @@ const SocialMedia = () => {
             platform: formData.platform,
             handle: formData.handle,
             email: formData.email || undefined,
-            password: formData.password || undefined,
             recoveryEmail: formData.recoveryEmail || undefined,
             recoveryPhone: formData.recoveryPhone || undefined,
             twoFactorEnabled: formData.twoFactorEnabled,
-            twoFactorBackupCodes: formData.twoFactorBackupCodes || undefined,
             notes: formData.notes || undefined,
             followerCount: formData.followerCount ? parseInt(formData.followerCount) : undefined,
             verified: formData.verified,
@@ -298,15 +276,8 @@ const SocialMedia = () => {
     });
   };
 
-  const togglePasswordVisibility = (id: string) => {
-    const newVisible = new Set(visiblePasswords);
-    if (newVisible.has(id)) {
-      newVisible.delete(id);
-    } else {
-      newVisible.add(id);
-    }
-    setVisiblePasswords(newVisible);
-  };
+
+
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -388,15 +359,8 @@ const SocialMedia = () => {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label>Password</Label>
-            <Input
-              type="password"
-              placeholder="Account password"
-              value={formData.password}
-              onChange={(e) => setFormData({...formData, password: e.target.value})}
-            />
-          </div>
+
+
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -433,17 +397,8 @@ const SocialMedia = () => {
             />
           </div>
 
-          {formData.twoFactorEnabled && (
-            <div className="space-y-2">
-              <Label>2FA Backup Codes</Label>
-              <Textarea
-                placeholder="Enter backup codes (comma separated)"
-                value={formData.twoFactorBackupCodes}
-                onChange={(e) => setFormData({...formData, twoFactorBackupCodes: e.target.value})}
-                rows={2}
-              />
-            </div>
-          )}
+
+
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -584,7 +539,7 @@ const SocialMedia = () => {
             filteredAccounts.map((account) => {
               const config = platformConfig[account.platform] || platformConfig.instagram;
               const Icon = config.icon;
-              const isPasswordVisible = visiblePasswords.has(account.id);
+              
 
               return (
                 <div
@@ -649,32 +604,8 @@ const SocialMedia = () => {
                       </div>
                     )}
 
-                    {account.password && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">Password</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-foreground font-mono">
-                            {isPasswordVisible ? account.password : "••••••••"}
-                          </span>
-                          <button 
-                            onClick={() => togglePasswordVisibility(account.id)}
-                            className="p-1 hover:bg-secondary rounded"
-                          >
-                            {isPasswordVisible ? (
-                              <EyeOff className="w-3 h-3 text-muted-foreground" />
-                            ) : (
-                              <Eye className="w-3 h-3 text-muted-foreground" />
-                            )}
-                          </button>
-                          <button 
-                            onClick={() => copyToClipboard(account.password!, "Password")}
-                            className="p-1 hover:bg-secondary rounded"
-                          >
-                            <Copy className="w-3 h-3 text-muted-foreground" />
-                          </button>
-                        </div>
-                      </div>
-                    )}
+
+
 
                     {/* Security Status */}
                     <div className="flex items-center justify-between pt-2 border-t border-border">
@@ -716,9 +647,9 @@ const SocialMedia = () => {
             <div>
               <h4 className="font-semibold text-foreground mb-1">Security Notice</h4>
               <p className="text-sm text-muted-foreground">
-                Your credentials are stored securely and protected by row-level security. 
-                We recommend enabling two-factor authentication on all accounts and using unique passwords. 
-                Consider using a dedicated password manager for additional security.
+                We recommend enabling two-factor authentication on all accounts. 
+                Use a dedicated password manager (e.g. 1Password, Bitwarden) to store your login credentials securely — 
+                never store passwords in spreadsheets or notes.
               </p>
             </div>
           </div>
