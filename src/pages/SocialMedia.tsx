@@ -18,9 +18,10 @@ import {
   Shield,
   Users,
   ExternalLink,
-  Music2
+  Music2,
+  Loader2
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import {
   Select,
@@ -36,24 +37,25 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface SocialAccount {
   id: string;
   platform: string;
   handle: string;
   email?: string;
-  recoveryEmail?: string;
-  recoveryPhone?: string;
-  twoFactorEnabled: boolean;
+  recovery_email?: string;
+  recovery_phone?: string;
+  two_factor_enabled: boolean;
   notes?: string;
-  followerCount?: number;
+  follower_count?: number;
   verified: boolean;
-  accountStatus: "active" | "inactive" | "suspended";
+  account_status: string;
 }
 
 const platformConfig: Record<string, { 
@@ -62,166 +64,103 @@ const platformConfig: Record<string, {
   bgColor: string;
   urlPrefix: string;
 }> = {
-  instagram: { 
-    icon: Instagram, 
-    color: "text-pink-500", 
-    bgColor: "bg-pink-500/10",
-    urlPrefix: "https://instagram.com/"
-  },
-  twitter: { 
-    icon: Twitter, 
-    color: "text-sky-500", 
-    bgColor: "bg-sky-500/10",
-    urlPrefix: "https://x.com/"
-  },
-  facebook: { 
-    icon: Facebook, 
-    color: "text-blue-600", 
-    bgColor: "bg-blue-600/10",
-    urlPrefix: "https://facebook.com/"
-  },
-  youtube: { 
-    icon: Youtube, 
-    color: "text-red-500", 
-    bgColor: "bg-red-500/10",
-    urlPrefix: "https://youtube.com/@"
-  },
-  linkedin: { 
-    icon: Linkedin, 
-    color: "text-blue-700", 
-    bgColor: "bg-blue-700/10",
-    urlPrefix: "https://linkedin.com/in/"
-  },
-  tiktok: { 
-    icon: Music2, 
-    color: "text-foreground", 
-    bgColor: "bg-foreground/10",
-    urlPrefix: "https://tiktok.com/@"
-  },
+  instagram: { icon: Instagram, color: "text-pink-500", bgColor: "bg-pink-500/10", urlPrefix: "https://instagram.com/" },
+  twitter: { icon: Twitter, color: "text-sky-500", bgColor: "bg-sky-500/10", urlPrefix: "https://x.com/" },
+  facebook: { icon: Facebook, color: "text-blue-600", bgColor: "bg-blue-600/10", urlPrefix: "https://facebook.com/" },
+  youtube: { icon: Youtube, color: "text-red-500", bgColor: "bg-red-500/10", urlPrefix: "https://youtube.com/@" },
+  linkedin: { icon: Linkedin, color: "text-blue-700", bgColor: "bg-blue-700/10", urlPrefix: "https://linkedin.com/in/" },
+  tiktok: { icon: Music2, color: "text-foreground", bgColor: "bg-foreground/10", urlPrefix: "https://tiktok.com/@" },
 };
 
 const SocialMedia = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<SocialAccount | null>(null);
-  // Form state
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [accounts, setAccounts] = useState<SocialAccount[]>([]);
+
   const [formData, setFormData] = useState({
     platform: "instagram",
     handle: "",
     email: "",
-    recoveryEmail: "",
-    recoveryPhone: "",
-    twoFactorEnabled: false,
+    recovery_email: "",
+    recovery_phone: "",
+    two_factor_enabled: false,
     notes: "",
-    followerCount: "",
+    follower_count: "",
     verified: false,
   });
 
-  // Mock data - will be replaced with real data from Supabase
-  const [accounts, setAccounts] = useState<SocialAccount[]>([
-    {
-      id: "1",
-      platform: "instagram",
-      handle: "@johndoe_rugby",
-      email: "john@email.com",
-      twoFactorEnabled: true,
-      followerCount: 125000,
-      verified: true,
-      accountStatus: "active",
-      notes: "Main personal brand account",
-    },
-    {
-      id: "2",
-      platform: "twitter",
-      handle: "@JohnDoeRugby",
-      email: "john@email.com",
-      twoFactorEnabled: true,
-      followerCount: 85000,
-      verified: true,
-      accountStatus: "active",
-    },
-    {
-      id: "3",
-      platform: "youtube",
-      handle: "JohnDoeOfficial",
-      email: "johndoe.youtube@email.com",
-      recoveryEmail: "backup@email.com",
-      twoFactorEnabled: true,
-      followerCount: 50000,
-      verified: false,
-      accountStatus: "active",
-      notes: "Training and lifestyle content",
-    },
-    {
-      id: "4",
-      platform: "linkedin",
-      handle: "johndoe-rugby",
-      email: "john.professional@email.com",
-      twoFactorEnabled: false,
-      followerCount: 15000,
-      verified: false,
-      accountStatus: "active",
-    },
-    {
-      id: "5",
-      platform: "tiktok",
-      handle: "@johndoe.rugby",
-      email: "john@email.com",
-      twoFactorEnabled: true,
-      followerCount: 250000,
-      verified: true,
-      accountStatus: "active",
-      notes: "Short-form content, highest engagement",
-    },
-  ]);
+  useEffect(() => {
+    if (user) fetchAccounts();
+  }, [user]);
+
+  const fetchAccounts = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("social_media_accounts")
+      .select("*")
+      .eq("user_id", user!.id)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching social accounts:", error);
+      toast({ title: "Error loading accounts", variant: "destructive" });
+    } else {
+      setAccounts(data || []);
+    }
+    setLoading(false);
+  };
 
   const resetForm = () => {
     setFormData({
       platform: "instagram",
       handle: "",
       email: "",
-      recoveryEmail: "",
-      recoveryPhone: "",
-      twoFactorEnabled: false,
+      recovery_email: "",
+      recovery_phone: "",
+      two_factor_enabled: false,
       notes: "",
-      followerCount: "",
+      follower_count: "",
       verified: false,
     });
   };
 
-  const handleAdd = () => {
-    if (!formData.handle) {
-      toast({
-        title: "Handle required",
-        description: "Please enter the account handle/username.",
-        variant: "destructive",
-      });
+  const handleAdd = async () => {
+    if (!formData.handle || !user) {
+      toast({ title: "Handle required", description: "Please enter the account handle/username.", variant: "destructive" });
       return;
     }
 
-    const newAccount: SocialAccount = {
-      id: Date.now().toString(),
+    setSaving(true);
+    const { error } = await supabase.from("social_media_accounts").insert({
+      user_id: user.id,
       platform: formData.platform,
       handle: formData.handle,
-      email: formData.email || undefined,
-      recoveryEmail: formData.recoveryEmail || undefined,
-      recoveryPhone: formData.recoveryPhone || undefined,
-      twoFactorEnabled: formData.twoFactorEnabled,
-      notes: formData.notes || undefined,
-      followerCount: formData.followerCount ? parseInt(formData.followerCount) : undefined,
+      email: formData.email || null,
+      recovery_email: formData.recovery_email || null,
+      recovery_phone: formData.recovery_phone || null,
+      two_factor_enabled: formData.two_factor_enabled,
+      notes: formData.notes || null,
+      follower_count: formData.follower_count ? parseInt(formData.follower_count) : null,
       verified: formData.verified,
-      accountStatus: "active",
-    };
+      account_status: "active",
+    });
+    setSaving(false);
 
-    setAccounts([...accounts, newAccount]);
+    if (error) {
+      console.error("Error adding account:", error);
+      toast({ title: "Error adding account", variant: "destructive" });
+      return;
+    }
+
     resetForm();
     setIsAddOpen(false);
-
-    toast({
-      title: "Account added",
-      description: `${formData.platform} account has been added.`,
-    });
+    await fetchAccounts();
+    toast({ title: "Account added", description: `${formData.platform} account has been added.` });
   };
 
   const handleEdit = (account: SocialAccount) => {
@@ -230,61 +169,61 @@ const SocialMedia = () => {
       platform: account.platform,
       handle: account.handle,
       email: account.email || "",
-      recoveryEmail: account.recoveryEmail || "",
-      recoveryPhone: account.recoveryPhone || "",
-      twoFactorEnabled: account.twoFactorEnabled,
+      recovery_email: account.recovery_email || "",
+      recovery_phone: account.recovery_phone || "",
+      two_factor_enabled: account.two_factor_enabled,
       notes: account.notes || "",
-      followerCount: account.followerCount?.toString() || "",
+      follower_count: account.follower_count?.toString() || "",
       verified: account.verified,
     });
   };
 
-  const handleUpdate = () => {
+  const handleUpdate = async () => {
     if (!editingAccount) return;
 
-    setAccounts(accounts.map(acc => 
-      acc.id === editingAccount.id
-        ? {
-            ...acc,
-            platform: formData.platform,
-            handle: formData.handle,
-            email: formData.email || undefined,
-            recoveryEmail: formData.recoveryEmail || undefined,
-            recoveryPhone: formData.recoveryPhone || undefined,
-            twoFactorEnabled: formData.twoFactorEnabled,
-            notes: formData.notes || undefined,
-            followerCount: formData.followerCount ? parseInt(formData.followerCount) : undefined,
-            verified: formData.verified,
-          }
-        : acc
-    ));
+    setSaving(true);
+    const { error } = await supabase
+      .from("social_media_accounts")
+      .update({
+        platform: formData.platform,
+        handle: formData.handle,
+        email: formData.email || null,
+        recovery_email: formData.recovery_email || null,
+        recovery_phone: formData.recovery_phone || null,
+        two_factor_enabled: formData.two_factor_enabled,
+        notes: formData.notes || null,
+        follower_count: formData.follower_count ? parseInt(formData.follower_count) : null,
+        verified: formData.verified,
+      })
+      .eq("id", editingAccount.id);
+    setSaving(false);
+
+    if (error) {
+      console.error("Error updating account:", error);
+      toast({ title: "Error updating account", variant: "destructive" });
+      return;
+    }
 
     setEditingAccount(null);
     resetForm();
-
-    toast({
-      title: "Account updated",
-      description: "Social media account has been updated.",
-    });
+    await fetchAccounts();
+    toast({ title: "Account updated", description: "Social media account has been updated." });
   };
 
-  const handleDelete = (id: string) => {
-    setAccounts(accounts.filter(acc => acc.id !== id));
-    toast({
-      title: "Account removed",
-      description: "Social media account has been removed.",
-    });
+  const handleDelete = async (id: string) => {
+    const { error } = await supabase.from("social_media_accounts").delete().eq("id", id);
+    if (error) {
+      console.error("Error deleting account:", error);
+      toast({ title: "Error deleting account", variant: "destructive" });
+      return;
+    }
+    await fetchAccounts();
+    toast({ title: "Account removed", description: "Social media account has been removed." });
   };
-
-
-
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
-    toast({
-      title: "Copied!",
-      description: `${label} copied to clipboard.`,
-    });
+    toast({ title: "Copied!", description: `${label} copied to clipboard.` });
   };
 
   const filteredAccounts = accounts.filter(account =>
@@ -293,9 +232,9 @@ const SocialMedia = () => {
     account.email?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const totalFollowers = accounts.reduce((sum, acc) => sum + (acc.followerCount || 0), 0);
+  const totalFollowers = accounts.reduce((sum, acc) => sum + (acc.follower_count || 0), 0);
   const verifiedCount = accounts.filter(acc => acc.verified).length;
-  const twoFactorCount = accounts.filter(acc => acc.twoFactorEnabled).length;
+  const twoFactorCount = accounts.filter(acc => acc.two_factor_enabled).length;
 
   const formatFollowers = (count: number) => {
     if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
@@ -321,9 +260,7 @@ const SocialMedia = () => {
             <div className="space-y-2">
               <Label>Platform</Label>
               <Select value={formData.platform} onValueChange={(v) => setFormData({...formData, platform: v})}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {Object.entries(platformConfig).map(([key, config]) => {
                     const Icon = config.icon;
@@ -341,45 +278,23 @@ const SocialMedia = () => {
             </div>
             <div className="space-y-2">
               <Label>Handle/Username</Label>
-              <Input
-                placeholder="@username"
-                value={formData.handle}
-                onChange={(e) => setFormData({...formData, handle: e.target.value})}
-              />
+              <Input placeholder="@username" value={formData.handle} onChange={(e) => setFormData({...formData, handle: e.target.value})} />
             </div>
           </div>
 
           <div className="space-y-2">
             <Label>Email</Label>
-            <Input
-              type="email"
-              placeholder="Account email"
-              value={formData.email}
-              onChange={(e) => setFormData({...formData, email: e.target.value})}
-            />
+            <Input type="email" placeholder="Account email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
           </div>
-
-
-
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Recovery Email</Label>
-              <Input
-                type="email"
-                placeholder="Recovery email"
-                value={formData.recoveryEmail}
-                onChange={(e) => setFormData({...formData, recoveryEmail: e.target.value})}
-              />
+              <Input type="email" placeholder="Recovery email" value={formData.recovery_email} onChange={(e) => setFormData({...formData, recovery_email: e.target.value})} />
             </div>
             <div className="space-y-2">
               <Label>Recovery Phone</Label>
-              <Input
-                type="tel"
-                placeholder="+27..."
-                value={formData.recoveryPhone}
-                onChange={(e) => setFormData({...formData, recoveryPhone: e.target.value})}
-              />
+              <Input type="tel" placeholder="+27..." value={formData.recovery_phone} onChange={(e) => setFormData({...formData, recovery_phone: e.target.value})} />
             </div>
           </div>
 
@@ -391,31 +306,17 @@ const SocialMedia = () => {
                 <p className="text-sm text-muted-foreground">Is 2FA enabled on this account?</p>
               </div>
             </div>
-            <Switch
-              checked={formData.twoFactorEnabled}
-              onCheckedChange={(checked) => setFormData({...formData, twoFactorEnabled: checked})}
-            />
+            <Switch checked={formData.two_factor_enabled} onCheckedChange={(checked) => setFormData({...formData, two_factor_enabled: checked})} />
           </div>
-
-
-
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Follower Count</Label>
-              <Input
-                type="number"
-                placeholder="0"
-                value={formData.followerCount}
-                onChange={(e) => setFormData({...formData, followerCount: e.target.value})}
-              />
+              <Input type="number" placeholder="0" value={formData.follower_count} onChange={(e) => setFormData({...formData, follower_count: e.target.value})} />
             </div>
             <div className="space-y-2 flex flex-col justify-end">
               <div className="flex items-center gap-2 h-10">
-                <Switch
-                  checked={formData.verified}
-                  onCheckedChange={(checked) => setFormData({...formData, verified: checked})}
-                />
+                <Switch checked={formData.verified} onCheckedChange={(checked) => setFormData({...formData, verified: checked})} />
                 <Label className="text-sm">Verified Account</Label>
               </div>
             </div>
@@ -423,29 +324,29 @@ const SocialMedia = () => {
 
           <div className="space-y-2">
             <Label>Notes</Label>
-            <Textarea
-              placeholder="Any additional notes..."
-              value={formData.notes}
-              onChange={(e) => setFormData({...formData, notes: e.target.value})}
-              rows={2}
-            />
+            <Textarea placeholder="Any additional notes..." value={formData.notes} onChange={(e) => setFormData({...formData, notes: e.target.value})} rows={2} />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => {
-            onOpenChange(false);
-            resetForm();
-            setEditingAccount(null);
-          }}>
-            Cancel
-          </Button>
-          <Button variant="gold" onClick={isEdit ? handleUpdate : handleAdd}>
+          <Button variant="outline" onClick={() => { onOpenChange(false); resetForm(); setEditingAccount(null); }}>Cancel</Button>
+          <Button variant="gold" onClick={isEdit ? handleUpdate : handleAdd} disabled={saving}>
+            {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
             {isEdit ? "Update" : "Add"} Account
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
+
+  if (loading) {
+    return (
+      <DashboardLayout title="My Social Media Links" subtitle="Securely manage your social media accounts and login credentials">
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout 
@@ -505,13 +406,7 @@ const SocialMedia = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder="Search accounts..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
+            <Input type="text" placeholder="Search accounts..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10" />
           </div>
           <Button variant="gold" onClick={() => setIsAddOpen(true)}>
             <Plus className="w-4 h-4" />
@@ -539,14 +434,9 @@ const SocialMedia = () => {
             filteredAccounts.map((account) => {
               const config = platformConfig[account.platform] || platformConfig.instagram;
               const Icon = config.icon;
-              
 
               return (
-                <div
-                  key={account.id}
-                  className="bg-card rounded-2xl border border-border p-6 shadow-soft hover:shadow-md transition-shadow"
-                >
-                  {/* Header */}
+                <div key={account.id} className="bg-card rounded-2xl border border-border p-6 shadow-soft hover:shadow-md transition-shadow">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center", config.bgColor)}>
@@ -555,9 +445,7 @@ const SocialMedia = () => {
                       <div>
                         <div className="flex items-center gap-2">
                           <p className="font-semibold text-foreground capitalize">{account.platform}</p>
-                          {account.verified && (
-                            <CheckCircle className="w-4 h-4 text-blue-500" />
-                          )}
+                          {account.verified && <CheckCircle className="w-4 h-4 text-blue-500" />}
                         </div>
                         <p className="text-sm text-muted-foreground">{account.handle}</p>
                       </div>
@@ -566,67 +454,47 @@ const SocialMedia = () => {
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(account)}>
                         <Edit3 className="w-4 h-4 text-muted-foreground" />
                       </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                        onClick={() => handleDelete(account.id)}
-                      >
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => handleDelete(account.id)}>
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
                   </div>
 
-                  {/* Stats */}
-                  {account.followerCount && (
+                  {account.follower_count && (
                     <div className="mb-4 p-3 bg-secondary rounded-lg">
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-muted-foreground">Followers</span>
-                        <span className="font-semibold text-foreground">{formatFollowers(account.followerCount)}</span>
+                        <span className="font-semibold text-foreground">{formatFollowers(account.follower_count)}</span>
                       </div>
                     </div>
                   )}
 
-                  {/* Credentials */}
                   <div className="space-y-3">
                     {account.email && (
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-muted-foreground">Email</span>
                         <div className="flex items-center gap-2">
                           <span className="text-sm text-foreground truncate max-w-[150px]">{account.email}</span>
-                          <button 
-                            onClick={() => copyToClipboard(account.email!, "Email")}
-                            className="p-1 hover:bg-secondary rounded"
-                          >
+                          <button onClick={() => copyToClipboard(account.email!, "Email")} className="p-1 hover:bg-secondary rounded">
                             <Copy className="w-3 h-3 text-muted-foreground" />
                           </button>
                         </div>
                       </div>
                     )}
 
-
-
-
-                    {/* Security Status */}
                     <div className="flex items-center justify-between pt-2 border-t border-border">
                       <div className="flex items-center gap-2">
-                        <Shield className={cn("w-4 h-4", account.twoFactorEnabled ? "text-green-500" : "text-muted-foreground")} />
+                        <Shield className={cn("w-4 h-4", account.two_factor_enabled ? "text-green-500" : "text-muted-foreground")} />
                         <span className="text-sm text-muted-foreground">
-                          2FA {account.twoFactorEnabled ? "Enabled" : "Disabled"}
+                          2FA {account.two_factor_enabled ? "Enabled" : "Disabled"}
                         </span>
                       </div>
-                      <a
-                        href={`${config.urlPrefix}${account.handle.replace("@", "")}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-1 hover:bg-secondary rounded"
-                      >
+                      <a href={`${config.urlPrefix}${account.handle.replace("@", "")}`} target="_blank" rel="noopener noreferrer" className="p-1 hover:bg-secondary rounded">
                         <ExternalLink className="w-4 h-4 text-muted-foreground" />
                       </a>
                     </div>
                   </div>
 
-                  {/* Notes */}
                   {account.notes && (
                     <div className="mt-4 p-3 bg-gold/10 rounded-lg border border-gold/30">
                       <p className="text-xs text-muted-foreground">{account.notes}</p>
@@ -656,10 +524,7 @@ const SocialMedia = () => {
         </div>
       </div>
 
-      {/* Add Dialog */}
       <AccountFormDialog isOpen={isAddOpen} onOpenChange={setIsAddOpen} />
-
-      {/* Edit Dialog */}
       <AccountFormDialog isOpen={!!editingAccount} onOpenChange={(open) => !open && setEditingAccount(null)} isEdit />
     </DashboardLayout>
   );
