@@ -52,7 +52,12 @@ import {
 
 const Profile = () => {
   const { isAthlete, isArtist, clientType, updateClientType } = useProfile();
+  const { signOut } = useAuth();
   const [saving, setSaving] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const handleClientTypeChange = async (value: string) => {
     setSaving(true);
@@ -63,6 +68,52 @@ const Profile = () => {
       toast({ title: "Error", description: "Failed to update client type.", variant: "destructive" });
     } else {
       toast({ title: "Updated", description: `Profile switched to ${value === "default" ? "General" : value}.` });
+    }
+  };
+
+  const handleExportData = async () => {
+    setExporting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("export-my-data");
+      if (error) throw error;
+
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `my-data-export-${new Date().toISOString().split("T")[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toast({ title: "Data Exported", description: "Your data has been downloaded as a JSON file." });
+    } catch (err) {
+      console.error("Export failed:", err);
+      toast({ title: "Export Failed", description: "Could not export your data. Please try again.", variant: "destructive" });
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmation !== "DELETE MY ACCOUNT") return;
+
+    setDeleting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("delete-my-account", {
+        body: { confirmation: "DELETE MY ACCOUNT" },
+      });
+      if (error) throw error;
+
+      toast({ title: "Account Deleted", description: "Your account and all data have been permanently removed." });
+      setShowDeleteDialog(false);
+      await signOut();
+    } catch (err) {
+      console.error("Delete failed:", err);
+      toast({ title: "Deletion Failed", description: "Could not delete your account. Please try again.", variant: "destructive" });
+    } finally {
+      setDeleting(false);
     }
   };
 
