@@ -43,23 +43,23 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const tables = [
-      "profiles",
-      "beneficiaries",
-      "emergency_contacts",
-      "life_file_documents",
-      "life_file_assets",
-      "life_file_shares",
-      "social_media_accounts",
-      "athlete_contracts",
-      "athlete_endorsements",
-      "artist_projects",
-      "artist_royalties",
-      "compliance_reminders",
-      "email_notifications",
-      "payslip_tax_documents",
-      "shared_access",
-      "user_subscriptions",
+    const tables: Array<{ name: string; column: string }> = [
+      { name: "profiles", column: "user_id" },
+      { name: "beneficiaries", column: "user_id" },
+      { name: "emergency_contacts", column: "user_id" },
+      { name: "life_file_documents", column: "user_id" },
+      { name: "life_file_assets", column: "user_id" },
+      { name: "life_file_shares", column: "owner_id" },
+      { name: "shared_access", column: "owner_id" },
+      { name: "social_media_accounts", column: "user_id" },
+      { name: "athlete_contracts", column: "user_id" },
+      { name: "athlete_endorsements", column: "user_id" },
+      { name: "artist_projects", column: "user_id" },
+      { name: "artist_royalties", column: "user_id" },
+      { name: "compliance_reminders", column: "user_id" },
+      { name: "email_notifications", column: "user_id" },
+      { name: "payslip_tax_documents", column: "user_id" },
+      { name: "user_subscriptions", column: "user_id" },
     ];
 
     const exportData: Record<string, unknown> = {
@@ -67,17 +67,17 @@ Deno.serve(async (req) => {
       user_id: userId,
     };
 
-    for (const table of tables) {
+    for (const { name, column } of tables) {
       const { data, error } = await supabase
-        .from(table)
+        .from(name)
         .select("*")
-        .eq("user_id", userId);
+        .eq(column, userId);
 
       if (error) {
-        console.error(`Error fetching ${table}:`, error.message);
-        exportData[table] = { error: error.message };
+        console.error(`Error fetching ${name}:`, error.message);
+        exportData[name] = { error: error.message };
       } else {
-        exportData[table] = data;
+        exportData[name] = data;
       }
     }
 
