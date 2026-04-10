@@ -1,12 +1,14 @@
 import { useState } from "react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { useProfile, ClientType } from "@/hooks/useProfile";
+import { useAuth } from "@/hooks/useAuth";
 import CurrentTierBadge from "@/components/subscription/CurrentTierBadge";
 import AssetSummaryCard from "@/components/dashboard/profile/AssetSummaryCard";
 import ContractExpiryTimeline from "@/components/dashboard/profile/ContractExpiryTimeline";
 import QuickStats from "@/components/dashboard/profile/QuickStats";
 import LifeFile from "@/components/dashboard/profile/LifeFile";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { generateExecutiveReportPDF, generateAssetBreakdownPDF, generateContractTimelinePDF, generateLifeFilePDF, generateAdvisorSummaryPDF } from "@/utils/executiveReportPdf";
 import { 
   Building2, 
@@ -27,15 +29,35 @@ import {
   Palette,
   Music,
   Target,
-  Settings
+  Settings,
+  AlertTriangle,
+  Trash2,
+  DatabaseBackup
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const Profile = () => {
   const { isAthlete, isArtist, clientType, updateClientType } = useProfile();
+  const { signOut } = useAuth();
   const [saving, setSaving] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const handleClientTypeChange = async (value: string) => {
     setSaving(true);
@@ -46,6 +68,52 @@ const Profile = () => {
       toast({ title: "Error", description: "Failed to update client type.", variant: "destructive" });
     } else {
       toast({ title: "Updated", description: `Profile switched to ${value === "default" ? "General" : value}.` });
+    }
+  };
+
+  const handleExportData = async () => {
+    setExporting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("export-my-data");
+      if (error) throw error;
+
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `my-data-export-${new Date().toISOString().split("T")[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toast({ title: "Data Exported", description: "Your data has been downloaded as a JSON file." });
+    } catch (err) {
+      console.error("Export failed:", err);
+      toast({ title: "Export Failed", description: "Could not export your data. Please try again.", variant: "destructive" });
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmation !== "DELETE MY ACCOUNT") return;
+
+    setDeleting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("delete-my-account", {
+        body: { confirmation: "DELETE MY ACCOUNT" },
+      });
+      if (error) throw error;
+
+      toast({ title: "Account Deleted", description: "Your account and all data have been permanently removed." });
+      setShowDeleteDialog(false);
+      await signOut();
+    } catch (err) {
+      console.error("Delete failed:", err);
+      toast({ title: "Deletion Failed", description: "Could not delete your account. Please try again.", variant: "destructive" });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -256,6 +324,102 @@ const Profile = () => {
           <p className="text-xs text-muted-foreground">
             {isAthlete ? "Career, Injury, Vehicle covered" : isArtist ? "Life, Equipment, Liability covered" : "Life, Business, Vehicle covered"}
           </p>
+        </div>
+      </div>
+
+      {/* POPIA Compliance Section */}
+      <div className="mt-10 border-t border-border pt-8">
+        <h2 className="text-lg font-semibold text-foreground mb-2">Data Privacy & POPIA Compliance</h2>
+        <p className="text-sm text-muted-foreground mb-6">
+          In accordance with the Protection of Personal Information Act (POPIA), you have the right to access and delete your personal data.
+        </p>
+
+        <div className="grid sm:grid-cols-2 gap-4">
+          {/* Download My Data */}
+          <div className="bg-card rounded-2xl border border-border p-5 shadow-soft">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-xl bg-info/20 flex items-center justify-center">
+                <DatabaseBackup className="w-5 h-5 text-info" />
+              </div>
+              <div>
+                <p className="font-semibold text-foreground">Download My Data</p>
+                <p className="text-xs text-muted-foreground">Export all your personal data as JSON</p>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground mb-4">
+              This includes your profile, documents, beneficiaries, contacts, contracts, social media accounts, and all other stored information.
+            </p>
+            <Button
+              onClick={handleExportData}
+              disabled={exporting}
+              variant="outline"
+              className="w-full gap-2"
+            >
+              <Download className="w-4 h-4" />
+              {exporting ? "Exporting..." : "Download My Data"}
+            </Button>
+          </div>
+
+          {/* Delete My Account */}
+          <div className="bg-card rounded-2xl border border-destructive/30 p-5 shadow-soft">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-xl bg-destructive/20 flex items-center justify-center">
+                <Trash2 className="w-5 h-5 text-destructive" />
+              </div>
+              <div>
+                <p className="font-semibold text-foreground">Delete My Account</p>
+                <p className="text-xs text-muted-foreground">Permanently remove all your data</p>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground mb-4">
+              This action is irreversible. All your data, files, and account will be permanently deleted.
+            </p>
+            <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" className="w-full gap-2">
+                  <AlertTriangle className="w-4 h-4" />
+                  Delete My Account
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5 text-destructive" />
+                    Delete Account Permanently
+                  </AlertDialogTitle>
+                  <AlertDialogDescription className="space-y-3">
+                    <span className="block">This will permanently delete:</span>
+                    <ul className="list-disc pl-5 space-y-1 text-sm">
+                      <li>Your profile and all personal information</li>
+                      <li>All documents and uploaded files</li>
+                      <li>Beneficiaries and emergency contacts</li>
+                      <li>Contracts, endorsements, and royalties</li>
+                      <li>Social media account records</li>
+                      <li>All shared access and permissions</li>
+                    </ul>
+                    <span className="block font-medium text-destructive">This action cannot be undone.</span>
+                    <span className="block mt-2">Type <strong>DELETE MY ACCOUNT</strong> to confirm:</span>
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <Input
+                  value={deleteConfirmation}
+                  onChange={(e) => setDeleteConfirmation(e.target.value)}
+                  placeholder="DELETE MY ACCOUNT"
+                  className="font-mono"
+                />
+                <AlertDialogFooter>
+                  <AlertDialogCancel onClick={() => setDeleteConfirmation("")}>Cancel</AlertDialogCancel>
+                  <Button
+                    variant="destructive"
+                    onClick={handleDeleteAccount}
+                    disabled={deleteConfirmation !== "DELETE MY ACCOUNT" || deleting}
+                  >
+                    {deleting ? "Deleting..." : "Permanently Delete"}
+                  </Button>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </div>
       </div>
     </DashboardLayout>
