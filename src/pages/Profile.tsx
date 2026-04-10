@@ -326,6 +326,102 @@ const Profile = () => {
           </p>
         </div>
       </div>
+
+      {/* POPIA Compliance Section */}
+      <div className="mt-10 border-t border-border pt-8">
+        <h2 className="text-lg font-semibold text-foreground mb-2">Data Privacy & POPIA Compliance</h2>
+        <p className="text-sm text-muted-foreground mb-6">
+          In accordance with the Protection of Personal Information Act (POPIA), you have the right to access and delete your personal data.
+        </p>
+
+        <div className="grid sm:grid-cols-2 gap-4">
+          {/* Download My Data */}
+          <div className="bg-card rounded-2xl border border-border p-5 shadow-soft">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-xl bg-info/20 flex items-center justify-center">
+                <DatabaseBackup className="w-5 h-5 text-info" />
+              </div>
+              <div>
+                <p className="font-semibold text-foreground">Download My Data</p>
+                <p className="text-xs text-muted-foreground">Export all your personal data as JSON</p>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground mb-4">
+              This includes your profile, documents, beneficiaries, contacts, contracts, social media accounts, and all other stored information.
+            </p>
+            <Button
+              onClick={handleExportData}
+              disabled={exporting}
+              variant="outline"
+              className="w-full gap-2"
+            >
+              <Download className="w-4 h-4" />
+              {exporting ? "Exporting..." : "Download My Data"}
+            </Button>
+          </div>
+
+          {/* Delete My Account */}
+          <div className="bg-card rounded-2xl border border-destructive/30 p-5 shadow-soft">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-xl bg-destructive/20 flex items-center justify-center">
+                <Trash2 className="w-5 h-5 text-destructive" />
+              </div>
+              <div>
+                <p className="font-semibold text-foreground">Delete My Account</p>
+                <p className="text-xs text-muted-foreground">Permanently remove all your data</p>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground mb-4">
+              This action is irreversible. All your data, files, and account will be permanently deleted.
+            </p>
+            <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" className="w-full gap-2">
+                  <AlertTriangle className="w-4 h-4" />
+                  Delete My Account
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5 text-destructive" />
+                    Delete Account Permanently
+                  </AlertDialogTitle>
+                  <AlertDialogDescription className="space-y-3">
+                    <span className="block">This will permanently delete:</span>
+                    <ul className="list-disc pl-5 space-y-1 text-sm">
+                      <li>Your profile and all personal information</li>
+                      <li>All documents and uploaded files</li>
+                      <li>Beneficiaries and emergency contacts</li>
+                      <li>Contracts, endorsements, and royalties</li>
+                      <li>Social media account records</li>
+                      <li>All shared access and permissions</li>
+                    </ul>
+                    <span className="block font-medium text-destructive">This action cannot be undone.</span>
+                    <span className="block mt-2">Type <strong>DELETE MY ACCOUNT</strong> to confirm:</span>
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <Input
+                  value={deleteConfirmation}
+                  onChange={(e) => setDeleteConfirmation(e.target.value)}
+                  placeholder="DELETE MY ACCOUNT"
+                  className="font-mono"
+                />
+                <AlertDialogFooter>
+                  <AlertDialogCancel onClick={() => setDeleteConfirmation("")}>Cancel</AlertDialogCancel>
+                  <Button
+                    variant="destructive"
+                    onClick={handleDeleteAccount}
+                    disabled={deleteConfirmation !== "DELETE MY ACCOUNT" || deleting}
+                  >
+                    {deleting ? "Deleting..." : "Permanently Delete"}
+                  </Button>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        </div>
+      </div>
     </DashboardLayout>
   );
 };
