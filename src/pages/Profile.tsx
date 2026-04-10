@@ -1,12 +1,14 @@
 import { useState } from "react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { useProfile, ClientType } from "@/hooks/useProfile";
+import { useAuth } from "@/hooks/useAuth";
 import CurrentTierBadge from "@/components/subscription/CurrentTierBadge";
 import AssetSummaryCard from "@/components/dashboard/profile/AssetSummaryCard";
 import ContractExpiryTimeline from "@/components/dashboard/profile/ContractExpiryTimeline";
 import QuickStats from "@/components/dashboard/profile/QuickStats";
 import LifeFile from "@/components/dashboard/profile/LifeFile";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { generateExecutiveReportPDF, generateAssetBreakdownPDF, generateContractTimelinePDF, generateLifeFilePDF, generateAdvisorSummaryPDF } from "@/utils/executiveReportPdf";
 import { 
   Building2, 
@@ -27,11 +29,26 @@ import {
   Palette,
   Music,
   Target,
-  Settings
+  Settings,
+  AlertTriangle,
+  Trash2,
+  DatabaseBackup
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const Profile = () => {
   const { isAthlete, isArtist, clientType, updateClientType } = useProfile();
