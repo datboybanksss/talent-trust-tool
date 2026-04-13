@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Mail, Phone, MessageSquare, Calendar, Shield, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const Contact = () => {
   const [searchParams] = useSearchParams();
@@ -18,6 +19,7 @@ const Contact = () => {
     phone: "",
     enquiryType: searchParams.get("type") || "",
     message: searchParams.get("message") || "",
+    website: "", // honeypot field
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -27,12 +29,71 @@ const Contact = () => {
       toast({ title: "Please fill in all required fields", variant: "destructive" });
       return;
     }
+
+    // Honeypot check — silently discard bot submissions
+    if (formData.website) {
+      setSubmitting(true);
+      await new Promise((r) => setTimeout(r, 1200));
+      setSubmitting(false);
+      toast({ title: "Message sent!", description: "We'll get back to you within 24 hours." });
+      setFormData({ name: "", email: "", phone: "", enquiryType: "", message: "", website: "" });
+      return;
+    }
+
     setSubmitting(true);
-    // Simulate submission
-    await new Promise((r) => setTimeout(r, 1200));
-    setSubmitting(false);
-    toast({ title: "Message sent!", description: "We'll get back to you within 24 hours." });
-    setFormData({ name: "", email: "", phone: "", enquiryType: "", message: "" });
+    try {
+      // Store submission in database
+      const { error: insertError } = await supabase.from("contact_submissions").insert({
+        name: formData.name.trim().slice(0, 100),
+        email: formData.email.trim().slice(0, 255),
+        phone: formData.phone.trim().slice(0, 20) || null,
+        enquiry_type: formData.enquiryType,
+        message: formData.message.trim().slice(0, 1000),
+      });
+
+      if (insertError) {
+        console.error("Contact submission error:", insertError);
+        toast({ title: "Something went wrong", description: "Please try again or email us directly.", variant: "destructive" });
+        setSubmitting(false);
+        return;
+      }
+
+      // Fire-and-forget emails (don't block UX on email delivery)
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const sendEmailUrl = `https://${projectId}.supabase.co/functions/v1/send-email`;
+      const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+      // Admin notification
+      fetch(sendEmailUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${anonKey}` },
+        body: JSON.stringify({
+          to: "hello@legacybuilder.co.za",
+          subject: `New Contact: ${formData.enquiryType} from ${formData.name}`,
+          html: `<h2>New Contact Form Submission</h2><p><strong>Name:</strong> ${formData.name}</p><p><strong>Email:</strong> ${formData.email}</p><p><strong>Phone:</strong> ${formData.phone || "N/A"}</p><p><strong>Type:</strong> ${formData.enquiryType}</p><p><strong>Message:</strong></p><p>${formData.message}</p>`,
+          replyTo: formData.email,
+        }),
+      }).catch(() => {});
+
+      // User confirmation
+      fetch(sendEmailUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${anonKey}` },
+        body: JSON.stringify({
+          to: formData.email,
+          subject: "We received your message — LegacyBuilder",
+          html: `<h2>Thank you for reaching out, ${formData.name}!</h2><p>We've received your message and will get back to you within 24 hours.</p><p>— The LegacyBuilder Team</p>`,
+        }),
+      }).catch(() => {});
+
+      toast({ title: "Message sent!", description: "We'll get back to you within 24 hours." });
+      setFormData({ name: "", email: "", phone: "", enquiryType: "", message: "", website: "" });
+    } catch (err) {
+      console.error("Contact form error:", err);
+      toast({ title: "Something went wrong", description: "Please try again.", variant: "destructive" });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -110,6 +171,19 @@ const Contact = () => {
             <Card className="border-border bg-card">
               <CardContent className="p-8">
                 <form onSubmit={handleSubmit} className="space-y-5">
+                  {/* Honeypot — hidden from real users */}
+                  <div className="absolute opacity-0 -z-10" aria-hidden="true" tabIndex={-1}>
+                    <Label htmlFor="website">Website</Label>
+                    <Input
+                      id="website"
+                      name="website"
+                      autoComplete="off"
+                      value={formData.website}
+                      onChange={(e) => setFormData((p) => ({ ...p, website: e.target.value }))}
+                      tabIndex={-1}
+                    />
+                  </div>
+
                   <div className="grid sm:grid-cols-2 gap-5">
                     <div className="space-y-2">
                       <Label htmlFor="name">Full Name *</Label>
