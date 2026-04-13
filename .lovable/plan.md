@@ -1,51 +1,49 @@
 
 
-## Work Stream B: Full Data Wiring — Phase 1 (Client-Side Pages)
+## Work Stream D — Build Without Email Domain
 
-### What
-Replace hardcoded mock data with real database-backed CRUD across the client dashboard pages. The Life File module is already partially wired (it fetches from Supabase but falls back to mock data) — this phase finishes that work and extends the same pattern to the other client pages.
+### Approach
+Build all infrastructure, edge functions, and UI now. The `send-email` wrapper will attempt to send but gracefully handle failures — logging the attempt to `audit_log` regardless. When you later add your GoDaddy domain via the email setup dialog, all email paths will start working without any code changes.
 
-### Scope — Phase 1 (this task)
+### Phase 1: send-email Edge Function + audit_log wiring
+- Create `supabase/functions/send-email/index.ts`
+- Accepts `{ to, subject, html, replyTo? }`, validates input
+- Attempts to send via Lovable Cloud's email infrastructure
+- Logs every attempt (success or failure) to `audit_log`
+- Returns `{ success, messageId?, error? }` — callers handle gracefully
 
-We will wire **3 high-priority client pages** that users interact with most:
+### Phase 2: Contact Form (D7)
+- **Migration**: Create `contact_submissions` table with RLS (public insert, admin read)
+- **Wire `Contact.tsx`**: On submit → insert into `contact_submissions` + call `send-email` twice (admin notification + user confirmation)
+- Add honeypot spam field (hidden input, discard if filled)
+- Show success toast regardless of email delivery status (submission is stored either way)
 
-1. **Life File** — Remove mock fallback; show empty states instead of fake data when no records exist
-2. **Social Media Accounts** — Wire to `social_media_accounts` table (already exists); replace inline mock array with real fetch/insert/update/delete
-3. **Documents** — Wire to `life_file_documents` table with file upload to the `life-file-documents` storage bucket; replace the large inline mock array
+### Phase 3: Financial Integrations Waitlist (D9)
+- **Migration**: Create `financial_integrations_waitlist` table
+- **Replace** mock connections UI in `FinancialIntegrations.tsx` with coming-soon state + waitlist form
+- On submit → insert row + call `send-email` for confirmation
 
-### How
+### Phase 4: Scheduled Reminders (D10)
+- **Migration**: Enable `pg_cron` + `pg_net`, create `cron_job_runs` table
+- Update `document-expiry-reminders` to use `send-email` wrapper and log to `cron_job_runs`
+- Schedule daily 04:00 UTC cron jobs
 
-#### 1. Life File — Remove Mock Fallback
-- **`src/pages/LifeFile.tsx`** — Remove the mock fallback logic (lines 158–163). When no data exists, show empty arrays so the UI renders proper empty states ("No beneficiaries yet — add one")
-- Remove the import of `mockLifeFileData`
-- Add empty-state messaging in each tab when arrays are empty
+### Phase 5: Auth Email Retrofit (D-retrofit)
+- Scaffold auth email templates using the built-in tooling
+- Brand them to match LegacyBuilder design
+- These will activate automatically once the domain is verified
 
-#### 2. Social Media — Wire to Database
-- **`src/pages/SocialMedia.tsx`** — Replace inline mock `useState` array with a `useEffect` that fetches from `social_media_accounts` where `user_id = current user`
-- Wire Add form to `supabase.insert()`, Edit to `supabase.update()`, Delete to `supabase.delete()`
-- Add loading spinner and empty state
-- Remove all inline mock data
+### Email behavior before domain setup
+- All submissions still get stored in the database
+- `send-email` logs attempts to `audit_log` with status `failed` / `no_domain`
+- Users see success toasts (the form worked; email delivery is a background concern)
+- Once you add your GoDaddy domain, emails start flowing — zero code changes needed
 
-#### 3. Documents — Wire to Database + Storage
-- **`src/pages/Documents.tsx`** — Replace `initialDocuments` mock array with real fetch from `life_file_documents`
-- Wire the upload dialog to upload files to the `life-file-documents` storage bucket then insert a row
-- Wire delete to remove both the storage object and the DB row
-- Add loading state and empty state per category
-- The existing `payslip_tax_documents` table may need to be unified or queried alongside
-
-### What stays for Phase 2
-- Agent Dashboard, Agent Client Detail, Agent Athlete Profile (mock client lists)
-- Sharing page, Apply for Funding, Financial Integrations
-- Executive Overview mock data
-
-### Files Modified
-- `src/pages/LifeFile.tsx` — remove mock fallback
-- `src/pages/SocialMedia.tsx` — full CRUD wiring
-- `src/pages/Documents.tsx` — full CRUD wiring + storage upload
-- No new database tables needed (all tables already exist)
-
-### Technical Notes
-- All three tables (`social_media_accounts`, `life_file_documents`, `beneficiaries`, etc.) already have RLS policies tied to `user_id`
-- The `life-file-documents` storage bucket already exists (private)
-- The existing service layer in `src/services/` provides the pattern for Life File; Social Media and Documents will get similar inline Supabase calls or new service files
+### Files to create/modify
+- `supabase/functions/send-email/index.ts` (new)
+- `src/pages/Contact.tsx` (wire real submission)
+- `src/pages/FinancialIntegrations.tsx` (replace mock UI)
+- `supabase/functions/document-expiry-reminders/index.ts` (update to use send-email)
+- Database migrations for `contact_submissions`, `financial_integrations_waitlist`, `cron_job_runs`, pg_cron/pg_net
+- Auth email templates (scaffold + brand)
 
