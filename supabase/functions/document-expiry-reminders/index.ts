@@ -11,14 +11,20 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
-  try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+  // Log cron run start
+  const { data: cronRun } = await supabase
+    .from("cron_job_runs")
+    .insert({ job_name: "document-expiry-reminders", status: "running" })
+    .select("id")
+    .single();
+
+  try {
     const now = new Date();
 
-    // Fetch all non-expired documents with expiry dates and at least one reminder enabled
     const { data: documents, error } = await supabase
       .from("life_file_documents")
       .select("*, profiles!life_file_documents_user_id_fkey(display_name)")
@@ -30,6 +36,13 @@ Deno.serve(async (req) => {
 
     if (error) {
       console.error("Error fetching documents:", error);
+      if (cronRun?.id) {
+        await supabase.from("cron_job_runs").update({
+          status: "failed",
+          completed_at: now.toISOString(),
+          error_message: error.message,
+        }).eq("id", cronRun.id);
+      }
       return new Response(JSON.stringify({ error: error.message }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -45,6 +58,7 @@ Deno.serve(async (req) => {
     ];
 
     let remindersSent = 0;
+    const sendEmailUrl = `${supabaseUrl}/functions/v1/send-email`;
 
     for (const doc of documents || []) {
       const expiryDate = new Date(doc.expiry_date);
@@ -55,41 +69,64 @@ Deno.serve(async (req) => {
 
       for (const interval of reminderIntervals) {
         if (!doc[interval.key]) continue;
-        if (sentAt[interval.key]) continue; // Already sent
-        if (daysUntilExpiry > interval.days) continue; // Not yet time
+        if (sentAt[interval.key]) continue;
+        if (daysUntilExpiry > interval.days) continue;
 
-        // Time to send this reminder
-        // Get user email from auth
-        const { data: userData } = await supabase.auth.admin.getUserById(
-          doc.user_id
-        );
+        // Get user email
+        const { data: userData } = await supabase.auth.admin.getUserById(doc.user_id);
         const userEmail = userData?.user?.email;
+        const displayName = (doc as any).profiles?.display_name || "there";
+
+        const emailHtml = `
+          <h2>Document Expiry Reminder</h2>
+          <p>Hi ${displayName},</p>
+          <p>Your document <strong>${doc.title}</strong> expires in <strong>${interval.label}</strong> (${doc.expiry_date}).</p>
+          <p>Please review and renew this document before it expires.</p>
+          <p>— LegacyBuilder</p>
+        `;
 
         if (userEmail) {
-          // Log the reminder notification
-          await supabase.from("email_notifications").insert({
-            user_id: doc.user_id,
-            recipient_email: userEmail,
-            subject: `Document Expiry Reminder: ${doc.title} expires in ${interval.label}`,
-            status: "sent",
-            sent_at: now.toISOString(),
-          });
+          // Send via send-email wrapper
+          try {
+            await fetch(sendEmailUrl, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${supabaseServiceKey}`,
+              },
+              body: JSON.stringify({
+                to: userEmail,
+                subject: `Document Expiry Reminder: ${doc.title} expires in ${interval.label}`,
+                html: emailHtml,
+              }),
+            });
+          } catch (e) {
+            console.warn("Failed to send email via wrapper:", e);
+          }
           remindersSent++;
         }
 
         // Send to notify_email too
-        if (doc.notify_email) {
-          await supabase.from("email_notifications").insert({
-            user_id: doc.user_id,
-            recipient_email: doc.notify_email,
-            subject: `Document Expiry Reminder: ${doc.title} expires in ${interval.label}`,
-            status: "sent",
-            sent_at: now.toISOString(),
-          });
+        if (doc.notify_email && doc.notify_email !== userEmail) {
+          try {
+            await fetch(sendEmailUrl, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${supabaseServiceKey}`,
+              },
+              body: JSON.stringify({
+                to: doc.notify_email,
+                subject: `Document Expiry Reminder: ${doc.title} expires in ${interval.label}`,
+                html: emailHtml,
+              }),
+            });
+          } catch (e) {
+            console.warn("Failed to send notify email:", e);
+          }
           remindersSent++;
         }
 
-        // Mark this reminder as sent
         sentAt[interval.key] = now.toISOString();
       }
 
@@ -102,19 +139,34 @@ Deno.serve(async (req) => {
       }
     }
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        documentsChecked: documents?.length || 0,
-        remindersSent,
-      }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
+    const result = {
+      success: true,
+      documentsChecked: documents?.length || 0,
+      remindersSent,
+    };
+
+    // Update cron run
+    if (cronRun?.id) {
+      await supabase.from("cron_job_runs").update({
+        status: "completed",
+        completed_at: new Date().toISOString(),
+        result,
+      }).eq("id", cronRun.id);
+    }
+
+    return new Response(JSON.stringify(result), {
+      status: 200,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   } catch (err) {
     console.error("Unexpected error:", err);
+    if (cronRun?.id) {
+      await supabase.from("cron_job_runs").update({
+        status: "failed",
+        completed_at: new Date().toISOString(),
+        error_message: err instanceof Error ? err.message : "Unknown error",
+      }).eq("id", cronRun.id);
+    }
     return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
