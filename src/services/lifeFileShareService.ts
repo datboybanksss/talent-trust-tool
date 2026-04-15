@@ -43,6 +43,28 @@ export const SHARE_SECTIONS = [
   { value: "documents", label: "Estate Documents" },
 ] as const;
 
+// Fire-and-forget audit log helper
+const logAudit = async (
+  action: string,
+  entityType: string,
+  entityId: string | null,
+  metadata: Record<string, unknown>
+) => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    await supabase.from("audit_log").insert({
+      user_id: user.id,
+      action,
+      entity_type: entityType,
+      entity_id: entityId,
+      metadata,
+    });
+  } catch (err) {
+    console.error("Audit log error:", err);
+  }
+};
+
 // Fetch shares created by the user
 export const fetchLifeFileShares = async (userId: string) => {
   const { data, error } = await supabase
@@ -73,12 +95,19 @@ export const createLifeFileShare = async (share: Omit<LifeFileShareInsert, "shar
     .from("life_file_shares")
     .insert({
       ...share,
-      shared_with_user_id: null, // Will be linked when user accepts
+      shared_with_user_id: null,
     })
     .select()
     .single();
   
   if (error) throw error;
+
+  logAudit("share_created", "life_file_share", data.id, {
+    shared_with_email: share.shared_with_email,
+    sections: share.sections,
+    access_level: share.access_level,
+  });
+
   return data as LifeFileShare;
 };
 
@@ -103,6 +132,8 @@ export const deleteLifeFileShare = async (id: string) => {
     .eq("id", id);
   
   if (error) throw error;
+
+  logAudit("share_deleted", "life_file_share", id, { share_id: id });
 };
 
 // Accept a share invitation
@@ -119,6 +150,9 @@ export const acceptLifeFileShare = async (id: string, userId: string) => {
     .single();
   
   if (error) throw error;
+
+  logAudit("share_accepted", "life_file_share", id, { share_id: id });
+
   return data as LifeFileShare;
 };
 
@@ -134,6 +168,9 @@ export const declineLifeFileShare = async (id: string) => {
     .single();
   
   if (error) throw error;
+
+  logAudit("share_declined", "life_file_share", id, { share_id: id });
+
   return data as LifeFileShare;
 };
 
@@ -149,5 +186,8 @@ export const revokeLifeFileShare = async (id: string) => {
     .single();
   
   if (error) throw error;
+
+  logAudit("share_revoked", "life_file_share", id, { share_id: id });
+
   return data as LifeFileShare;
 };

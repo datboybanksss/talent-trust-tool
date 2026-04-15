@@ -96,6 +96,15 @@ Deno.serve(async (req) => {
 
     exportData["shared_access_received"] = receivedAccess || [];
 
+    // Audit log: record data export
+    await supabase.from("audit_log").insert({
+      user_id: userId,
+      action: "data_export",
+      entity_type: "user_data",
+      entity_id: userId,
+      metadata: { tables_exported: tables.map((t) => t.name) },
+    });
+
     return new Response(JSON.stringify(exportData, null, 2), {
       headers: {
         ...corsHeaders,

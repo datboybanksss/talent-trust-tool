@@ -133,6 +133,19 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Audit log: record account deletion BEFORE deleting auth user (so the row persists for admin review)
+    await supabase.from("audit_log").insert({
+      user_id: userId,
+      action: "account_deletion",
+      entity_type: "user_account",
+      entity_id: userId,
+      metadata: {
+        email: userEmail,
+        tables_cleaned: tablesToDelete,
+        warnings: errors.length > 0 ? errors : undefined,
+      },
+    });
+
     // Delete the auth user
     const { error: deleteUserError } = await supabase.auth.admin.deleteUser(userId);
     if (deleteUserError) {
