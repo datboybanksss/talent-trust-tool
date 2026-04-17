@@ -55,6 +55,7 @@ export type Database = {
           currency: string
           description: string | null
           id: string
+          metadata: Json | null
           notes: string | null
           platform: string | null
           project_type: string
@@ -72,6 +73,7 @@ export type Database = {
           currency?: string
           description?: string | null
           id?: string
+          metadata?: Json | null
           notes?: string | null
           platform?: string | null
           project_type?: string
@@ -89,6 +91,7 @@ export type Database = {
           currency?: string
           description?: string | null
           id?: string
+          metadata?: Json | null
           notes?: string | null
           platform?: string | null
           project_type?: string
@@ -855,6 +858,7 @@ export type Database = {
           accepted_at: string | null
           access_level: string
           created_at: string
+          document_type_allowlist: string[] | null
           expires_at: string | null
           id: string
           message: string | null
@@ -870,6 +874,7 @@ export type Database = {
           accepted_at?: string | null
           access_level?: string
           created_at?: string
+          document_type_allowlist?: string[] | null
           expires_at?: string | null
           id?: string
           message?: string | null
@@ -885,6 +890,7 @@ export type Database = {
           accepted_at?: string | null
           access_level?: string
           created_at?: string
+          document_type_allowlist?: string[] | null
           expires_at?: string | null
           id?: string
           message?: string | null
@@ -998,6 +1004,7 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          is_demo: boolean
           phone: string | null
           updated_at: string
           user_id: string
@@ -1008,6 +1015,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          is_demo?: boolean
           phone?: string | null
           updated_at?: string
           user_id: string
@@ -1018,6 +1026,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          is_demo?: boolean
           phone?: string | null
           updated_at?: string
           user_id?: string
@@ -1056,6 +1065,45 @@ export type Database = {
           shared_with_email?: string
           shared_with_user_id?: string | null
           status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      shared_meetings: {
+        Row: {
+          attendee_user_ids: string[]
+          created_at: string
+          created_by: string
+          ends_at: string
+          id: string
+          meeting_type: string
+          notes: string | null
+          starts_at: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          attendee_user_ids?: string[]
+          created_at?: string
+          created_by: string
+          ends_at: string
+          id?: string
+          meeting_type?: string
+          notes?: string | null
+          starts_at: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          attendee_user_ids?: string[]
+          created_at?: string
+          created_by?: string
+          ends_at?: string
+          id?: string
+          meeting_type?: string
+          notes?: string | null
+          starts_at?: string
+          title?: string
           updated_at?: string
         }
         Relationships: []
