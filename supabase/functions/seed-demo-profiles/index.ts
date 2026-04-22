@@ -323,6 +323,32 @@ Deno.serve(async (req) => {
     { user_id: artistId, platform: "tiktok", handle: "@refilwe.demo", follower_count: 240000, verified: false, account_status: "active", notes: "DEMO" },
   ]);
 
+  // 8e. portal_staff_access for the demo agent — fake @themvpbuilder.co.za recipients only.
+  // The is_demo guard in send-invitation-email blocks real sends, but the addresses are also
+  // obviously-fake as defense in depth.
+  await admin.from("portal_staff_access").insert([
+    {
+      agent_id: agentId,
+      staff_email: "assistant.demo@themvpbuilder.co.za",
+      staff_name: "Lerato Mahlangu (DEMO)",
+      role: "pa",
+      role_label: "Personal Assistant (PA)",
+      sections: ["clients", "pipeline", "calendar", "compare", "templates"],
+      status: "active",
+      confidentiality_accepted_at: new Date(now - 30 * 86400000).toISOString(),
+      activated_at: new Date(now - 30 * 86400000).toISOString(),
+    },
+    {
+      agent_id: agentId,
+      staff_email: "accountant.demo@themvpbuilder.co.za",
+      staff_name: "Sibusiso Khumalo (DEMO)",
+      role: "accountant",
+      role_label: "Accountant",
+      sections: ["clients", "pipeline", "compare"],
+      status: "pending",
+    },
+  ]);
+
   // 9. Generate PDFs + insert life_file_documents
   const docPlans: Array<{ owner: string; ownerName: string; docs: typeof ATHLETE_DOCS }> = [
     { owner: athleteId, ownerName: audit.names.athlete.display_name, docs: ATHLETE_DOCS },

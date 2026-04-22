@@ -802,6 +802,11 @@ const AgentDashboard = () => {
                             <Copy className="w-3 h-3 mr-1" /> Copy Link
                           </Button>
                         )}
+                        {!isActivated && (
+                          <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); resendInvitation(inv); }} className="hidden sm:flex">
+                            <Mail className="w-3 h-3 mr-1" /> Resend
+                          </Button>
+                        )}
                         {isActivated && (
                           <Button variant="ghost" size="sm" className="text-primary hidden sm:flex" onClick={(e) => { e.stopPropagation(); navigate(`/agent-dashboard/client/${inv.id}`); }}>
                             <Eye className="w-3 h-3 mr-1" /> View
