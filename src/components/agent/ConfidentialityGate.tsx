@@ -51,7 +51,13 @@ const ConfidentialityGate = ({ staffAccessId, agentCompany, roleName, sections, 
     try {
       const { error } = await supabase
         .from("portal_staff_access")
-        .update({ confidentiality_accepted_at: new Date().toISOString(), status: "active" })
+        .update({
+          confidentiality_accepted_at: new Date().toISOString(),
+          status: "active",
+          // Stamp activated_at here as well so the row passes staff_has_section()
+          // RLS in a single atomic write. Belt-and-braces with StaffActivate.
+          activated_at: new Date().toISOString(),
+        })
         .eq("id", staffAccessId);
 
       if (error) throw error;
