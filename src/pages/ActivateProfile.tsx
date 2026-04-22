@@ -18,6 +18,11 @@ interface InvitationData {
   pre_populated_data: Record<string, any>;
 }
 
+interface ExpiredInfo {
+  agent_email: string | null;
+  agent_name: string | null;
+}
+
 const ActivateProfile = () => {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
@@ -25,10 +30,13 @@ const ActivateProfile = () => {
   const [invitation, setInvitation] = useState<InvitationData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [expired, setExpired] = useState<ExpiredInfo | null>(null);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isActivating, setIsActivating] = useState(false);
   const [activated, setActivated] = useState(false);
+  const [docFailures, setDocFailures] = useState<Array<{ filename: string; error: string }>>([]);
+  const [autoSignedIn, setAutoSignedIn] = useState(false);
 
   useEffect(() => {
     if (token) {

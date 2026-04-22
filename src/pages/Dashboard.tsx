@@ -4,6 +4,8 @@ import CurrentTierBadge from "@/components/subscription/CurrentTierBadge";
 import StatsCard from "@/components/dashboard/StatsCard";
 import PropertyInvestments from "@/components/dashboard/PropertyInvestments";
 import LifeFileSummaryCard from "@/components/dashboard/LifeFileSummaryCard";
+import PendingAccessRequestCard from "@/components/dashboard/PendingAccessRequestCard";
+import FirstLoginWelcomeCard from "@/components/dashboard/FirstLoginWelcomeCard";
 
 import FinancialOverview from "@/components/dashboard/FinancialOverview";
 import { Button } from "@/components/ui/button";
@@ -50,6 +52,12 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout title={greeting} subtitle={subtitle}>
+      {/* First-login welcome banner — dismissible, persists via profiles.first_login_seen_at */}
+      <FirstLoginWelcomeCard />
+
+      {/* Agent-requested access — Accept / Customise / Decline */}
+      <PendingAccessRequestCard />
+
       {/* Subscription Tier */}
       <div className="mb-4">
         <CurrentTierBadge tierType="client" />
