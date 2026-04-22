@@ -107,7 +107,7 @@ const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, set
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainNavItems.map((item) => (
+              {visibleNavItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     onClick={() => handleNavClick(item.view)}
@@ -118,20 +118,23 @@ const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, set
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  onClick={() => { navigate("/myagency"); if (isMobile) toggleSidebar(); }}
-                  className="hover:bg-muted/50"
-                >
-                  <Building2 className="mr-2 h-4 w-4" />
-                  {!collapsed && <span>My Agency</span>}
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {showOwnerOnly && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    onClick={() => { navigate("/myagency"); if (isMobile) toggleSidebar(); }}
+                    className="hover:bg-muted/50"
+                  >
+                    <Building2 className="mr-2 h-4 w-4" />
+                    {!collapsed && <span>My Agency</span>}
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
         {/* Quick Actions */}
+        {showQuickActions && (
         <SidebarGroup>
           <SidebarGroupLabel>Quick Actions</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -157,6 +160,7 @@ const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, set
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        )}
 
         {/* Compliance */}
         <SidebarGroup>
