@@ -2,15 +2,16 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
 import { saveAs } from "file-saver";
+import type { ExecutiveDataset } from "@/hooks/useExecutiveData";
 import {
-  kpis,
-  clientTypeValues,
-  revenueStreams,
-  monthlyRevenue,
-  topClients,
-  demographics,
-  overheadData,
-} from "@/data/executiveMockData";
+  ExecutiveFilters,
+  getFilteredKPIs,
+  getFilteredClientTypeValues,
+  getFilteredRevenueStreams,
+  getFilteredMonthlyRevenue,
+  getFilteredTopClients,
+  getFilteredDemographics,
+} from "@/utils/executiveFilters";
 
 const fmt = (n: number) =>
   n >= 1_000_000 ? `R${(n / 1_000_000).toFixed(1)}M` : `R${(n / 1_000).toFixed(0)}K`;
