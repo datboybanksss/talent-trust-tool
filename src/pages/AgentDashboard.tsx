@@ -857,6 +857,7 @@ const AgentDashboard = () => {
           {/* Sidebar — 1 col */}
           <div className="space-y-6">
             {/* Recent Activity */}
+            {!staff.isStaff && (
             <Card className="border-border/50">
               <CardContent className="p-5">
                 <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
@@ -880,6 +881,7 @@ const AgentDashboard = () => {
                 </div>
               </CardContent>
             </Card>
+            )}
 
             <Card className="border-border/50">
               <CardContent className="p-5">
