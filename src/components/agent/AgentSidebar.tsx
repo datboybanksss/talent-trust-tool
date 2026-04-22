@@ -98,8 +98,19 @@ const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, set
             </div>
             {!collapsed && (
               <div className="min-w-0">
-                <p className="text-sm font-display font-bold text-foreground truncate">Agent Portal</p>
-                <p className="text-[10px] text-muted-foreground truncate">{roleLabel}</p>
+                <p
+                  className="text-sm font-display font-bold text-foreground truncate"
+                  title={
+                    staff.isStaff
+                      ? staff.agencyName ?? "Agent Portal"
+                      : agentProfile?.company_name ?? "Agent Portal"
+                  }
+                >
+                  {staff.isStaff
+                    ? staff.agencyName ?? "Agent Portal"
+                    : agentProfile?.company_name ?? "Agent Portal"}
+                </p>
+                <p className="text-[10px] text-muted-foreground truncate">{footerRoleLabel}</p>
               </div>
             )}
           </div>
