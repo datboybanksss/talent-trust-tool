@@ -611,10 +611,15 @@ const AgentClientDetail = () => {
                   <CardHeader>
                     <CardTitle className="text-lg">Insurance Policies</CardTitle>
                     <CardDescription>
-                      {mockAssets.filter(a => a.asset_category === "insurance").length} active policies · Total cover: R{(lifeFileSummary.totalInsuranceCover / 1000000).toFixed(1)}M
+                      {insuranceAssets.length} active policies · Total cover: R{(lifeFileSummary.totalInsuranceCover / 1000000).toFixed(1)}M
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
+                    {insuranceAssets.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-6">
+                        {lifeFileLoading ? "Loading…" : "No insurance policies on file yet."}
+                      </p>
+                    ) : (
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -626,7 +631,7 @@ const AgentClientDetail = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {mockAssets.filter(a => a.asset_category === "insurance").map(asset => (
+                        {insuranceAssets.map(asset => (
                           <TableRow key={asset.id}>
                             <TableCell className="font-medium">{getTypeLabel("insurance", asset.asset_type)}</TableCell>
                             <TableCell>{asset.institution}</TableCell>
@@ -639,6 +644,7 @@ const AgentClientDetail = () => {
                         ))}
                       </TableBody>
                     </Table>
+                    )}
                   </CardContent>
                 </Card>
 
@@ -647,10 +653,15 @@ const AgentClientDetail = () => {
                   <CardHeader>
                     <CardTitle className="text-lg">Investments</CardTitle>
                     <CardDescription>
-                      {mockAssets.filter(a => a.asset_category === "investment").length} active investments · Total value: R{(lifeFileSummary.totalInvestmentValue / 1000000).toFixed(1)}M
+                      {investmentAssets.length} active investments · Total value: R{(lifeFileSummary.totalInvestmentValue / 1000000).toFixed(1)}M
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
+                    {investmentAssets.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-6">
+                        {lifeFileLoading ? "Loading…" : "No investments on file yet."}
+                      </p>
+                    ) : (
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -662,7 +673,7 @@ const AgentClientDetail = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {mockAssets.filter(a => a.asset_category === "investment").map(asset => (
+                        {investmentAssets.map(asset => (
                           <TableRow key={asset.id}>
                             <TableCell className="font-medium">{getTypeLabel("investment", asset.asset_type)}</TableCell>
                             <TableCell>{asset.institution}</TableCell>
@@ -675,6 +686,7 @@ const AgentClientDetail = () => {
                         ))}
                       </TableBody>
                     </Table>
+                    )}
                   </CardContent>
                 </Card>
               </div>
