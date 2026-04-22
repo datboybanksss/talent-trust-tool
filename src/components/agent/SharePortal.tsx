@@ -297,9 +297,12 @@ const SharePortal = () => {
         <div>
           <h2 className="text-2xl font-display font-bold text-foreground">Share Portal Access</h2>
           <p className="text-muted-foreground text-sm mt-1">
-            Invite support staff, PAs, accountants, or lawyers with pre-determined access levels.
+            {isStaffViewer
+              ? "View your agency's team. Only the owner can invite staff or change roles."
+              : "Invite support staff, PAs, accountants, or lawyers with pre-determined access levels."}
           </p>
         </div>
+        {!isStaffViewer && (
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button variant="gold">
