@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { useAgencyScope } from "@/hooks/useAgencyScope";
 
 export interface LiveInvitation {
   id: string;
@@ -32,23 +32,23 @@ export interface ExecutiveDataset {
 }
 
 export const useExecutiveData = () => {
-  const { user } = useAuth();
+  const { scopedAgentId, loading } = useAgencyScope();
 
   return useQuery<ExecutiveDataset>({
-    queryKey: ["executive-data", user?.id],
-    enabled: !!user?.id,
+    queryKey: ["executive-data", scopedAgentId],
+    enabled: !loading && !!scopedAgentId,
     queryFn: async (): Promise<ExecutiveDataset> => {
-      if (!user?.id) return { invitations: [], deals: [] };
+      if (!scopedAgentId) return { invitations: [], deals: [] };
 
       const [invRes, dealRes] = await Promise.all([
         supabase
           .from("client_invitations")
           .select("id, client_name, client_type, status, archived_at, created_at, pre_populated_data")
-          .eq("agent_id", user.id),
+          .eq("agent_id", scopedAgentId),
         supabase
           .from("agent_deals")
           .select("id, client_name, client_type, brand, deal_type, status, value_amount, value_text, start_date, end_date, created_at")
-          .eq("agent_id", user.id),
+          .eq("agent_id", scopedAgentId),
       ]);
 
       return {
