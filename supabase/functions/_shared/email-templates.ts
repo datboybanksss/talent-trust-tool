@@ -54,7 +54,7 @@ function btn(label: string, url: string): string {
 export function contactFormConfirmationEmail(name: string) {
   return {
     subject: "We received your message — LegacyBuilder",
-    html: wrap("Thank you for reaching out", p(`Hi ${name},`) + p("We've received your message and a member of the LegacyBuilder team will get back to you within 48 hours.") + p("If your matter is urgent, please reply to this email with "URGENT" in the subject line.") + p("Warm regards,<br>The LegacyBuilder Team")),
+    html: wrap("Thank you for reaching out", p(`Hi ${name},`) + p("We've received your message and a member of the LegacyBuilder team will get back to you within 48 hours.") + p('If your matter is urgent, please reply to this email with "URGENT" in the subject line.') + p("Warm regards,<br>The LegacyBuilder Team")),
   };
 }
 
