@@ -911,6 +911,7 @@ const AgentDashboard = () => {
         </div>
         </>
         )}
+        </>
         )}
 
             {/* New Client dialog: kept here for now, but always mounted regardless of view */}
