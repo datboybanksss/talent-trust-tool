@@ -35,6 +35,8 @@ import ConfidentialityGate from "@/components/agent/ConfidentialityGate";
 import ExecutiveOverviewInline from "@/components/executive/ExecutiveOverviewInline";
 import RemoveClientDialog from "@/components/agent/RemoveClientDialog";
 import * as XLSX from "xlsx";
+import SectionGuard from "@/components/agent/SectionGuard";
+import { useStaffAccess } from "@/hooks/useStaffAccess";
 
 interface Invitation {
   id: string;
@@ -64,6 +66,7 @@ const AgentDashboard = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const staff = useStaffAccess();
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -73,6 +76,17 @@ const AgentDashboard = () => {
   });
   const [loading, setLoading] = useState(false);
   const [activeView, setActiveView] = useState<"clients" | "pipeline" | "compare" | "calendar" | "templates" | "share" | "executive">("executive");
+
+  // When staff finishes loading, default their view to the first allowed section
+  useEffect(() => {
+    if (staff.loading || !staff.isStaff) return;
+    const order: Array<typeof activeView> = ["clients", "pipeline", "compare", "calendar", "templates"];
+    const first = order.find((v) => staff.sections.includes(v));
+    if (first && (activeView === "executive" || activeView === "share" || !staff.sections.includes(activeView))) {
+      setActiveView(first);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [staff.loading, staff.isStaff, staff.sections.join("|")]);
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
   const [bulkPreview, setBulkPreview] = useState<{ name: string; email: string; phone: string; type: string; sport: string; team: string; marketValue: string; valid: boolean; error?: string }[]>([]);
   const [bulkImporting, setBulkImporting] = useState(false);
