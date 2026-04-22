@@ -247,6 +247,82 @@ Deno.serve(async (req) => {
   ];
   await admin.from("shared_meetings").insert(sharedMeetings);
 
+  // 8b. Agent roster: client_invitations + agent_deals (powers Executive Overview, Compare).
+  // NOTE: client_invitations.client_type and agent_deals.client_type only allow 'athlete'|'artist'.
+  const daysAgo = (n: number) => new Date(now - n * 86400000).toISOString();
+  const dateAgo = (n: number) => new Date(now - n * 86400000).toISOString().slice(0, 10);
+  const dateAhead = (n: number) => new Date(now + n * 86400000).toISOString().slice(0, 10);
+  const roster = [
+    { name: "Thabo Mokoena", email: "thabo.mokoena.demo@example.com", type: "athlete", status: "activated", meta: { sport: "Football", province: "Gauteng", gender: "male", age_band: "25-34", industry: "Sports" }, ageDays: 450 },
+    { name: "Lindiwe Dube", email: "lindiwe.dube.demo@example.com", type: "athlete", status: "activated", meta: { sport: "Athletics", province: "Western Cape", gender: "female", age_band: "18-24", industry: "Sports", para_athlete: "true" }, ageDays: 380 },
+    { name: "Sipho Nkosi", email: "sipho.nkosi.demo@example.com", type: "athlete", status: "activated", meta: { sport: "Rugby", province: "KwaZulu-Natal", gender: "male", age_band: "25-34", industry: "Sports" }, ageDays: 300 },
+    { name: "Naledi Mthembu", email: "naledi.mthembu.demo@example.com", type: "artist", status: "activated", meta: { genre: "Amapiano", province: "Gauteng", gender: "female", age_band: "25-34", industry: "Music" }, ageDays: 220 },
+    { name: "Kabelo Molefe", email: "kabelo.molefe.demo@example.com", type: "artist", status: "activated", meta: { genre: "Afro-pop", province: "Free State", gender: "male", age_band: "18-24", industry: "Music" }, ageDays: 180 },
+    { name: "Palesa Sithole", email: "palesa.sithole.demo@example.com", type: "artist", status: "activated", meta: { genre: "Spoken Word", province: "Gauteng", gender: "female", age_band: "35-44", industry: "Music" }, ageDays: 140 },
+    { name: "Andile Maseko", email: "andile.maseko.demo@example.com", type: "athlete", status: "pending", meta: { sport: "Cricket", province: "Western Cape", gender: "male", age_band: "25-34", industry: "Sports" }, ageDays: 90 },
+    { name: "Asanda Dlamini", email: "asanda.dlamini.demo@example.com", type: "artist", status: "pending", meta: { genre: "Hip-hop", province: "Gauteng", gender: "female", age_band: "18-24", industry: "Music" }, ageDays: 45 },
+    { name: "Lwazi Nkomo", email: "lwazi.nkomo.demo@example.com", type: "athlete", status: "expired", meta: { sport: "Football", province: "Eastern Cape", gender: "male", age_band: "25-34", industry: "Sports" }, ageDays: 500, archivedDays: 60 },
+  ];
+  await admin.from("client_invitations").insert(roster.map((r) => ({
+    agent_id: agentId, client_email: r.email, client_name: r.name, client_phone: "+27 82 555 0200",
+    client_type: r.type, status: r.status, pre_populated_data: r.meta,
+    created_at: daysAgo(r.ageDays),
+    activated_at: r.status === "pending" ? null : daysAgo(r.ageDays - 10),
+    archived_at: r.archivedDays ? daysAgo(r.archivedDays) : null,
+  })));
+  const dealRows = [
+    ["Thabo Mokoena", "athlete", "Velocity Sportswear (DEMO)", "Endorsement", "active", 850000, "R850K", 420, 280],
+    ["Thabo Mokoena", "athlete", "Highveld Bank (DEMO)", "Sponsorship", "active", 1200000, "R1.2M", 300, 420],
+    ["Thabo Mokoena", "athlete", "Nguni Energy (DEMO)", "Endorsement", "closed_won", 450000, "R450K", 540, -180],
+    ["Lindiwe Dube", "athlete", "Performance Apparel (DEMO)", "Endorsement", "active", 380000, "R380K", 240, 480],
+    ["Lindiwe Dube", "athlete", "Mzansi Health (DEMO)", "Sponsorship", "negotiating", 220000, "R220K", 30, 365],
+    ["Sipho Nkosi", "athlete", "Karoo Outdoor (DEMO)", "Endorsement", "active", 620000, "R620K", 180, 540],
+    ["Sipho Nkosi", "athlete", "Cape Beverages (DEMO)", "Appearance", "closed_won", 95000, "R95K", 90, -60],
+    ["Naledi Mthembu", "artist", "Indaba House (DEMO)", "Recording", "active", 750000, "R750K", 200, 530],
+    ["Naledi Mthembu", "artist", "Heritage Brand (DEMO)", "Sync", "closed_won", 180000, "R180K", 150, -30],
+    ["Kabelo Molefe", "artist", "Mzansi Soundwave (DEMO)", "Recording", "active", 320000, "R320K", 120, 600],
+    ["Kabelo Molefe", "artist", "Drakensberg Festival (DEMO)", "Live", "closed_won", 145000, "R145K", 75, -60],
+    ["Palesa Sithole", "artist", "Apex Capital (DEMO)", "Advisory", "active", 950000, "R950K", 100, 265],
+    ["Andile Maseko", "athlete", "Continental Cricket (DEMO)", "Sponsorship", "active", 480000, "R480K", 60, 305],
+    ["Asanda Dlamini", "artist", "Vista Music (DEMO)", "Publishing", "negotiating", 280000, "R280K", 20, 720],
+    ["Asanda Dlamini", "artist", "Highveld Audio (DEMO)", "Sync", "closed_won", 75000, "R75K", 10, -5],
+  ] as const;
+  await admin.from("agent_deals").insert(dealRows.map((d) => ({
+    agent_id: agentId, client_name: d[0], client_type: d[1], brand: d[2], deal_type: d[3], status: d[4],
+    value_amount: d[5], value_text: d[6], currency: "ZAR",
+    start_date: dateAgo(d[7] as number), end_date: (d[8] as number) >= 0 ? dateAhead(d[8] as number) : dateAgo(-(d[8] as number)),
+    notes: "DEMO seeded deal",
+  })));
+
+  // 8c. life_file_assets for athlete/artist/rugby/sprinter (powers Asset Registry, Estate Snapshot).
+  await admin.from("life_file_assets").insert([
+    { user_id: athleteId, asset_category: "retirement", asset_type: "Retirement Annuity", institution: "Allan Gray (DEMO)", amount: 1850000, currency: "ZAR", premium_or_contribution: 8500, premium_frequency: "monthly", beneficiary_names: "Spouse, Child One", beneficiary_allocation: "60/40", status: "active", notes: "DEMO" },
+    { user_id: athleteId, asset_category: "insurance", asset_type: "Life Cover", institution: "Discovery Life (DEMO)", amount: 10000000, currency: "ZAR", premium_or_contribution: 4200, premium_frequency: "monthly", status: "active", notes: "DEMO" },
+    { user_id: athleteId, asset_category: "investment", asset_type: "TFSA", institution: "Easy Equities (DEMO)", amount: 320000, currency: "ZAR", premium_or_contribution: 3000, premium_frequency: "monthly", status: "active", notes: "DEMO" },
+    { user_id: athleteId, asset_category: "property", asset_type: "Primary Residence", institution: "Standard Bank (DEMO)", amount: 5800000, currency: "ZAR", premium_or_contribution: 38000, premium_frequency: "monthly", status: "active", notes: "DEMO" },
+    { user_id: athleteId, asset_category: "vehicle", asset_type: "Vehicle", institution: "Wesbank (DEMO)", amount: 950000, currency: "ZAR", premium_or_contribution: 14500, premium_frequency: "monthly", status: "active", notes: "DEMO" },
+    { user_id: athleteId, asset_category: "savings", asset_type: "Emergency Fund", institution: "FNB (DEMO)", amount: 480000, currency: "ZAR", status: "active", notes: "DEMO" },
+    { user_id: artistId, asset_category: "retirement", asset_type: "Retirement Annuity", institution: "Sygnia (DEMO)", amount: 420000, currency: "ZAR", premium_or_contribution: 4500, premium_frequency: "monthly", status: "active", notes: "DEMO" },
+    { user_id: artistId, asset_category: "insurance", asset_type: "Life Cover", institution: "Old Mutual (DEMO)", amount: 5000000, currency: "ZAR", premium_or_contribution: 2100, premium_frequency: "monthly", status: "active", notes: "DEMO" },
+    { user_id: artistId, asset_category: "investment", asset_type: "Unit Trust", institution: "Coronation (DEMO)", amount: 680000, currency: "ZAR", premium_or_contribution: 5000, premium_frequency: "monthly", status: "active", notes: "DEMO" },
+    { user_id: artistId, asset_category: "savings", asset_type: "Tour Income Reserve", institution: "Investec (DEMO)", amount: 920000, currency: "ZAR", status: "active", notes: "DEMO" },
+    { user_id: rugbyId, asset_category: "retirement", asset_type: "Provident Fund", institution: "Alexander Forbes (DEMO)", amount: 780000, currency: "ZAR", premium_or_contribution: 12000, premium_frequency: "monthly", status: "active", notes: "DEMO" },
+    { user_id: rugbyId, asset_category: "insurance", asset_type: "Life + Disability", institution: "Sanlam (DEMO)", amount: 8000000, currency: "ZAR", premium_or_contribution: 3800, premium_frequency: "monthly", status: "active", notes: "DEMO" },
+    { user_id: rugbyId, asset_category: "investment", asset_type: "TFSA", institution: "Easy Equities (DEMO)", amount: 220000, currency: "ZAR", premium_or_contribution: 3000, premium_frequency: "monthly", status: "active", notes: "DEMO" },
+    { user_id: rugbyId, asset_category: "property", asset_type: "Investment Property", institution: "Nedbank (DEMO)", amount: 3200000, currency: "ZAR", premium_or_contribution: 22000, premium_frequency: "monthly", status: "active", notes: "DEMO" },
+    { user_id: rugbyId, asset_category: "vehicle", asset_type: "Vehicle", institution: "Wesbank (DEMO)", amount: 620000, currency: "ZAR", premium_or_contribution: 9500, premium_frequency: "monthly", status: "active", notes: "DEMO" },
+    { user_id: sprinterId, asset_category: "retirement", asset_type: "Retirement Annuity", institution: "Sygnia (DEMO)", amount: 180000, currency: "ZAR", premium_or_contribution: 2500, premium_frequency: "monthly", status: "active", notes: "DEMO" },
+    { user_id: sprinterId, asset_category: "insurance", asset_type: "Life Cover", institution: "Discovery (DEMO)", amount: 3000000, currency: "ZAR", premium_or_contribution: 1400, premium_frequency: "monthly", status: "active", notes: "DEMO" },
+    { user_id: sprinterId, asset_category: "investment", asset_type: "TFSA", institution: "Easy Equities (DEMO)", amount: 95000, currency: "ZAR", premium_or_contribution: 2000, premium_frequency: "monthly", status: "active", notes: "DEMO" },
+    { user_id: sprinterId, asset_category: "savings", asset_type: "Funding Reserve", institution: "Capitec (DEMO)", amount: 145000, currency: "ZAR", status: "active", notes: "DEMO" },
+  ]);
+
+  // 8d. social_media_accounts for the artist
+  await admin.from("social_media_accounts").insert([
+    { user_id: artistId, platform: "instagram", handle: "@refilwe.demo", follower_count: 185000, verified: true, account_status: "active", notes: "DEMO" },
+    { user_id: artistId, platform: "tiktok", handle: "@refilwe.demo", follower_count: 240000, verified: false, account_status: "active", notes: "DEMO" },
+  ]);
+
   // 9. Generate PDFs + insert life_file_documents
   const docPlans: Array<{ owner: string; ownerName: string; docs: typeof ATHLETE_DOCS }> = [
     { owner: athleteId, ownerName: audit.names.athlete.display_name, docs: ATHLETE_DOCS },
