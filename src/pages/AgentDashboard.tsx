@@ -903,7 +903,6 @@ const AgentDashboard = () => {
                   </div>
                 </DialogContent>
               </Dialog>
-            </div>
 
             <div className="space-y-3">
               {invitations.length === 0 ? (
