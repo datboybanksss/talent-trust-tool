@@ -525,6 +525,17 @@ const AgentDashboard = () => {
   const roleLabel = agentProfile?.role === "athlete_agent" ? "Athletes' Agent" : "Artists' Manager";
   const activatedCount = invitations.filter((i) => i.status === "activated").length;
   const pendingCount = invitations.filter((i) => i.status === "pending").length;
+  // Derive recent activity from real invitations (most recent 5 events).
+  const recentActivity = invitations
+    .slice()
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .slice(0, 5)
+    .map((i) => ({
+      action: i.status === "activated" ? "Profile activated" : "Invitation sent",
+      client: i.client_name,
+      time: timeAgo(i.created_at),
+      icon: i.status === "activated" ? CheckCircle2 : Mail,
+    }));
   const rawName =
     (user?.user_metadata?.display_name as string | undefined) ||
     (user?.user_metadata?.full_name as string | undefined) ||
