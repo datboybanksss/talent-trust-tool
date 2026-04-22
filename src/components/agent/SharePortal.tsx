@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useAgencyScope } from "@/hooks/useAgencyScope";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -78,16 +79,19 @@ interface SharedStaffMember {
 const SharePortal = () => {
   const { toast } = useToast();
   const { user } = useAuth();
+  // Page is gated by SectionGuard ownerOnly, so isViewingAsStaff should always
+  // be false here — but still scope reads defensively.
+  const { scopedAgentId } = useAgencyScope();
   const [staff, setStaff] = useState<SharedStaffMember[]>([]);
   const [loadingStaff, setLoadingStaff] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const fetchStaff = useCallback(async () => {
-    if (!user) return;
+    if (!user || !scopedAgentId) return;
     const { data, error } = await supabase
       .from("portal_staff_access")
       .select("*")
-      .eq("agent_id", user.id)
+      .eq("agent_id", scopedAgentId)
       .order("created_at", { ascending: false });
 
     if (!error && data) {
@@ -106,7 +110,7 @@ const SharePortal = () => {
       })));
     }
     setLoadingStaff(false);
-  }, [user]);
+  }, [user, scopedAgentId]);
 
   useEffect(() => { fetchStaff(); }, [fetchStaff]);
 
