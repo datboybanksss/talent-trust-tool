@@ -904,7 +904,21 @@ const AgentDashboard = () => {
             </div>
 
             <div className="space-y-3">
-              {invitations.map((inv) => {
+              {invitations.length === 0 ? (
+                <Card className="border-dashed">
+                  <CardContent className="p-8 text-center space-y-3">
+                    <div className="w-12 h-12 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
+                      <UserPlus className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">No clients yet</p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        You haven't invited any clients yet. Click <strong>New Client</strong> to send your first invitation.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : invitations.map((inv) => {
                 const initials = inv.client_name.split(" ").map((n) => n[0]).join("").slice(0, 2);
                 const isActivated = inv.status === "activated";
                 const date = new Date(inv.created_at).toLocaleDateString("en-ZA", { day: "numeric", month: "short", year: "numeric" });
