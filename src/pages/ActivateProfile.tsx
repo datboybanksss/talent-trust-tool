@@ -50,6 +50,12 @@ const ActivateProfile = () => {
       body: { action: "lookup", token },
     });
 
+    if (data?.error === "expired") {
+      setExpired({ agent_email: data.agent_email ?? null, agent_name: data.agent_name ?? null });
+      setLoading(false);
+      return;
+    }
+
     if (fnError || !data?.invitation) {
       setError(data?.error || "Invalid or expired activation link.");
       setLoading(false);
@@ -98,6 +104,23 @@ const ActivateProfile = () => {
       return;
     }
 
+    setDocFailures(Array.isArray(data?.documentsFailed) ? data.documentsFailed : []);
+
+    // Auto-sign-in via the magic link returned by the edge function.
+    if (data?.magic_link_token_hash) {
+      const { error: otpErr } = await supabase.auth.verifyOtp({
+        token_hash: data.magic_link_token_hash,
+        type: "magiclink",
+      });
+      if (!otpErr) {
+        setAutoSignedIn(true);
+        setActivated(true);
+        setTimeout(() => navigate("/dashboard"), 1500);
+        return;
+      }
+    }
+
+    // Fallback — manual sign-in flow.
     setActivated(true);
     toast({ title: "Profile Activated!", description: "You can now sign in with your email and password." });
   };
