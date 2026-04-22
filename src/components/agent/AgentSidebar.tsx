@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useStaffAccess } from "@/hooks/useStaffAccess";
 import {
   Sidebar,
   SidebarContent,
@@ -40,20 +41,30 @@ interface AgentSidebarProps {
 }
 
 const mainNavItems = [
-  { title: "Executive Overview", icon: Crown, view: "executive" as const },
-  { title: "Clients", icon: Users, view: "clients" as const },
-  { title: "Compare", icon: BarChart3, view: "compare" as const },
-  { title: "Calendar", icon: CalendarDays, view: "calendar" as const },
-  { title: "Deal Pipeline", icon: Kanban, view: "pipeline" as const },
-  { title: "Agreement Templates", icon: FileText, view: "templates" as const },
-  { title: "Share Portal", icon: Share2, view: "share" as const },
+  { title: "Executive Overview", icon: Crown, view: "executive" as const, ownerOnly: true },
+  { title: "Clients", icon: Users, view: "clients" as const, section: "clients" },
+  { title: "Compare", icon: BarChart3, view: "compare" as const, section: "compare" },
+  { title: "Calendar", icon: CalendarDays, view: "calendar" as const, section: "calendar" },
+  { title: "Deal Pipeline", icon: Kanban, view: "pipeline" as const, section: "pipeline" },
+  { title: "Agreement Templates", icon: FileText, view: "templates" as const, section: "templates" },
+  { title: "Share Portal", icon: Share2, view: "share" as const, ownerOnly: true },
 ];
 
 const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, setActiveView }: AgentSidebarProps) => {
   const { state, isMobile, toggleSidebar } = useSidebar();
   const collapsed = state === "collapsed";
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const navigate = useNavigate();
+  const staff = useStaffAccess();
+
+  const visibleNavItems = mainNavItems.filter((item) => {
+    if (!staff.isStaff) return true;
+    if (item.ownerOnly) return false;
+    return item.section ? staff.sections.includes(item.section) : false;
+  });
+
+  const showQuickActions = !staff.isStaff || staff.sections.includes("clients");
+  const showOwnerOnly = !staff.isStaff;
 
   const handleNavClick = (view: typeof activeView) => {
     setActiveView(view);
@@ -66,6 +77,7 @@ const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, set
   };
 
   const roleLabel = agentProfile?.role === "athlete_agent" ? "Athletes' Agent" : "Artists' Manager";
+  const footerRoleLabel = staff.isStaff ? (staff.roleLabel ?? "Staff") : roleLabel;
 
   const handleSignOut = async () => {
     await signOut();
@@ -95,7 +107,7 @@ const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, set
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainNavItems.map((item) => (
+              {visibleNavItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     onClick={() => handleNavClick(item.view)}
@@ -106,20 +118,23 @@ const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, set
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  onClick={() => { navigate("/myagency"); if (isMobile) toggleSidebar(); }}
-                  className="hover:bg-muted/50"
-                >
-                  <Building2 className="mr-2 h-4 w-4" />
-                  {!collapsed && <span>My Agency</span>}
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {showOwnerOnly && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    onClick={() => { navigate("/myagency"); if (isMobile) toggleSidebar(); }}
+                    className="hover:bg-muted/50"
+                  >
+                    <Building2 className="mr-2 h-4 w-4" />
+                    {!collapsed && <span>My Agency</span>}
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
         {/* Quick Actions */}
+        {showQuickActions && (
         <SidebarGroup>
           <SidebarGroupLabel>Quick Actions</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -145,6 +160,7 @@ const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, set
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        )}
 
         {/* Compliance */}
         <SidebarGroup>
@@ -172,11 +188,20 @@ const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, set
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
-        {!collapsed && agentProfile && (
+        {!collapsed && (
           <div className="px-2 pb-2">
             <div className="bg-secondary rounded-xl p-3">
-              <p className="text-xs font-medium text-foreground truncate">{agentProfile.company_name}</p>
-              <p className="text-[10px] text-muted-foreground truncate">{roleLabel}</p>
+              {staff.isStaff ? (
+                <>
+                  <p className="text-xs font-medium text-foreground truncate">Staff of {staff.agencyName}</p>
+                  <p className="text-[10px] text-muted-foreground truncate">{user?.email} · {footerRoleLabel}</p>
+                </>
+              ) : agentProfile ? (
+                <>
+                  <p className="text-xs font-medium text-foreground truncate">{agentProfile.company_name}</p>
+                  <p className="text-[10px] text-muted-foreground truncate">{footerRoleLabel}</p>
+                </>
+              ) : null}
             </div>
           </div>
         )}

@@ -10,6 +10,7 @@ import AgentSidebar from "@/components/agent/AgentSidebar";
 import AgencyIdentityHeader from "@/components/myagency/AgencyIdentityHeader";
 import AgencyStatsRow from "@/components/myagency/AgencyStatsRow";
 import POPIACompliancePanel from "@/components/myagency/POPIACompliancePanel";
+import { useStaffAccess } from "@/hooks/useStaffAccess";
 
 export interface AgencyProfile {
   id: string;
@@ -26,6 +27,7 @@ const MyAgency = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const staff = useStaffAccess();
   const [profile, setProfile] = useState<AgencyProfile | null>(null);
   const [isDemo, setIsDemo] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -54,7 +56,16 @@ const MyAgency = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
-  if (loading) {
+  // Owner-only page: redirect staff away
+  useEffect(() => {
+    if (staff.loading) return;
+    if (staff.isStaff) {
+      toast({ title: "Owner-only section", description: "This section is only available to agency owners." });
+      navigate("/agent-dashboard");
+    }
+  }, [staff.loading, staff.isStaff, navigate, toast]);
+
+  if (loading || staff.loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <p className="text-muted-foreground">Loading agency…</p>

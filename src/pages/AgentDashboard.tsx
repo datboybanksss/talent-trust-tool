@@ -35,6 +35,8 @@ import ConfidentialityGate from "@/components/agent/ConfidentialityGate";
 import ExecutiveOverviewInline from "@/components/executive/ExecutiveOverviewInline";
 import RemoveClientDialog from "@/components/agent/RemoveClientDialog";
 import * as XLSX from "xlsx";
+import SectionGuard from "@/components/agent/SectionGuard";
+import { useStaffAccess } from "@/hooks/useStaffAccess";
 
 interface Invitation {
   id: string;
@@ -64,6 +66,7 @@ const AgentDashboard = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const staff = useStaffAccess();
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -73,6 +76,17 @@ const AgentDashboard = () => {
   });
   const [loading, setLoading] = useState(false);
   const [activeView, setActiveView] = useState<"clients" | "pipeline" | "compare" | "calendar" | "templates" | "share" | "executive">("executive");
+
+  // When staff finishes loading, default their view to the first allowed section
+  useEffect(() => {
+    if (staff.loading || !staff.isStaff) return;
+    const order: Array<typeof activeView> = ["clients", "pipeline", "compare", "calendar", "templates"];
+    const first = order.find((v) => staff.sections.includes(v));
+    if (first && (activeView === "executive" || activeView === "share" || !staff.sections.includes(activeView))) {
+      setActiveView(first);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [staff.loading, staff.isStaff, staff.sections.join("|")]);
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
   const [bulkPreview, setBulkPreview] = useState<{ name: string; email: string; phone: string; type: string; sport: string; team: string; marketValue: string; valid: boolean; error?: string }[]>([]);
   const [bulkImporting, setBulkImporting] = useState(false);
@@ -705,17 +719,23 @@ const AgentDashboard = () => {
         </Card>
 
         {activeView === "executive" ? (
-          <ExecutiveOverviewInline />
+          <SectionGuard ownerOnly><ExecutiveOverviewInline /></SectionGuard>
         ) : activeView === "pipeline" ? (
-          <DealPipeline />
+          <SectionGuard section="pipeline"><DealPipeline /></SectionGuard>
         ) : activeView === "compare" ? (
-          <ClientComparison />
+          <SectionGuard section="compare"><ClientComparison /></SectionGuard>
         ) : activeView === "calendar" ? (
-          <AgentCalendar />
+          <SectionGuard section="calendar"><AgentCalendar /></SectionGuard>
         ) : activeView === "templates" ? (
-          <AgreementTemplates clients={invitations.filter(i => i.status === "activated").map(i => ({ id: i.id, name: i.client_name, email: i.client_email, phone: i.client_phone, type: i.client_type }))} />
+          <SectionGuard section="templates">
+            <AgreementTemplates clients={invitations.filter(i => i.status === "activated").map(i => ({ id: i.id, name: i.client_name, email: i.client_email, phone: i.client_phone, type: i.client_type }))} />
+          </SectionGuard>
         ) : activeView === "share" ? (
-          <SharePortal />
+          <SectionGuard ownerOnly><SharePortal /></SectionGuard>
+        ) : (
+        <>
+        {staff.isStaff && !staff.sections.includes("clients") ? (
+          <SectionGuard section="clients"><div /></SectionGuard>
         ) : (
         <>
         {/* Main Content Grid */}
@@ -837,6 +857,7 @@ const AgentDashboard = () => {
           {/* Sidebar — 1 col */}
           <div className="space-y-6">
             {/* Recent Activity */}
+            {!staff.isStaff && (
             <Card className="border-border/50">
               <CardContent className="p-5">
                 <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
@@ -860,6 +881,7 @@ const AgentDashboard = () => {
                 </div>
               </CardContent>
             </Card>
+            )}
 
             <Card className="border-border/50">
               <CardContent className="p-5">
@@ -887,6 +909,8 @@ const AgentDashboard = () => {
             </Card>
           </div>
         </div>
+        </>
+        )}
         </>
         )}
 
