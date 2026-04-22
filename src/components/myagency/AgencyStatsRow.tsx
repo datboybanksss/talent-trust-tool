@@ -1,11 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Users, CalendarClock, Pencil, Check, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import CurrentTierBadge from "@/components/subscription/CurrentTierBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { clientTypeValues } from "@/data/executiveMockData";
 
 interface Props {
   agentUserId: string;
@@ -15,11 +14,6 @@ interface Props {
 const STORAGE_KEY = "myagency:clientCountOverride";
 
 const AgencyStatsRow = ({ agentUserId, memberSince }: Props) => {
-  // Default = total clients from Executive Overview dataset (sum of client-type counts)
-  const executiveTotal = useMemo(
-    () => clientTypeValues.reduce((sum, c) => sum + c.count, 0),
-    []
-  );
   const [liveCount, setLiveCount] = useState<number | null>(null);
   const [override, setOverride] = useState<number | null>(() => {
     const raw = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
@@ -54,8 +48,8 @@ const AgencyStatsRow = ({ agentUserId, memberSince }: Props) => {
     load();
   }, [agentUserId]);
 
-  // Display: manual override > real count if > 0 > executive overview default
-  const displayCount = override ?? (liveCount && liveCount > 0 ? liveCount : executiveTotal);
+  // Display: manual override > live count from invitations + shares (0 when no clients).
+  const displayCount = override ?? (liveCount ?? 0);
 
   const startEdit = () => {
     setDraft(String(displayCount));

@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { TrendingUp, Users, DollarSign, ShieldCheck, UserMinus, UserPlus } from "lucide-react";
 import { getFilteredKPIs, ExecutiveFilters } from "@/utils/executiveFilters";
+import { useExecutiveData } from "@/hooks/useExecutiveData";
 
 const fmt = (n: number) =>
   n >= 1_000_000 ? `R${(n / 1_000_000).toFixed(1)}M` : `R${(n / 1_000).toFixed(0)}K`;
@@ -11,7 +12,9 @@ interface ExecutiveKPICardsProps {
 }
 
 const ExecutiveKPICards = ({ filters }: ExecutiveKPICardsProps) => {
-  const kpis = useMemo(() => getFilteredKPIs(filters), [filters]);
+  const { data } = useExecutiveData();
+  const dataset = data ?? { invitations: [], deals: [] };
+  const kpis = useMemo(() => getFilteredKPIs(dataset, filters), [dataset, filters]);
 
   const cards = [
     {

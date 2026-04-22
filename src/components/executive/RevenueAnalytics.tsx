@@ -6,8 +6,9 @@ import {
 } from "recharts";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { CHART_COLORS } from "@/data/executiveMockData";
+import { CHART_COLORS } from "@/data/executiveChartColors";
 import { getFilteredMonthlyRevenue, getFilteredRevenueStreams, getFilteredTopClients, ExecutiveFilters } from "@/utils/executiveFilters";
+import { useExecutiveData } from "@/hooks/useExecutiveData";
 
 const fmt = (n: number) => `R${(n / 1_000_000).toFixed(1)}M`;
 
@@ -17,9 +18,11 @@ interface RevenueAnalyticsProps {
 }
 
 const RevenueAnalytics = ({ onSegmentClick, filters }: RevenueAnalyticsProps) => {
-  const monthly = useMemo(() => getFilteredMonthlyRevenue(filters), [filters]);
-  const streams = useMemo(() => getFilteredRevenueStreams(filters), [filters]);
-  const clients = useMemo(() => getFilteredTopClients(filters), [filters]);
+  const { data } = useExecutiveData();
+  const dataset = data ?? { invitations: [], deals: [] };
+  const monthly = useMemo(() => getFilteredMonthlyRevenue(dataset, filters), [dataset, filters]);
+  const streams = useMemo(() => getFilteredRevenueStreams(dataset, filters), [dataset, filters]);
+  const clients = useMemo(() => getFilteredTopClients(dataset, filters), [dataset, filters]);
 
   return (
     <div className="space-y-6">
