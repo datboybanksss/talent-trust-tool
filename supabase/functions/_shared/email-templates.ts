@@ -141,3 +141,88 @@ export function twoFactorCodeEmail(code: string) {
     html: wrap("Your Verification Code", p("Use the code below to complete your sign-in:") + `<div style="text-align:center;margin:24px 0;"><span style="display:inline-block;background:${BRAND.lightBg};border:2px solid ${BRAND.gold};border-radius:8px;padding:16px 32px;font-family:monospace;font-size:32px;letter-spacing:8px;color:${BRAND.green};font-weight:700;">${code}</span></div>` + p("This code expires in 10 minutes. If you didn't try to sign in, please change your password immediately.")),
   };
 }
+
+// ── Invitation templates ──
+
+function formatExpiry(iso: string | null | undefined): string {
+  if (!iso) return "in the coming days";
+  try {
+    return new Date(iso).toLocaleDateString("en-ZA", { day: "numeric", month: "long", year: "numeric" });
+  } catch {
+    return "soon";
+  }
+}
+
+export interface StaffInvitationEmailInput {
+  recipientName: string;
+  agencyName: string;
+  inviterName: string;
+  roleLabel: string;
+  sections: string[];
+  activationUrl: string;
+  expiresAt: string | null;
+  isReturningUser: boolean;
+}
+
+export function staffInvitationEmail(input: StaffInvitationEmailInput) {
+  const sectionsList = input.sections.length > 0
+    ? `<ul style="margin:0 0 14px 0;padding-left:20px;color:#374151;font-size:14px;line-height:1.6;">${input.sections.map((s) => `<li style="text-transform:capitalize;">${s.replace(/_/g, " ")}</li>`).join("")}</ul>`
+    : p("Your access scope will be confirmed by the agent.");
+  const greeting = input.isReturningUser
+    ? p(`Welcome back, ${input.recipientName}.`)
+    : p(`Hi ${input.recipientName},`);
+  const intro = input.isReturningUser
+    ? p(`<strong>${input.inviterName}</strong> at <strong>${input.agencyName}</strong> has invited you to join their team on LegacyBuilder. Sign in to accept.`)
+    : p(`<strong>${input.inviterName}</strong> at <strong>${input.agencyName}</strong> has invited you to join their portal on LegacyBuilder.`);
+  const ctaLabel = input.isReturningUser ? "Sign In to Accept" : "Activate My Access";
+  return {
+    subject: `${input.agencyName} invited you to join their portal on LegacyBuilder`,
+    html: wrap(
+      "You've been invited to a portal",
+      greeting +
+      intro +
+      p(`<strong>Your role:</strong> ${input.roleLabel}`) +
+      p(`<strong>You'll have access to:</strong>`) + sectionsList +
+      p(`Before you can access the portal, you'll be asked to acknowledge a brief confidentiality agreement covering POPIA-compliant handling of client data.`) +
+      btn(ctaLabel, input.activationUrl) +
+      p(`<small>This invitation expires on <strong>${formatExpiry(input.expiresAt)}</strong>.</small>`) +
+      p(`<small>If you weren't expecting this invitation, you can safely ignore this email.</small>`)
+    ),
+  };
+}
+
+export interface ClientInvitationEmailInput {
+  recipientName: string;
+  agencyName: string;
+  inviterName: string;
+  clientType: string;
+  activationUrl: string;
+  expiresAt: string | null;
+  isReturningUser: boolean;
+}
+
+export function clientInvitationEmail(input: ClientInvitationEmailInput) {
+  const typeLabel = input.clientType === "artist"
+    ? "manage your contracts, royalties, projects, and team — all in one place"
+    : "manage your contracts, endorsements, brand deals, and life-file — all in one place";
+  const greeting = input.isReturningUser
+    ? p(`Welcome back, ${input.recipientName}.`)
+    : p(`Hi ${input.recipientName},`);
+  const intro = input.isReturningUser
+    ? p(`<strong>${input.inviterName}</strong> at <strong>${input.agencyName}</strong> has prepared a LegacyBuilder profile for you. Sign in to claim it.`)
+    : p(`<strong>${input.inviterName}</strong> at <strong>${input.agencyName}</strong> has prepared a LegacyBuilder profile for you.`);
+  const ctaLabel = input.isReturningUser ? "Sign In to Activate" : "Activate My Profile";
+  return {
+    subject: `${input.agencyName} has invited you to activate your LegacyBuilder profile`,
+    html: wrap(
+      "Your LegacyBuilder profile is ready",
+      greeting +
+      intro +
+      p(`LegacyBuilder is your private command centre to ${typeLabel}.`) +
+      p(`Your profile has already been pre-populated with details your agent has on file. After activation, <strong>you</strong> own and control all access — your agent will only see what you explicitly share.`) +
+      btn(ctaLabel, input.activationUrl) +
+      p(`<small>This invitation expires on <strong>${formatExpiry(input.expiresAt)}</strong>.</small>`) +
+      p(`<small>If you weren't expecting this invitation, you can safely ignore this email.</small>`)
+    ),
+  };
+}
