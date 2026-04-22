@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import DealDialog from "./DealDialog";
 import DeleteDealDialog from "./DeleteDealDialog";
+import RecordAttribution from "@/components/agent/RecordAttribution";
 
 interface Deal {
   id: string;
@@ -34,6 +35,10 @@ interface Deal {
   start_date: string | null;
   end_date: string | null;
   notes: string | null;
+  created_by: string | null;
+  created_at: string | null;
+  updated_by: string | null;
+  updated_at: string | null;
 }
 
 const PIPELINE_STAGES = [
@@ -269,6 +274,15 @@ const DealPipeline = () => {
                                 {deal.start_date}{deal.end_date ? ` → ${deal.end_date}` : ""}
                               </div>
                             )}
+
+                            <div className="pt-1 border-t border-border/30">
+                              <RecordAttribution
+                                createdBy={deal.created_by}
+                                createdAt={deal.created_at}
+                                updatedBy={deal.updated_by}
+                                updatedAt={deal.updated_at}
+                              />
+                            </div>
                           </CardContent>
                         </Card>
                       );
