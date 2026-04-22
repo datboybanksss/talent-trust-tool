@@ -220,6 +220,26 @@ const AgentDashboard = () => {
       .is("archived_at", null)
       .order("created_at", { ascending: false });
     setInvitations(data ?? []);
+
+    // Fetch share statuses for activated clients (badge data).
+    const activatedIds = (data ?? [])
+      .filter((i) => i.activated_user_id)
+      .map((i) => i.activated_user_id as string);
+    if (activatedIds.length > 0) {
+      const { data: shares } = await supabase
+        .from("life_file_shares")
+        .select("owner_id, status, decline_reason")
+        .in("owner_id", activatedIds)
+        .eq("shared_with_user_id", user.id);
+      const map: Record<string, ShareStatus> = {};
+      (shares ?? []).forEach((s) => {
+        const inv = (data ?? []).find((i) => i.activated_user_id === s.owner_id);
+        if (inv) map[inv.id] = { status: s.status as ShareStatus["status"], decline_reason: s.decline_reason };
+      });
+      setShareStatuses(map);
+    } else {
+      setShareStatuses({});
+    }
   };
 
   const handleSpreadsheetImport = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -309,6 +329,8 @@ const AgentDashboard = () => {
     setLocation(""); setNationality("South African"); setDateOfBirth(""); setIdNumber("");
     setSocialHandle(""); setPreDeals([]); setImportedData(null); setImportErrors([]);
     setFormTab("basic");
+    setRequestAccess(true);
+    setRequestedSections(["contracts", "endorsements", "tax"]);
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -358,6 +380,7 @@ const AgentDashboard = () => {
         client_email: clientEmail,
         client_phone: clientPhone || null,
         client_type: clientType,
+        requested_share_sections: requestAccess && requestedSections.length > 0 ? requestedSections : null,
         pre_populated_data: JSON.parse(JSON.stringify({
           notes,
           documents: documentsMeta,
