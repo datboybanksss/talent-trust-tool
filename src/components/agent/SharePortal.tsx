@@ -14,7 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useToast } from "@/hooks/use-toast";
 import {
   UserPlus, Trash2, Shield, Eye, Users, Kanban, CalendarDays,
-  FileText, Mail, Copy, CheckCircle2, Clock, Settings2, Pencil
+  FileText, Mail, Copy, CheckCircle2, Clock, Settings2, Pencil, Send
 } from "lucide-react";
 
 type PortalSection = "clients" | "pipeline" | "calendar" | "compare" | "templates";
@@ -71,6 +71,8 @@ interface SharedStaffMember {
   status: "pending" | "active";
   invitedAt: string;
   confidentialityAcceptedAt: string | null;
+  invitationToken: string | null;
+  expiresAt: string | null;
 }
 
 const SharePortal = () => {
@@ -99,6 +101,8 @@ const SharePortal = () => {
         status: d.status === "active" ? "active" : "pending",
         invitedAt: d.created_at,
         confidentialityAcceptedAt: d.confidentiality_accepted_at,
+        invitationToken: d.invitation_token ?? null,
+        expiresAt: d.expires_at ?? null,
       })));
     }
     setLoadingStaff(false);
@@ -131,7 +135,7 @@ const SharePortal = () => {
     const preset = ROLE_PRESETS.find((r) => r.id === selectedRole)!;
     const roleLabel = selectedRole === "custom" ? "Custom Role" : preset.label;
 
-    const { error } = await supabase.from("portal_staff_access").insert({
+    const { data: inserted, error } = await supabase.from("portal_staff_access").insert({
       agent_id: user.id,
       staff_email: email,
       staff_name: name,
@@ -139,20 +143,83 @@ const SharePortal = () => {
       role_label: roleLabel,
       sections: effectiveSections,
       status: "pending",
-    });
+    }).select("id").single();
 
-    if (error) {
+    if (error || !inserted) {
       toast({ title: "Error", description: "Could not send invitation.", variant: "destructive" });
       return;
     }
 
-    toast({ title: "Invitation sent", description: `${name} has been invited as ${roleLabel}. They must accept the confidentiality terms before accessing the portal.` });
+    // Fire-and-track email
+    const { data: emailRes, error: emailErr } = await supabase.functions.invoke("send-invitation-email", {
+      body: {
+        invitation_type: "staff",
+        invitation_id: inserted.id,
+        app_origin: window.location.origin,
+      },
+    });
+
+    if (emailErr || (emailRes && !emailRes.success)) {
+      toast({
+        title: "Invitation saved — email failed",
+        description: `${name}'s invitation is saved, but email delivery failed. Use the Copy Link button on their row to send it manually.`,
+        variant: "destructive",
+      });
+    } else if (emailRes?.demo) {
+      toast({ title: "Demo mode", description: "Invitation saved. Email was not sent because this is a demo account." });
+    } else {
+      toast({ title: "Invitation emailed", description: `${name} has been invited as ${roleLabel}. They'll receive a branded email with the activation link.` });
+    }
+
     setName("");
     setEmail("");
     setSelectedRole("");
     setCustomSections([]);
     setConfidentialityAccepted(false);
     setDialogOpen(false);
+    fetchStaff();
+  };
+
+  const buildActivationUrl = (token: string | null) =>
+    token ? `${window.location.origin}/staff-activate/${token}` : null;
+
+  const handleCopyLink = async (member: SharedStaffMember) => {
+    const url = buildActivationUrl(member.invitationToken);
+    if (!url) {
+      toast({ title: "No link available", description: "Refresh the page and try again.", variant: "destructive" });
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      toast({ title: "Link copied", description: `Activation link for ${member.name} is on your clipboard.` });
+    } catch {
+      toast({ title: "Copy failed", description: url, variant: "destructive" });
+    }
+  };
+
+  const handleResend = async (member: SharedStaffMember) => {
+    // If expired, refresh expires_at first
+    if (member.expiresAt && new Date(member.expiresAt) <= new Date()) {
+      const newExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+      await supabase.from("portal_staff_access").update({ expires_at: newExpiry }).eq("id", member.id);
+    }
+    const { data: emailRes, error: emailErr } = await supabase.functions.invoke("send-invitation-email", {
+      body: { invitation_type: "staff", invitation_id: member.id, app_origin: window.location.origin },
+    });
+    if (emailErr || (emailRes && !emailRes.success)) {
+      toast({ title: "Resend failed", description: emailRes?.error ?? "Email delivery failed.", variant: "destructive" });
+    } else if (emailRes?.demo) {
+      toast({ title: "Demo mode", description: "Email not actually sent (demo account)." });
+    } else {
+      toast({ title: "Invitation resent", description: `Fresh invitation emailed to ${member.name}.` });
+      await supabase.from("audit_log").insert({
+        action: "invitation_resent",
+        entity_type: "invitation",
+        entity_id: member.id,
+        user_id: user?.id ?? null,
+        metadata: { invitation_type: "staff", recipient: member.email },
+      });
+    }
     fetchStaff();
   };
 
@@ -418,6 +485,16 @@ const SharePortal = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
+                        {member.status !== "active" && (
+                          <>
+                            <Button variant="ghost" size="icon" onClick={() => handleCopyLink(member)} title="Copy activation link">
+                              <Copy className="w-4 h-4 text-muted-foreground" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => handleResend(member)} title="Resend invitation email">
+                              <Send className="w-4 h-4 text-muted-foreground" />
+                            </Button>
+                          </>
+                        )}
                         <Button variant="ghost" size="icon" onClick={() => openEdit(member)}>
                           <Pencil className="w-4 h-4 text-muted-foreground" />
                         </Button>
