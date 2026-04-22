@@ -19,7 +19,7 @@ interface ActivityEntry {
   user_id: string;
 }
 
-interface Member { user_id: string; name: string; role: string; }
+interface Member { user_id: string; name: string; role: string; active?: boolean; }
 
 const PAGE_SIZE = 20;
 
@@ -137,8 +137,19 @@ const WorkspaceActivityPanel = () => {
             <SelectTrigger className="text-xs"><SelectValue placeholder="All members" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All members</SelectItem>
-              {members.map((m) => (
+              {members.filter((m) => m.active !== false).length > 0 && (
+                <div className="px-2 py-1 text-[10px] uppercase tracking-wide text-muted-foreground">Current</div>
+              )}
+              {members.filter((m) => m.active !== false).map((m) => (
                 <SelectItem key={m.user_id} value={m.user_id}>{m.name} ({m.role})</SelectItem>
+              ))}
+              {members.filter((m) => m.active === false).length > 0 && (
+                <div className="px-2 py-1 mt-1 text-[10px] uppercase tracking-wide text-muted-foreground border-t border-border/40">Former</div>
+              )}
+              {members.filter((m) => m.active === false).map((m) => (
+                <SelectItem key={m.user_id} value={m.user_id}>
+                  <span className="text-muted-foreground">{m.name} ({m.role})</span>
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>

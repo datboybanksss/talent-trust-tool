@@ -56,32 +56,42 @@ Deno.serve(async (req) => {
     const body: RequestBody = await req.json().catch(() => ({}));
     const limit = Math.min(Math.max(body.limit ?? 20, 1), 100);
 
-    // Workspace members = owner + active staff with linked auth users
-    const { data: staffRows } = await admin
+    // Workspace members: owner + ALL staff EVER linked (active OR revoked) so
+    // former members still appear in audit history. Active set is computed
+    // separately for the "Current vs Former" UI grouping.
+    const { data: allStaffRows } = await admin
       .from("portal_staff_access")
-      .select("staff_user_id, staff_name, role_label")
+      .select("staff_user_id, staff_name, role_label, status")
       .eq("agent_id", callerId)
-      .eq("status", "active")
       .not("staff_user_id", "is", null);
 
-    const memberIds = [callerId, ...(staffRows ?? []).map((r) => r.staff_user_id as string)];
-    const memberMap = new Map<string, { name: string; role: string }>();
-    memberMap.set(callerId, { name: "Owner", role: "Owner" });
-    (staffRows ?? []).forEach((r) => {
-      memberMap.set(r.staff_user_id as string, { name: r.staff_name, role: r.role_label });
+    const memberMap = new Map<string, { name: string; role: string; active: boolean }>();
+    memberMap.set(callerId, { name: "Owner", role: "Owner", active: true });
+    (allStaffRows ?? []).forEach((r) => {
+      memberMap.set(r.staff_user_id as string, {
+        name: r.staff_name,
+        role: r.role_label,
+        active: r.status === "active",
+      });
     });
 
     // Owner display name
     const { data: ownerProfile } = await admin
       .from("profiles").select("display_name").eq("user_id", callerId).maybeSingle();
     if (ownerProfile?.display_name) {
-      memberMap.set(callerId, { name: ownerProfile.display_name, role: "Owner" });
+      memberMap.set(callerId, { name: ownerProfile.display_name, role: "Owner", active: true });
     }
+
+    // Workspace audit scope = anything authored by owner, current staff, or
+    // former staff. We constrain to audit entries whose metadata.agency_id
+    // matches the caller (owner). Fallback for older rows: filter by user_id
+    // membership in the union set we know about.
+    const knownMemberIds = Array.from(memberMap.keys());
 
     let q = admin
       .from("audit_log")
       .select("id, action, entity_type, entity_id, user_id, metadata, created_at")
-      .in("user_id", memberIds)
+      .or(`metadata->>agency_id.eq.${callerId},user_id.in.(${knownMemberIds.join(",")})`)
       .order("created_at", { ascending: false })
       .limit(limit);
 
@@ -91,6 +101,23 @@ Deno.serve(async (req) => {
 
     const { data: rows, error } = await q;
     if (error) throw error;
+
+    // Resolve any author uuids we don't already know about (defensive — covers
+    // edge case where a row's user_id isn't in portal_staff_access at all).
+    const unknownAuthors = Array.from(
+      new Set((rows ?? []).map((r) => r.user_id as string).filter((u) => u && !memberMap.has(u))),
+    );
+    if (unknownAuthors.length) {
+      const { data: extraProfiles } = await admin
+        .from("profiles").select("user_id, display_name").in("user_id", unknownAuthors);
+      (extraProfiles ?? []).forEach((p) => {
+        memberMap.set(p.user_id, {
+          name: p.display_name ?? "Former member",
+          role: "Former member",
+          active: false,
+        });
+      });
+    }
 
     const enriched = (rows ?? []).map((r) => ({
       id: r.id,
@@ -105,7 +132,7 @@ Deno.serve(async (req) => {
     }));
 
     const members = Array.from(memberMap.entries()).map(([id, v]) => ({
-      user_id: id, name: v.name, role: v.role,
+      user_id: id, name: v.name, role: v.role, active: v.active,
     }));
 
     return new Response(JSON.stringify({ entries: enriched, members, agency_name: agencyRow.company_name }), {
