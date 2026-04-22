@@ -319,7 +319,7 @@ const AgentDashboard = () => {
     }
 
     if (user) {
-      const { error } = await supabase.from("client_invitations").insert({
+      const { data: inserted, error } = await supabase.from("client_invitations").insert({
         agent_id: user.id,
         client_name: clientName,
         client_email: clientEmail,
@@ -340,33 +340,26 @@ const AgentDashboard = () => {
           },
           deals: preDeals,
         })),
-      });
+      }).select("invitation_token, client_name").single();
 
       if (error) {
         toast({ title: "Error", description: "Failed to create invitation.", variant: "destructive" });
         setIsCreating(false);
         return;
       }
+
+      // Auto-copy the real activation link so the agent can paste it to the client.
+      if (inserted?.invitation_token) {
+        const url = `${window.location.origin}/activate/${inserted.invitation_token}`;
+        try { await navigator.clipboard.writeText(url); } catch { /* clipboard may be unavailable */ }
+        toast({
+          title: "Invitation created — link copied",
+          description: `Activation link for ${inserted.client_name} is on your clipboard. Paste it into an email or message.`,
+        });
+      }
     }
 
-    // Add to local state for demo
-    const newInvitation: Invitation = {
-      id: Date.now().toString(),
-      client_name: clientName,
-      client_email: clientEmail,
-      client_phone: clientPhone || null,
-      client_type: clientType,
-      status: "pending",
-      invitation_token: `tok_${Date.now()}`,
-      created_at: new Date().toISOString(),
-    };
-    setInvitations((prev) => [newInvitation, ...prev]);
     setIsCreating(false);
-    const docCount = uploadedFiles.length;
-    toast({
-      title: "Invitation Created",
-      description: `Activation link ready for ${clientName}${docCount > 0 ? ` with ${docCount} document${docCount > 1 ? "s" : ""}` : ""}.`,
-    });
     resetForm();
     setDialogOpen(false);
     fetchInvitations();
