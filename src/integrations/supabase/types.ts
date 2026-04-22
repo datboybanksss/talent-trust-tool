@@ -407,6 +407,7 @@ export type Database = {
           id: string
           invitation_token: string
           pre_populated_data: Json | null
+          requested_share_sections: string[] | null
           status: string
         }
         Insert: {
@@ -423,6 +424,7 @@ export type Database = {
           id?: string
           invitation_token?: string
           pre_populated_data?: Json | null
+          requested_share_sections?: string[] | null
           status?: string
         }
         Update: {
@@ -439,6 +441,7 @@ export type Database = {
           id?: string
           invitation_token?: string
           pre_populated_data?: Json | null
+          requested_share_sections?: string[] | null
           status?: string
         }
         Relationships: []
@@ -924,6 +927,7 @@ export type Database = {
           accepted_at: string | null
           access_level: string
           created_at: string
+          decline_reason: string | null
           document_type_allowlist: string[] | null
           expires_at: string | null
           id: string
@@ -940,6 +944,7 @@ export type Database = {
           accepted_at?: string | null
           access_level?: string
           created_at?: string
+          decline_reason?: string | null
           document_type_allowlist?: string[] | null
           expires_at?: string | null
           id?: string
@@ -956,6 +961,7 @@ export type Database = {
           accepted_at?: string | null
           access_level?: string
           created_at?: string
+          decline_reason?: string | null
           document_type_allowlist?: string[] | null
           expires_at?: string | null
           id?: string
@@ -1078,6 +1084,7 @@ export type Database = {
           client_type: string | null
           created_at: string
           display_name: string | null
+          first_login_seen_at: string | null
           id: string
           is_demo: boolean
           phone: string | null
@@ -1089,6 +1096,7 @@ export type Database = {
           client_type?: string | null
           created_at?: string
           display_name?: string | null
+          first_login_seen_at?: string | null
           id?: string
           is_demo?: boolean
           phone?: string | null
@@ -1100,6 +1108,7 @@ export type Database = {
           client_type?: string | null
           created_at?: string
           display_name?: string | null
+          first_login_seen_at?: string | null
           id?: string
           is_demo?: boolean
           phone?: string | null

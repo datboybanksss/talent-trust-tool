@@ -14,6 +14,7 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Checkbox } from "@/components/ui/checkbox";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -48,6 +49,11 @@ interface Invitation {
   invitation_token: string;
   created_at: string;
   activated_user_id?: string | null;
+}
+
+interface ShareStatus {
+  status: "pending_client_approval" | "accepted" | "declined";
+  decline_reason: string | null;
 }
 
 // Helper: humanize a timestamp into "2h ago", "3d ago", etc.
@@ -150,6 +156,13 @@ const AgentDashboard = () => {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
 
+  // Form state — agent's pending share request to the client
+  const [requestAccess, setRequestAccess] = useState(true);
+  const [requestedSections, setRequestedSections] = useState<string[]>(["contracts", "endorsements", "tax"]);
+
+  // Per-invitation share status (post-activation), keyed by invitation.id
+  const [shareStatuses, setShareStatuses] = useState<Record<string, ShareStatus>>({});
+
   // Form state — extended profile
   const [teamOrAgency, setTeamOrAgency] = useState("");
   const [sportOrDiscipline, setSportOrDiscipline] = useState("");
@@ -207,6 +220,26 @@ const AgentDashboard = () => {
       .is("archived_at", null)
       .order("created_at", { ascending: false });
     setInvitations(data ?? []);
+
+    // Fetch share statuses for activated clients (badge data).
+    const activatedIds = (data ?? [])
+      .filter((i) => i.activated_user_id)
+      .map((i) => i.activated_user_id as string);
+    if (activatedIds.length > 0) {
+      const { data: shares } = await supabase
+        .from("life_file_shares")
+        .select("owner_id, status, decline_reason")
+        .in("owner_id", activatedIds)
+        .eq("shared_with_user_id", user.id);
+      const map: Record<string, ShareStatus> = {};
+      (shares ?? []).forEach((s) => {
+        const inv = (data ?? []).find((i) => i.activated_user_id === s.owner_id);
+        if (inv) map[inv.id] = { status: s.status as ShareStatus["status"], decline_reason: s.decline_reason };
+      });
+      setShareStatuses(map);
+    } else {
+      setShareStatuses({});
+    }
   };
 
   const handleSpreadsheetImport = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -296,6 +329,8 @@ const AgentDashboard = () => {
     setLocation(""); setNationality("South African"); setDateOfBirth(""); setIdNumber("");
     setSocialHandle(""); setPreDeals([]); setImportedData(null); setImportErrors([]);
     setFormTab("basic");
+    setRequestAccess(true);
+    setRequestedSections(["contracts", "endorsements", "tax"]);
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -345,6 +380,7 @@ const AgentDashboard = () => {
         client_email: clientEmail,
         client_phone: clientPhone || null,
         client_type: clientType,
+        requested_share_sections: requestAccess && requestedSections.length > 0 ? requestedSections : null,
         pre_populated_data: JSON.parse(JSON.stringify({
           notes,
           documents: documentsMeta,
@@ -817,6 +853,25 @@ const AgentDashboard = () => {
                             <><Clock className="w-3 h-3 mr-1" />Pending</>
                           )}
                         </Badge>
+                        {isActivated && shareStatuses[inv.id] && (
+                          <Badge
+                            variant="outline"
+                            className={
+                              shareStatuses[inv.id].status === "accepted"
+                                ? "bg-green-500/10 text-green-700 border-green-200"
+                                : shareStatuses[inv.id].status === "declined"
+                                ? "text-muted-foreground border-border"
+                                : "text-amber-600 border-amber-200"
+                            }
+                            title={shareStatuses[inv.id].status === "declined" ? (shareStatuses[inv.id].decline_reason ?? "no reason given") : undefined}
+                          >
+                            {shareStatuses[inv.id].status === "accepted"
+                              ? "Client granted access"
+                              : shareStatuses[inv.id].status === "declined"
+                              ? `Client declined access: ${shareStatuses[inv.id].decline_reason ?? "no reason given"}`
+                              : "Waiting for client response"}
+                          </Badge>
+                        )}
                         {!isActivated && (
                           <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); copyLink(inv.invitation_token); }} className="hidden sm:flex">
                             <Copy className="w-3 h-3 mr-1" /> Copy Link
@@ -985,6 +1040,56 @@ const AgentDashboard = () => {
                       <div>
                         <Label className="text-xs">Notes (visible to client)</Label>
                         <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Pre-populated notes..." rows={2} />
+                      </div>
+                      <div className="border border-border rounded-lg p-3 space-y-3 bg-secondary/30">
+                        <label className="flex items-start gap-2 cursor-pointer">
+                          <Checkbox
+                            checked={requestAccess}
+                            onCheckedChange={(c) => setRequestAccess(c === true)}
+                            className="mt-0.5"
+                          />
+                          <div className="flex-1">
+                            <p className="text-xs font-medium text-foreground">
+                              Request access to this client's profile after activation
+                            </p>
+                            <p className="text-[11px] text-muted-foreground">
+                              The client decides whether to accept, customise, or decline.
+                            </p>
+                          </div>
+                        </label>
+                        {requestAccess && (
+                          <div className="space-y-2 pl-6">
+                            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">Sections to request</p>
+                            <div className="grid grid-cols-3 gap-2">
+                              {[
+                                { v: "contracts", l: "Contracts" },
+                                { v: "endorsements", l: "Endorsements" },
+                                { v: "tax", l: "Tax" },
+                              ].map((s) => (
+                                <label key={s.v} className="flex items-center gap-1.5 text-xs cursor-pointer">
+                                  <Checkbox
+                                    checked={requestedSections.includes(s.v)}
+                                    onCheckedChange={(c) => {
+                                      setRequestedSections((prev) =>
+                                        c === true ? [...prev, s.v] : prev.filter((x) => x !== s.v)
+                                      );
+                                    }}
+                                  />
+                                  {s.l}
+                                </label>
+                              ))}
+                            </div>
+                            <div className="grid grid-cols-3 gap-2 pt-2 border-t border-border/50">
+                              {["Estate", "Identity", "Medical"].map((label) => (
+                                <div key={label} className="flex items-center gap-1.5 text-xs text-muted-foreground opacity-60">
+                                  <span className="w-3.5 h-3.5 rounded border border-border bg-muted inline-block" />
+                                  {label}
+                                </div>
+                              ))}
+                            </div>
+                            <p className="text-[10px] text-muted-foreground italic">Protected — client can grant later.</p>
+                          </div>
+                        )}
                       </div>
                     </TabsContent>
 
