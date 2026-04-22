@@ -35,8 +35,8 @@ interface AgentSidebarProps {
   onNewClient: () => void;
   onBulkImport: () => void;
   agentProfile: { role: string; company_name: string } | null;
-  activeView: "clients" | "pipeline" | "compare" | "calendar" | "templates" | "share" | "executive";
-  setActiveView: (view: "clients" | "pipeline" | "compare" | "calendar" | "templates" | "share" | "executive") => void;
+  activeView: "clients" | "pipeline" | "compare" | "calendar" | "templates" | "share" | "executive" | "agency";
+  setActiveView: (view: "clients" | "pipeline" | "compare" | "calendar" | "templates" | "share" | "executive" | "agency") => void;
 }
 
 const mainNavItems = [
@@ -46,7 +46,8 @@ const mainNavItems = [
   { title: "Calendar", icon: CalendarDays, view: "calendar" as const, section: "calendar" },
   { title: "Deal Pipeline", icon: Kanban, view: "pipeline" as const, section: "pipeline" },
   { title: "Agreement Templates", icon: FileText, view: "templates" as const, section: "templates" },
-  { title: "Share Portal", icon: Share2, view: "share" as const, ownerOnly: true },
+  { title: "The Agency", icon: Users, view: "agency" as const, alwaysVisible: true },
+  { title: "Share Portal", icon: Share2, view: "share" as const, alwaysVisible: true },
 ];
 
 const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, setActiveView }: AgentSidebarProps) => {
@@ -58,7 +59,8 @@ const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, set
 
   const visibleNavItems = mainNavItems.filter((item) => {
     if (!staff.isStaff) return true;
-    if (item.ownerOnly) return false;
+    if ((item as any).ownerOnly) return false;
+    if ((item as any).alwaysVisible) return true;
     return item.section ? staff.sections.includes(item.section) : false;
   });
 

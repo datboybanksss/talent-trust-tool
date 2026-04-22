@@ -31,6 +31,7 @@ import AgentNotifications from "@/components/agent/AgentNotifications";
 import AgentCalendar from "@/components/agent/AgentCalendar";
 import AgreementTemplates from "@/components/agent/AgreementTemplates";
 import SharePortal from "@/components/agent/SharePortal";
+import AgencyDirectory from "@/components/agent/AgencyDirectory";
 import AgentChatBot from "@/components/agent/AgentChatBot";
 import ConfidentialityGate from "@/components/agent/ConfidentialityGate";
 import ExecutiveOverviewInline from "@/components/executive/ExecutiveOverviewInline";
@@ -85,15 +86,16 @@ const AgentDashboard = () => {
     company_name: "Roc Nation Sports SA",
   });
   const [loading, setLoading] = useState(false);
-  const [activeView, setActiveView] = useState<"clients" | "pipeline" | "compare" | "calendar" | "templates" | "share" | "executive">("executive");
+  const [activeView, setActiveView] = useState<"clients" | "pipeline" | "compare" | "calendar" | "templates" | "share" | "executive" | "agency">("executive");
 
   // When staff finishes loading, default their view to the first allowed section
   useEffect(() => {
     if (staff.loading || !staff.isStaff) return;
-    const order: Array<typeof activeView> = ["clients", "pipeline", "compare", "calendar", "templates"];
+    const order: Array<typeof activeView> = ["clients", "pipeline", "compare", "calendar", "templates", "agency", "share"];
     const first = order.find((v) => staff.sections.includes(v));
-    if (first && (activeView === "executive" || activeView === "share" || !staff.sections.includes(activeView))) {
-      setActiveView(first);
+    const allowed = staff.sections.includes(activeView) || activeView === "agency" || activeView === "share";
+    if (activeView === "executive" || !allowed) {
+      setActiveView(first ?? "agency");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [staff.loading, staff.isStaff, staff.sections.join("|")]);
@@ -794,7 +796,9 @@ const AgentDashboard = () => {
             <AgreementTemplates clients={invitations.filter(i => i.status === "activated").map(i => ({ id: i.id, name: i.client_name, email: i.client_email, phone: i.client_phone, type: i.client_type }))} />
           </SectionGuard>
         ) : activeView === "share" ? (
-          <SectionGuard ownerOnly><SharePortal /></SectionGuard>
+          <SharePortal />
+        ) : activeView === "agency" ? (
+          <AgencyDirectory />
         ) : (
         <>
         {staff.isStaff && !staff.sections.includes("clients") ? (

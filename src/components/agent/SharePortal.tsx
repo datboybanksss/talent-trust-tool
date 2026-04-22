@@ -15,7 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useToast } from "@/hooks/use-toast";
 import {
   UserPlus, Trash2, Shield, Eye, Users, Kanban, CalendarDays,
-  FileText, Mail, Copy, CheckCircle2, Clock, Settings2, Pencil, Send
+  FileText, Mail, Copy, CheckCircle2, Clock, Settings2, Pencil, Send, Crown
 } from "lucide-react";
 
 type PortalSection = "clients" | "pipeline" | "calendar" | "compare" | "templates";
@@ -79,20 +79,36 @@ interface SharedStaffMember {
 const SharePortal = () => {
   const { toast } = useToast();
   const { user } = useAuth();
-  // Page is gated by SectionGuard ownerOnly, so isViewingAsStaff should always
-  // be false here — but still scope reads defensively.
-  const { scopedAgentId } = useAgencyScope();
+  const { scopedAgentId, workspaceRole, agencyOwnerName } = useAgencyScope();
+  const isStaffViewer = workspaceRole === "staff";
   const [staff, setStaff] = useState<SharedStaffMember[]>([]);
   const [loadingStaff, setLoadingStaff] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [ownerRow, setOwnerRow] = useState<{ name: string; email: string | null; agencyName: string } | null>(null);
 
   const fetchStaff = useCallback(async () => {
     if (!user || !scopedAgentId) return;
-    const { data, error } = await supabase
+    let query = supabase
       .from("portal_staff_access")
       .select("*")
       .eq("agent_id", scopedAgentId)
       .order("created_at", { ascending: false });
+    if (isStaffViewer) {
+      // Staff only see active members (not pending invites)
+      query = query.eq("status", "active").not("activated_at", "is", null);
+    }
+    const { data, error } = await query;
+
+    // Load owner card
+    const [{ data: agency }, { data: ownerProfile }] = await Promise.all([
+      supabase.from("agent_manager_profiles").select("company_name").eq("user_id", scopedAgentId).maybeSingle(),
+      supabase.from("profiles").select("display_name").eq("user_id", scopedAgentId).maybeSingle(),
+    ]);
+    setOwnerRow({
+      name: ownerProfile?.display_name ?? agencyOwnerName ?? "Agency Owner",
+      email: isStaffViewer ? null : user.email ?? null,
+      agencyName: agency?.company_name ?? "Your Agency",
+    });
 
     if (!error && data) {
       setStaff(data.map((d: any) => ({
@@ -110,7 +126,7 @@ const SharePortal = () => {
       })));
     }
     setLoadingStaff(false);
-  }, [user, scopedAgentId]);
+  }, [user, scopedAgentId, isStaffViewer, agencyOwnerName]);
 
   useEffect(() => { fetchStaff(); }, [fetchStaff]);
 
@@ -281,9 +297,12 @@ const SharePortal = () => {
         <div>
           <h2 className="text-2xl font-display font-bold text-foreground">Share Portal Access</h2>
           <p className="text-muted-foreground text-sm mt-1">
-            Invite support staff, PAs, accountants, or lawyers with pre-determined access levels.
+            {isStaffViewer
+              ? "View your agency's team. Only the owner can invite staff or change roles."
+              : "Invite support staff, PAs, accountants, or lawyers with pre-determined access levels."}
           </p>
         </div>
+        {!isStaffViewer && (
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button variant="gold">
@@ -388,6 +407,7 @@ const SharePortal = () => {
             </div>
           </DialogContent>
         </Dialog>
+        )}
       </div>
 
       {/* Compliance note */}
@@ -402,6 +422,7 @@ const SharePortal = () => {
       </Card>
 
       {/* Role legend */}
+      {!isStaffViewer && (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {ROLE_PRESETS.filter((r) => r.id !== "custom").map((role) => (
           <Card key={role.id}>
@@ -421,17 +442,21 @@ const SharePortal = () => {
           </Card>
         ))}
       </div>
+      )}
 
       {/* Staff table */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Shared Staff ({staff.length})</CardTitle>
+          <CardTitle className="text-base">
+            Workspace Members ({(ownerRow ? 1 : 0) + staff.length})
+          </CardTitle>
+          <CardDescription>
+            The agency owner is pinned at the top. {isStaffViewer ? "" : "Manage staff access using the actions on each row."}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {loadingStaff ? (
             <p className="text-center text-muted-foreground py-8 animate-pulse">Loading staff...</p>
-          ) : staff.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">No staff members invited yet.</p>
           ) : (
             <Table>
               <TableHeader>
@@ -440,11 +465,45 @@ const SharePortal = () => {
                   <TableHead>Role</TableHead>
                   <TableHead>Sections</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Confidentiality</TableHead>
-                  <TableHead className="w-10" />
+                  {!isStaffViewer && <TableHead>Confidentiality</TableHead>}
+                  {!isStaffViewer && <TableHead className="w-10" />}
                 </TableRow>
               </TableHeader>
               <TableBody>
+                {ownerRow && (
+                  <TableRow className="bg-primary/5">
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Crown className="w-4 h-4 text-primary" />
+                        <div>
+                          <p className="font-medium text-sm">{ownerRow.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {ownerRow.email ?? ownerRow.agencyName}
+                          </p>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className="bg-primary text-primary-foreground text-xs">Owner</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className="text-[10px]">All sections</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className="text-xs">
+                        <CheckCircle2 className="w-3 h-3 mr-1" /> Active
+                      </Badge>
+                    </TableCell>
+                    {!isStaffViewer && (
+                      <TableCell>
+                        <Badge variant="secondary" className="text-xs">
+                          <CheckCircle2 className="w-3 h-3 mr-1" /> N/A
+                        </Badge>
+                      </TableCell>
+                    )}
+                    {!isStaffViewer && <TableCell />}
+                  </TableRow>
+                )}
                 {staff.map((member) => (
                   <TableRow key={member.id}>
                     <TableCell>
@@ -476,6 +535,7 @@ const SharePortal = () => {
                         </Badge>
                       )}
                     </TableCell>
+                    {!isStaffViewer && (
                     <TableCell>
                       {member.confidentialityAcceptedAt ? (
                         <Badge variant="secondary" className="text-xs">
@@ -487,6 +547,8 @@ const SharePortal = () => {
                         </Badge>
                       )}
                     </TableCell>
+                    )}
+                    {!isStaffViewer && (
                     <TableCell>
                       <div className="flex items-center gap-1">
                         {member.status !== "active" && (
@@ -507,6 +569,7 @@ const SharePortal = () => {
                         </Button>
                       </div>
                     </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>
