@@ -2,8 +2,12 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Accessibility } from "lucide-react";
-import { DrillDownFilter, filterClients, DrillDownClient } from "@/data/executiveDrillDownData";
+import { useExecutiveData } from "@/hooks/useExecutiveData";
+
+export interface DrillDownFilter {
+  category: string;
+  segment: string;
+}
 
 interface DrillDownSheetProps {
   filter: DrillDownFilter | null;
@@ -24,10 +28,34 @@ const typeBadgeVariant = (type: string) => {
 };
 
 const DrillDownSheet = ({ filter, open, onOpenChange }: DrillDownSheetProps) => {
+  const { data } = useExecutiveData();
   if (!filter) return null;
 
-  const clients = filterClients(filter);
-  const totalRevenue = clients.reduce((s, c) => s + c.revenue, 0);
+  const dataset = data ?? { invitations: [], deals: [] };
+
+  // Aggregate revenue per client_name from deals.
+  const revenueByClient = new Map<string, { revenue: number; type: string; brand: string }>();
+  dataset.deals.forEach((d) => {
+    const cur = revenueByClient.get(d.client_name) ?? { revenue: 0, type: d.client_type, brand: d.brand };
+    cur.revenue += d.value_amount ?? 0;
+    revenueByClient.set(d.client_name, cur);
+  });
+
+  let rows = [...revenueByClient.entries()].map(([name, v]) => ({ name, ...v }));
+
+  if (filter.category === "Client Type") {
+    rows = rows.filter((r) => (r.type || "").toLowerCase().startsWith(filter.segment.toLowerCase().replace(/s$/, "")));
+  } else if (filter.category === "Revenue Stream") {
+    const matchingNames = new Set(
+      dataset.deals.filter((d) => d.deal_type === filter.segment).map((d) => d.client_name),
+    );
+    rows = rows.filter((r) => matchingNames.has(r.name));
+  } else if (filter.category === "Industry") {
+    rows = rows.filter((r) => r.brand === filter.segment);
+  }
+
+  rows.sort((a, b) => b.revenue - a.revenue);
+  const totalRevenue = rows.reduce((s, c) => s + c.revenue, 0);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -53,20 +81,19 @@ const DrillDownSheet = ({ filter, open, onOpenChange }: DrillDownSheetProps) => 
               </TableRow>
             </TableHeader>
             <TableBody>
-              {clients.map((c) => (
+              {rows.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center text-muted-foreground py-8 text-sm">
+                    No matching clients yet.
+                  </TableCell>
+                </TableRow>
+              ) : rows.map((c) => (
                 <TableRow key={c.name} className="cursor-default">
-                  <TableCell className="font-medium">
-                    <div className="flex items-center gap-1.5">
-                      {c.name}
-                      {c.paraAthlete && (
-                        <Accessibility className="w-3.5 h-3.5 text-primary shrink-0" />
-                      )}
-                    </div>
-                  </TableCell>
+                  <TableCell className="font-medium">{c.name}</TableCell>
                   <TableCell>
-                    <Badge variant={typeBadgeVariant(c.type)} className="text-xs">{c.type}</Badge>
+                    <Badge variant={typeBadgeVariant(c.type)} className="text-xs capitalize">{c.type}</Badge>
                   </TableCell>
-                  <TableCell className="text-muted-foreground text-sm">{c.industry}</TableCell>
+                  <TableCell className="text-muted-foreground text-sm">{c.brand}</TableCell>
                   <TableCell className="text-right font-mono text-sm">{fmt(c.revenue)}</TableCell>
                 </TableRow>
               ))}
