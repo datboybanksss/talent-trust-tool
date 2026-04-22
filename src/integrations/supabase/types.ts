@@ -1383,6 +1383,10 @@ export type Database = {
           read_ct: number
         }[]
       }
+      staff_has_section: {
+        Args: { _agent_id: string; _section: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
