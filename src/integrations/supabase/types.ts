@@ -403,6 +403,7 @@ export type Database = {
           client_phone: string | null
           client_type: string
           created_at: string
+          expires_at: string | null
           id: string
           invitation_token: string
           pre_populated_data: Json | null
@@ -418,6 +419,7 @@ export type Database = {
           client_phone?: string | null
           client_type: string
           created_at?: string
+          expires_at?: string | null
           id?: string
           invitation_token?: string
           pre_populated_data?: Json | null
@@ -433,6 +435,7 @@ export type Database = {
           client_phone?: string | null
           client_type?: string
           created_at?: string
+          expires_at?: string | null
           id?: string
           invitation_token?: string
           pre_populated_data?: Json | null
@@ -1017,10 +1020,13 @@ export type Database = {
       }
       portal_staff_access: {
         Row: {
+          activated_at: string | null
           agent_id: string
           confidentiality_accepted_at: string | null
           created_at: string
+          expires_at: string | null
           id: string
+          invitation_token: string
           role: string
           role_label: string
           sections: string[]
@@ -1031,10 +1037,13 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          activated_at?: string | null
           agent_id: string
           confidentiality_accepted_at?: string | null
           created_at?: string
+          expires_at?: string | null
           id?: string
+          invitation_token?: string
           role?: string
           role_label?: string
           sections?: string[]
@@ -1045,10 +1054,13 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          activated_at?: string | null
           agent_id?: string
           confidentiality_accepted_at?: string | null
           created_at?: string
+          expires_at?: string | null
           id?: string
+          invitation_token?: string
           role?: string
           role_label?: string
           sections?: string[]
