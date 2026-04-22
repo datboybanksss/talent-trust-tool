@@ -69,6 +69,7 @@ const App = () => (
             <Route path="/agent-dashboard/client/:clientId" element={<AgentRoute><AgentClientDetail /></AgentRoute>} />
             <Route path="/agent-dashboard/athlete/:athleteId" element={<AgentRoute><AgentAthleteProfile /></AgentRoute>} />
             <Route path="/myagency" element={<AgentRoute><MyAgency /></AgentRoute>} />
+            <Route path="/agent-account" element={<AgentRoute><AgentAccount /></AgentRoute>} />
             <Route path="/activate/:token" element={<ActivateProfile />} />
             <Route path="/client-activate/:token" element={<ActivateProfile />} />
             <Route path="/staff-activate/:token" element={<StaffActivate />} />
