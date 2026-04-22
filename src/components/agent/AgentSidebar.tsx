@@ -27,6 +27,7 @@ import {
   FileText,
   Share2,
   Crown,
+  Building2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -105,6 +106,15 @@ const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, set
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={() => { navigate("/myagency"); if (isMobile) toggleSidebar(); }}
+                  className="hover:bg-muted/50"
+                >
+                  <Building2 className="mr-2 h-4 w-4" />
+                  {!collapsed && <span>My Agency</span>}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
