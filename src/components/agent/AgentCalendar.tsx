@@ -16,7 +16,6 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useAgencyScope } from "@/hooks/useAgencyScope";
-import OwnerOnly from "@/components/agent/OwnerOnly";
 import { toast } from "sonner";
 
 interface AgendaItem {
@@ -32,10 +31,12 @@ interface AgendaItem {
 const AgentCalendar = () => {
   const { user } = useAuth();
   // Read meetings scoped to the agency owner; staff with `calendar` section
-  // see all agent-owned meetings + meetings they are personally invited to.
+  // see all agency-owned meetings + meetings they are personally invited to.
   // TODO(visibility-column): private meetings leak to all staff. See
   // KNOWN_LIMITATIONS.md → "Staff visibility on agent meetings".
-  const { scopedAgentId, loading: scopeLoading } = useAgencyScope();
+  const { scopedAgentId, loading: scopeLoading, canEdit, canDelete } = useAgencyScope();
+  const writeCalendar = canEdit("calendar");
+  const deleteCalendar = canDelete("calendar");
   const qc = useQueryClient();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
@@ -45,12 +46,14 @@ const AgentCalendar = () => {
   const { data: meetings = [] } = useQuery({
     queryKey: ["agent-meetings", scopedAgentId, user?.id],
     enabled: !scopeLoading && !!scopedAgentId && !!user?.id,
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: true,
     queryFn: async () => {
       if (!user?.id || !scopedAgentId) return [];
       const { data } = await supabase
         .from("shared_meetings")
-        .select("id, title, notes, starts_at, created_by")
-        .or(`created_by.eq.${scopedAgentId},attendee_user_ids.cs.{${user.id}}`);
+        .select("id, title, notes, starts_at, created_by, agency_owner_id")
+        .or(`agency_owner_id.eq.${scopedAgentId},created_by.eq.${scopedAgentId},attendee_user_ids.cs.{${user.id}}`);
       return data ?? [];
     },
   });
@@ -75,7 +78,7 @@ const AgentCalendar = () => {
       date: new Date(row.starts_at),
       source: "meeting",
       notes: row.notes,
-      canDelete: row.created_by === user?.id,
+      canDelete: deleteCalendar && (row.created_by === user?.id || row.agency_owner_id === scopedAgentId),
     }));
     const r: AgendaItem[] = reminders.map((row: any) => ({
       id: `r-${row.id}`,
@@ -131,8 +134,11 @@ const AgentCalendar = () => {
       if (!user?.id) throw new Error("Not authenticated");
       const starts = new Date(`${form.date}T${form.time}:00`);
       const ends = new Date(starts.getTime() + 60 * 60 * 1000);
+      if (!scopedAgentId) throw new Error("Workspace not ready");
       const { error } = await supabase.from("shared_meetings").insert({
         created_by: user.id,
+        agency_owner_id: scopedAgentId,
+        updated_by: user.id,
         title: form.title,
         notes: form.notes || null,
         starts_at: starts.toISOString(),
@@ -140,6 +146,12 @@ const AgentCalendar = () => {
         meeting_type: "general",
       });
       if (error) throw error;
+      await supabase.from("audit_log").insert({
+        action: "meeting_created",
+        entity_type: "meeting",
+        user_id: user.id,
+        metadata: { agency_id: scopedAgentId, title: form.title, starts_at: starts.toISOString() },
+      });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["agent-meetings", user?.id] });
@@ -152,8 +164,18 @@ const AgentCalendar = () => {
 
   const deleteMeeting = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("shared_meetings").delete().eq("id", id.replace(/^m-/, ""));
+      const realId = id.replace(/^m-/, "");
+      const { error } = await supabase.from("shared_meetings").delete().eq("id", realId);
       if (error) throw error;
+      if (user) {
+        await supabase.from("audit_log").insert({
+          action: "meeting_deleted",
+          entity_type: "meeting",
+          entity_id: realId,
+          user_id: user.id,
+          metadata: { agency_id: scopedAgentId },
+        });
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["agent-meetings", user?.id] });
@@ -170,7 +192,7 @@ const AgentCalendar = () => {
           <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-primary" /> Meetings</div>
           <div className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-amber-500" /> Reminders</div>
         </div>
-        <OwnerOnly>
+        {writeCalendar && (
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button size="sm"><Plus className="w-3.5 h-3.5 mr-1.5" /> Add Event</Button>
@@ -191,7 +213,7 @@ const AgentCalendar = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-        </OwnerOnly>
+        )}
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
@@ -261,11 +283,9 @@ const AgentCalendar = () => {
                           {ev.notes && <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2">{ev.notes}</p>}
                         </div>
                         {ev.canDelete && (
-                          <OwnerOnly>
-                            <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => deleteMeeting.mutate(ev.id)}>
-                              <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
-                            </Button>
-                          </OwnerOnly>
+                          <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => deleteMeeting.mutate(ev.id)}>
+                            <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
+                          </Button>
                         )}
                       </div>
                     ))}
