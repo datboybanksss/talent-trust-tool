@@ -66,7 +66,7 @@ const DrillDownSheet = ({ filter, open, onOpenChange }: DrillDownSheetProps) => 
           </SheetTitle>
           <SheetDescription className="flex items-center gap-2 text-sm">
             <Badge variant="outline" className="text-xs">{filter.category}</Badge>
-            <span>{clients.length} clients • {fmt(totalRevenue)} total revenue</span>
+            <span>{rows.length} clients • {fmt(totalRevenue)} total revenue</span>
           </SheetDescription>
         </SheetHeader>
 

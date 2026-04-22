@@ -4,11 +4,10 @@ import ExecutiveKPICards from "@/components/executive/ExecutiveKPICards";
 import BookValueSection from "@/components/executive/BookValueSection";
 import RevenueAnalytics from "@/components/executive/RevenueAnalytics";
 import DemographicsSection from "@/components/executive/DemographicsSection";
-import OverheadSection from "@/components/executive/OverheadSection";
 import ExecutiveFilters from "@/components/executive/ExecutiveFilters";
-import DrillDownSheet from "@/components/executive/DrillDownSheet";
+import DrillDownSheet, { type DrillDownFilter } from "@/components/executive/DrillDownSheet";
 import { generateExecutiveOverviewPDF } from "@/utils/executiveOverviewPdf";
-import { DrillDownFilter } from "@/data/executiveDrillDownData";
+import { useExecutiveData } from "@/hooks/useExecutiveData";
 import { Crown } from "lucide-react";
 
 const ExecutiveOverviewInline = () => {
@@ -21,6 +20,7 @@ const ExecutiveOverviewInline = () => {
 
   const [drillFilter, setDrillFilter] = useState<DrillDownFilter | null>(null);
   const [drillOpen, setDrillOpen] = useState(false);
+  const { data } = useExecutiveData();
 
   const handleSegmentClick = useCallback((category: string, segment: string) => {
     setDrillFilter({ category, segment });
@@ -48,7 +48,7 @@ const ExecutiveOverviewInline = () => {
         setBusinessUnit={setBusinessUnit}
         manager={manager}
         setManager={setManager}
-        onExportPdf={generateExecutiveOverviewPDF}
+        onExportPdf={() => generateExecutiveOverviewPDF(data ?? { invitations: [], deals: [] }, filters)}
       />
 
       {/* KPIs */}
@@ -60,7 +60,6 @@ const ExecutiveOverviewInline = () => {
           <TabsTrigger value="book-value">Book Value</TabsTrigger>
           <TabsTrigger value="revenue">Revenue Analytics</TabsTrigger>
           <TabsTrigger value="demographics">Demographics</TabsTrigger>
-          <TabsTrigger value="overhead">Overhead & Costs</TabsTrigger>
         </TabsList>
 
         <TabsContent value="book-value">
@@ -71,9 +70,6 @@ const ExecutiveOverviewInline = () => {
         </TabsContent>
         <TabsContent value="demographics">
           <DemographicsSection onSegmentClick={handleSegmentClick} filters={filters} />
-        </TabsContent>
-        <TabsContent value="overhead">
-          <OverheadSection onSegmentClick={handleSegmentClick} filters={filters} />
         </TabsContent>
       </Tabs>
 
