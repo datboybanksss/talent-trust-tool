@@ -346,7 +346,7 @@ const AgentDashboard = () => {
           },
           deals: preDeals,
         })),
-      }).select("invitation_token, client_name").single();
+      }).select("id, invitation_token, client_name").single();
 
       if (error) {
         toast({ title: "Error", description: "Failed to create invitation.", variant: "destructive" });
@@ -354,14 +354,35 @@ const AgentDashboard = () => {
         return;
       }
 
-      // Auto-copy the real activation link so the agent can paste it to the client.
+      // Auto-copy the real activation link as a fallback in case email delivery fails.
       if (inserted?.invitation_token) {
-        const url = `${window.location.origin}/activate/${inserted.invitation_token}`;
+        const url = `${window.location.origin}/client-activate/${inserted.invitation_token}`;
         try { await navigator.clipboard.writeText(url); } catch { /* clipboard may be unavailable */ }
-        toast({
-          title: "Invitation created — link copied",
-          description: `Activation link for ${inserted.client_name} is on your clipboard. Paste it into an email or message.`,
+      }
+
+      // Fire the invitation email
+      if (inserted?.id) {
+        const { data: emailRes, error: emailErr } = await supabase.functions.invoke("send-invitation-email", {
+          body: {
+            invitation_type: "client",
+            invitation_id: inserted.id,
+            app_origin: window.location.origin,
+          },
         });
+        if (emailErr || (emailRes && !emailRes.success)) {
+          toast({
+            title: "Invitation saved — email failed",
+            description: `Invitation for ${inserted.client_name} is saved and the activation link is on your clipboard. Send it manually.`,
+            variant: "destructive",
+          });
+        } else if (emailRes?.demo) {
+          toast({ title: "Demo mode", description: "Invitation saved. No real email sent (demo account)." });
+        } else {
+          toast({
+            title: "Invitation emailed",
+            description: `Activation link emailed to ${inserted.client_name}. Backup link copied to clipboard.`,
+          });
+        }
       }
     }
 
@@ -372,9 +393,42 @@ const AgentDashboard = () => {
   };
 
   const copyLink = (token: string) => {
-    const url = `${window.location.origin}/activate/${token}`;
+    const url = `${window.location.origin}/client-activate/${token}`;
     navigator.clipboard.writeText(url);
     toast({ title: "Link Copied", description: "Activation link copied to clipboard." });
+  };
+
+  const resendInvitation = async (inv: Invitation) => {
+    // Refresh expiry if the invitation is past due
+    const { data: row } = await supabase
+      .from("client_invitations")
+      .select("expires_at")
+      .eq("id", inv.id)
+      .maybeSingle();
+    if (row?.expires_at && new Date(row.expires_at) <= new Date()) {
+      const newExpiry = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+      await supabase.from("client_invitations").update({ expires_at: newExpiry }).eq("id", inv.id);
+    }
+    const { data: emailRes, error: emailErr } = await supabase.functions.invoke("send-invitation-email", {
+      body: { invitation_type: "client", invitation_id: inv.id, app_origin: window.location.origin },
+    });
+    if (emailErr || (emailRes && !emailRes.success)) {
+      toast({ title: "Resend failed", description: emailRes?.error ?? "Email delivery failed.", variant: "destructive" });
+    } else if (emailRes?.demo) {
+      toast({ title: "Demo mode", description: "Email not actually sent (demo account)." });
+    } else {
+      toast({ title: "Invitation resent", description: `Fresh invitation emailed to ${inv.client_name}.` });
+      if (user) {
+        await supabase.from("audit_log").insert({
+          action: "invitation_resent",
+          entity_type: "invitation",
+          entity_id: inv.id,
+          user_id: user.id,
+          metadata: { invitation_type: "client", recipient: inv.client_email },
+        });
+      }
+    }
+    fetchInvitations();
   };
 
   const downloadTemplate = () => {
@@ -746,6 +800,11 @@ const AgentDashboard = () => {
                         {!isActivated && (
                           <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); copyLink(inv.invitation_token); }} className="hidden sm:flex">
                             <Copy className="w-3 h-3 mr-1" /> Copy Link
+                          </Button>
+                        )}
+                        {!isActivated && (
+                          <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); resendInvitation(inv); }} className="hidden sm:flex">
+                            <Mail className="w-3 h-3 mr-1" /> Resend
                           </Button>
                         )}
                         {isActivated && (

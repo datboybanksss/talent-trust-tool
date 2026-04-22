@@ -13,6 +13,7 @@ import AgentDashboard from "./pages/AgentDashboard";
 import AgentClientDetail from "./pages/AgentClientDetail";
 import AgentAthleteProfile from "./pages/AgentAthleteProfile";
 import ActivateProfile from "./pages/ActivateProfile";
+import StaffActivate from "./pages/StaffActivate";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
@@ -68,6 +69,8 @@ const App = () => (
             <Route path="/agent-dashboard/athlete/:athleteId" element={<AgentRoute><AgentAthleteProfile /></AgentRoute>} />
             <Route path="/myagency" element={<AgentRoute><MyAgency /></AgentRoute>} />
             <Route path="/activate/:token" element={<ActivateProfile />} />
+            <Route path="/client-activate/:token" element={<ActivateProfile />} />
+            <Route path="/staff-activate/:token" element={<StaffActivate />} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/dashboard/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/dashboard/life-file" element={<ProtectedRoute><LifeFile /></ProtectedRoute>} />
