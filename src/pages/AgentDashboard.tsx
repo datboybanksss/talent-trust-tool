@@ -33,6 +33,7 @@ import SharePortal from "@/components/agent/SharePortal";
 import AgentChatBot from "@/components/agent/AgentChatBot";
 import ConfidentialityGate from "@/components/agent/ConfidentialityGate";
 import ExecutiveOverviewInline from "@/components/executive/ExecutiveOverviewInline";
+import RemoveClientDialog from "@/components/agent/RemoveClientDialog";
 import * as XLSX from "xlsx";
 
 interface Invitation {
@@ -44,6 +45,7 @@ interface Invitation {
   status: string;
   invitation_token: string;
   created_at: string;
+  activated_user_id?: string | null;
 }
 
 // Helper: humanize a timestamp into "2h ago", "3d ago", etc.
