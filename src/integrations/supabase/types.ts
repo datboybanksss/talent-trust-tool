@@ -19,6 +19,7 @@ export type Database = {
           company_name: string
           created_at: string
           id: string
+          logo_url: string | null
           phone: string | null
           registration_number: string | null
           role: string
@@ -29,6 +30,7 @@ export type Database = {
           company_name: string
           created_at?: string
           id?: string
+          logo_url?: string | null
           phone?: string | null
           registration_number?: string | null
           role: string
@@ -39,6 +41,7 @@ export type Database = {
           company_name?: string
           created_at?: string
           id?: string
+          logo_url?: string | null
           phone?: string | null
           registration_number?: string | null
           role?: string
@@ -1275,6 +1278,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      delete_agent_account: { Args: never; Returns: string }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean

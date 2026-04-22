@@ -45,6 +45,7 @@ import Contact from "./pages/Contact";
 import EstateCalculator from "./pages/EstateCalculator";
 import GuardianManagement from "./pages/GuardianManagement";
 import FinancialIntegrations from "./pages/FinancialIntegrations";
+import MyAgency from "./pages/MyAgency";
 
 const queryClient = new QueryClient();
 
@@ -65,6 +66,7 @@ const App = () => (
             <Route path="/agent-dashboard" element={<AgentRoute><AgentDashboard /></AgentRoute>} />
             <Route path="/agent-dashboard/client/:clientId" element={<AgentRoute><AgentClientDetail /></AgentRoute>} />
             <Route path="/agent-dashboard/athlete/:athleteId" element={<AgentRoute><AgentAthleteProfile /></AgentRoute>} />
+            <Route path="/myagency" element={<AgentRoute><MyAgency /></AgentRoute>} />
             <Route path="/activate/:token" element={<ActivateProfile />} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/dashboard/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
