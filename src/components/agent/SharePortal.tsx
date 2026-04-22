@@ -422,6 +422,7 @@ const SharePortal = () => {
       </Card>
 
       {/* Role legend */}
+      {!isStaffViewer && (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {ROLE_PRESETS.filter((r) => r.id !== "custom").map((role) => (
           <Card key={role.id}>
@@ -441,17 +442,21 @@ const SharePortal = () => {
           </Card>
         ))}
       </div>
+      )}
 
       {/* Staff table */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Shared Staff ({staff.length})</CardTitle>
+          <CardTitle className="text-base">
+            Workspace Members ({(ownerRow ? 1 : 0) + staff.length})
+          </CardTitle>
+          <CardDescription>
+            The agency owner is pinned at the top. {isStaffViewer ? "" : "Manage staff access using the actions on each row."}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {loadingStaff ? (
             <p className="text-center text-muted-foreground py-8 animate-pulse">Loading staff...</p>
-          ) : staff.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">No staff members invited yet.</p>
           ) : (
             <Table>
               <TableHeader>
@@ -460,11 +465,45 @@ const SharePortal = () => {
                   <TableHead>Role</TableHead>
                   <TableHead>Sections</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Confidentiality</TableHead>
-                  <TableHead className="w-10" />
+                  {!isStaffViewer && <TableHead>Confidentiality</TableHead>}
+                  {!isStaffViewer && <TableHead className="w-10" />}
                 </TableRow>
               </TableHeader>
               <TableBody>
+                {ownerRow && (
+                  <TableRow className="bg-primary/5">
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Crown className="w-4 h-4 text-primary" />
+                        <div>
+                          <p className="font-medium text-sm">{ownerRow.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {ownerRow.email ?? ownerRow.agencyName}
+                          </p>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className="bg-primary text-primary-foreground text-xs">Owner</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className="text-[10px]">All sections</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className="text-xs">
+                        <CheckCircle2 className="w-3 h-3 mr-1" /> Active
+                      </Badge>
+                    </TableCell>
+                    {!isStaffViewer && (
+                      <TableCell>
+                        <Badge variant="secondary" className="text-xs">
+                          <CheckCircle2 className="w-3 h-3 mr-1" /> N/A
+                        </Badge>
+                      </TableCell>
+                    )}
+                    {!isStaffViewer && <TableCell />}
+                  </TableRow>
+                )}
                 {staff.map((member) => (
                   <TableRow key={member.id}>
                     <TableCell>
@@ -496,6 +535,7 @@ const SharePortal = () => {
                         </Badge>
                       )}
                     </TableCell>
+                    {!isStaffViewer && (
                     <TableCell>
                       {member.confidentialityAcceptedAt ? (
                         <Badge variant="secondary" className="text-xs">
@@ -507,6 +547,8 @@ const SharePortal = () => {
                         </Badge>
                       )}
                     </TableCell>
+                    )}
+                    {!isStaffViewer && (
                     <TableCell>
                       <div className="flex items-center gap-1">
                         {member.status !== "active" && (
@@ -527,6 +569,7 @@ const SharePortal = () => {
                         </Button>
                       </div>
                     </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>
