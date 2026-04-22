@@ -38,6 +38,8 @@ import RemoveClientDialog from "@/components/agent/RemoveClientDialog";
 import * as XLSX from "xlsx";
 import SectionGuard from "@/components/agent/SectionGuard";
 import { useStaffAccess } from "@/hooks/useStaffAccess";
+import { useAgencyScope } from "@/hooks/useAgencyScope";
+import OwnerOnly from "@/components/agent/OwnerOnly";
 
 interface Invitation {
   id: string;
@@ -73,6 +75,7 @@ const AgentDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const staff = useStaffAccess();
+  const scope = useAgencyScope();
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -193,16 +196,19 @@ const AgentDashboard = () => {
     if (!user) {
       // For demo, don't redirect
     } else {
-      initializeAgentProfile();
+      // Wait until agency scope resolves so staff load the AGENCY profile,
+      // not their own (empty) agent_manager_profiles row.
+      if (!scope.loading) initializeAgentProfile();
     }
-  }, [user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, scope.loading, scope.scopedAgentId]);
 
   const initializeAgentProfile = async () => {
-    if (!user) return;
+    if (!user || !scope.scopedAgentId) return;
     const { data: profile } = await supabase
       .from("agent_manager_profiles")
       .select("role, company_name")
-      .eq("user_id", user.id)
+      .eq("user_id", scope.scopedAgentId)
       .maybeSingle();
 
     if (profile) {
@@ -212,11 +218,11 @@ const AgentDashboard = () => {
   };
 
   const fetchInvitations = async () => {
-    if (!user) return;
+    if (!user || !scope.scopedAgentId) return;
     const { data } = await supabase
       .from("client_invitations")
       .select("*")
-      .eq("agent_id", user.id)
+      .eq("agent_id", scope.scopedAgentId)
       .is("archived_at", null)
       .order("created_at", { ascending: false });
     setInvitations(data ?? []);
@@ -230,7 +236,7 @@ const AgentDashboard = () => {
         .from("life_file_shares")
         .select("owner_id, status, decline_reason")
         .in("owner_id", activatedIds)
-        .eq("shared_with_user_id", user.id);
+        .eq("shared_with_user_id", scope.scopedAgentId);
       const map: Record<string, ShareStatus> = {};
       (shares ?? []).forEach((s) => {
         const inv = (data ?? []).find((i) => i.activated_user_id === s.owner_id);
@@ -780,12 +786,14 @@ const AgentDashboard = () => {
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-display font-bold text-foreground">Client Invitations</h2>
-              <Button
-                className="bg-primary text-primary-foreground hover:bg-primary/90"
-                onClick={() => setDialogOpen(true)}
-              >
-                <UserPlus className="w-4 h-4 mr-2" /> New Client
-              </Button>
+              <OwnerOnly>
+                <Button
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                  onClick={() => setDialogOpen(true)}
+                >
+                  <UserPlus className="w-4 h-4 mr-2" /> New Client
+                </Button>
+              </OwnerOnly>
             </div>
 
 
@@ -892,15 +900,17 @@ const AgentDashboard = () => {
                             <User className="w-3 h-3 mr-1" /> Full Profile
                           </Button>
                         )}
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                          onClick={(e) => { e.stopPropagation(); setRemoveTarget(inv); }}
-                          aria-label={`Remove ${inv.client_name} from roster`}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        <OwnerOnly>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                            onClick={(e) => { e.stopPropagation(); setRemoveTarget(inv); }}
+                            aria-label={`Remove ${inv.client_name} from roster`}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </OwnerOnly>
                       </div>
                     </CardContent>
                   </Card>

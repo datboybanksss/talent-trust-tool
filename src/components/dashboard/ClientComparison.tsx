@@ -12,7 +12,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { useAgencyScope } from "@/hooks/useAgencyScope";
 
 interface ClientRow {
   id: string;
@@ -31,26 +31,26 @@ type SortKey = "name" | "totalDealValue" | "activeDeals" | "totalDeals";
 
 const ClientComparison = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { scopedAgentId, loading: scopeLoading } = useAgencyScope();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [sortKey, setSortKey] = useState<SortKey>("totalDealValue");
   const [sortAsc, setSortAsc] = useState(false);
 
   const { data: rows = [] } = useQuery<ClientRow[]>({
-    queryKey: ["compare-clients", user?.id],
-    enabled: !!user?.id,
+    queryKey: ["compare-clients", scopedAgentId],
+    enabled: !scopeLoading && !!scopedAgentId,
     queryFn: async () => {
-      if (!user?.id) return [];
+      if (!scopedAgentId) return [];
       const [{ data: invites }, { data: deals }] = await Promise.all([
         supabase
           .from("client_invitations")
           .select("id, client_name, client_type")
-          .eq("agent_id", user.id)
+          .eq("agent_id", scopedAgentId)
           .is("archived_at", null),
         supabase
           .from("agent_deals")
           .select("client_invitation_id, client_name, value_amount, status")
-          .eq("agent_id", user.id),
+          .eq("agent_id", scopedAgentId),
       ]);
 
       return (invites ?? []).map((inv) => {
