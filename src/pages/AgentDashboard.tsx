@@ -678,15 +678,14 @@ const AgentDashboard = () => {
               </Button>
             </div>
 
-            {/* placeholder: dialog lifted to top-level so it works from any view */}
+            {/* New Client dialog moved to top level so it opens from any view */}
+
             <div className="hidden">
-              <Dialog open={false} onOpenChange={() => {}}>
-                <DialogContent className="hidden">
-                  <DialogHeader>
-                    <DialogTitle>placeholder</DialogTitle>
-                  </DialogHeader>
-                  {/* Spreadsheet Import Banner */}
-                  <div className="border border-dashed border-primary/40 bg-primary/5 rounded-lg p-3 flex items-center gap-3">
+              {/* placeholder kept empty — real dialog lives at root */}
+            </div>
+            {false && (
+              <div>
+                <div className="border border-dashed border-primary/40 bg-primary/5 rounded-lg p-3 flex items-center gap-3">
                     <FileSpreadsheet className="w-5 h-5 text-primary shrink-0" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-foreground">Import from Spreadsheet</p>
