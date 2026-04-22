@@ -62,7 +62,9 @@ const StaffActivate = () => {
       .from("portal_staff_access")
       .update({
         staff_user_id: userId,
-        activated_at: new Date().toISOString(),
+        // activated_at is set by ConfidentialityGate so all three RLS-required
+        // fields (status, confidentiality_accepted_at, activated_at) land in
+        // one atomic UPDATE on the same row.
       })
       .eq("id", invitation!.id);
     if (updErr) {
