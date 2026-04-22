@@ -362,10 +362,10 @@ const AgentDashboard = () => {
     // Upload files first if any
     const documentsMeta: { file_name: string; storage_path: string; document_type: string }[] = [];
 
-    if (user && uploadedFiles.length > 0) {
+    if (user && scope.scopedAgentId && uploadedFiles.length > 0) {
       setIsUploading(true);
       for (const file of uploadedFiles) {
-        const filePath = `${user.id}/${Date.now()}_${file.name}`;
+        const filePath = `${scope.scopedAgentId}/${Date.now()}_${file.name}`;
         const { error: uploadError } = await supabase.storage
           .from("agent-client-documents")
           .upload(filePath, file);
@@ -380,9 +380,11 @@ const AgentDashboard = () => {
       setIsUploading(false);
     }
 
-    if (user) {
+    if (user && scope.scopedAgentId) {
       const { data: inserted, error } = await supabase.from("client_invitations").insert({
-        agent_id: user.id,
+        agent_id: scope.scopedAgentId,
+        created_by: user.id,
+        updated_by: user.id,
         client_name: clientName,
         client_email: clientEmail,
         client_phone: clientPhone || null,
@@ -409,6 +411,17 @@ const AgentDashboard = () => {
         toast({ title: "Error", description: "Failed to create invitation.", variant: "destructive" });
         setIsCreating(false);
         return;
+      }
+
+      // Audit trail
+      if (inserted?.id) {
+        await supabase.from("audit_log").insert({
+          action: "invitation_created",
+          entity_type: "invitation",
+          entity_id: inserted.id,
+          user_id: user.id,
+          metadata: { agency_id: scope.scopedAgentId, client_name: clientName, client_email: clientEmail },
+        });
       }
 
       // Auto-copy the real activation link as a fallback in case email delivery fails.
@@ -464,7 +477,10 @@ const AgentDashboard = () => {
       .maybeSingle();
     if (row?.expires_at && new Date(row.expires_at) <= new Date()) {
       const newExpiry = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
-      await supabase.from("client_invitations").update({ expires_at: newExpiry }).eq("id", inv.id);
+      await supabase
+        .from("client_invitations")
+        .update({ expires_at: newExpiry, updated_by: user?.id ?? null })
+        .eq("id", inv.id);
     }
     const { data: emailRes, error: emailErr } = await supabase.functions.invoke("send-invitation-email", {
       body: { invitation_type: "client", invitation_id: inv.id, app_origin: window.location.origin },
@@ -572,9 +588,11 @@ const AgentDashboard = () => {
     let successCount = 0;
     for (let i = 0; i < validClients.length; i++) {
       const c = validClients[i];
-      if (user) {
+      if (user && scope.scopedAgentId) {
         const { error } = await supabase.from("client_invitations").insert({
-          agent_id: user.id,
+          agent_id: scope.scopedAgentId,
+          created_by: user.id,
+          updated_by: user.id,
           client_name: c.name,
           client_email: c.email,
           client_phone: c.phone || null,
@@ -789,14 +807,14 @@ const AgentDashboard = () => {
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-display font-bold text-foreground">Client Invitations</h2>
-              <OwnerOnly>
+              {scope.canEdit("clients") && (
                 <Button
                   className="bg-primary text-primary-foreground hover:bg-primary/90"
                   onClick={() => setDialogOpen(true)}
                 >
                   <UserPlus className="w-4 h-4 mr-2" /> New Client
                 </Button>
-              </OwnerOnly>
+              )}
             </div>
 
 
@@ -903,7 +921,7 @@ const AgentDashboard = () => {
                             <User className="w-3 h-3 mr-1" /> Full Profile
                           </Button>
                         )}
-                        <OwnerOnly>
+                        {scope.canDelete("clients") && (
                           <Button
                             variant="ghost"
                             size="icon"
@@ -913,7 +931,7 @@ const AgentDashboard = () => {
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
-                        </OwnerOnly>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
