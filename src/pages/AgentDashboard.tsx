@@ -31,6 +31,7 @@ import AgentNotifications from "@/components/agent/AgentNotifications";
 import AgentCalendar from "@/components/agent/AgentCalendar";
 import AgreementTemplates from "@/components/agent/AgreementTemplates";
 import SharePortal from "@/components/agent/SharePortal";
+import AgencyDirectory from "@/components/agent/AgencyDirectory";
 import AgentChatBot from "@/components/agent/AgentChatBot";
 import ConfidentialityGate from "@/components/agent/ConfidentialityGate";
 import ExecutiveOverviewInline from "@/components/executive/ExecutiveOverviewInline";
@@ -85,7 +86,7 @@ const AgentDashboard = () => {
     company_name: "Roc Nation Sports SA",
   });
   const [loading, setLoading] = useState(false);
-  const [activeView, setActiveView] = useState<"clients" | "pipeline" | "compare" | "calendar" | "templates" | "share" | "executive">("executive");
+  const [activeView, setActiveView] = useState<"clients" | "pipeline" | "compare" | "calendar" | "templates" | "share" | "executive" | "agency">("executive");
 
   // When staff finishes loading, default their view to the first allowed section
   useEffect(() => {
