@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -7,13 +7,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import {
-  ArrowLeft, FileText, Bell, Handshake, BarChart3, User, Download,
+  ArrowLeft, FileText, Bell, Handshake, BarChart3, Download,
   Calendar, DollarSign, Shield, Clock, CheckCircle2, AlertTriangle,
-  Trophy, Music, TrendingUp, MapPin, Phone, Mail, Globe, Star,
-  Briefcase, WifiOff, Wifi, HeartPulse, PhoneCall
+  TrendingUp, Mail, Phone, Globe, HeartPulse, Lock, Loader2,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -23,220 +21,199 @@ import { generateLifeFilePDF } from "@/utils/lifeFilePdfExport";
 import { INSURANCE_TYPES, INVESTMENT_TYPES, type LifeFileAsset } from "@/types/lifeFileAsset";
 import type { Beneficiary, EmergencyContact, LifeFileDocument } from "@/types/lifeFile";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { fetchBeneficiaries, fetchEmergencyContacts, fetchLifeFileDocuments } from "@/services/lifeFileService";
 import { fetchLifeFileAssets } from "@/services/lifeFileAssetService";
 
-// ─── Mock Client Data ───────────────────────────────────────────────
-const MOCK_CLIENTS: Record<string, any> = {
-  "1": {
-    id: "1", name: "Siya Kolisi", email: "siya@example.com", phone: "+27 81 234 5678",
-    type: "athlete", sport: "Rugby", team: "Racing 92 / Springboks", status: "activated",
-    marketValue: "R45,000,000", age: 34, nationality: "South African",
-    location: "Cape Town, SA", socialFollowers: "3.2M",
-    bio: "World Cup-winning Springbok captain. Global rugby icon and philanthropist.",
-    documents: [
-      { id: "d1", name: "Team Contract — Racing 92", type: "contract", date: "2025-06-01", status: "active", size: "2.4MB" },
-      { id: "d2", name: "Nike Endorsement Agreement", type: "endorsement", date: "2025-01-15", status: "active", size: "1.8MB" },
-      { id: "d3", name: "SA Rugby Image Rights", type: "image_rights", date: "2024-11-20", status: "active", size: "980KB" },
-      { id: "d4", name: "Tax Clearance Certificate 2025", type: "compliance", date: "2025-03-01", status: "valid", size: "340KB" },
-      { id: "d5", name: "Medical Insurance Policy", type: "insurance", date: "2025-02-10", status: "active", size: "1.2MB" },
-      { id: "d6", name: "Kolisi Foundation Trust Deed", type: "trust", date: "2023-08-15", status: "active", size: "3.1MB" },
-    ],
-    reminders: [
-      { id: "r1", title: "Racing 92 contract renewal discussion", due: "2026-04-15", priority: "high", status: "upcoming" },
-      { id: "r2", title: "Nike deal annual review", due: "2026-05-01", priority: "medium", status: "upcoming" },
-      { id: "r3", title: "Tax return submission — SARS", due: "2026-06-30", priority: "high", status: "upcoming" },
-      { id: "r4", title: "Medical assessment — team clearance", due: "2026-04-01", priority: "medium", status: "overdue" },
-      { id: "r5", title: "Foundation annual report deadline", due: "2026-07-15", priority: "low", status: "upcoming" },
-    ],
-    deals: [
-      { id: "dl1", brand: "Nike", type: "Endorsement", value: "R8,500,000/yr", start: "2025-01-15", end: "2027-01-14", status: "active" },
-      { id: "dl2", brand: "Racing 92", type: "Player Contract", value: "R18,000,000/yr", start: "2024-07-01", end: "2026-06-30", status: "active" },
-      { id: "dl3", brand: "SA Rugby", type: "Image Rights", value: "R3,200,000/yr", start: "2024-11-20", end: "2026-11-19", status: "active" },
-      { id: "dl4", brand: "BMW South Africa", type: "Brand Ambassador", value: "R2,500,000/yr", start: "2025-06-01", end: "2026-05-31", status: "negotiating" },
-      { id: "dl5", brand: "Kolisi Foundation", type: "NPO", value: "—", start: "2020-01-01", end: "ongoing", status: "active" },
-    ],
-    stats: { contractsActive: 4, totalDealValue: "R32,200,000", complianceScore: 92, documentsCount: 6 },
-    serviceActive: true, lastDataSync: "2026-04-06T08:30:00Z",
-    commissionRate: 5, commissionEarned: "R1,610,000",
-  },
-  "2": {
-    id: "2", name: "Zozibini Tunzi", email: "zozi@example.com", phone: "+27 82 345 6789",
-    type: "artist", discipline: "Model / Public Figure", agency: "Independent", status: "activated",
-    marketValue: "R12,000,000", age: 33, nationality: "South African",
-    location: "New York, USA", socialFollowers: "5.1M",
-    bio: "Miss Universe 2019. Activist, model, and media personality championing diversity in beauty.",
-    documents: [
-      { id: "d1", name: "Estée Lauder Global Contract", type: "endorsement", date: "2025-03-01", status: "active", size: "2.1MB" },
-      { id: "d2", name: "IMG Models Representation", type: "contract", date: "2024-09-15", status: "active", size: "1.5MB" },
-      { id: "d3", name: "US Work Visa (O-1B)", type: "compliance", date: "2025-08-20", status: "valid", size: "450KB" },
-      { id: "d4", name: "Tax Residency Declaration", type: "compliance", date: "2025-01-10", status: "valid", size: "280KB" },
-    ],
-    reminders: [
-      { id: "r1", title: "Estée Lauder campaign shoot — NYC", due: "2026-04-10", priority: "high", status: "upcoming" },
-      { id: "r2", title: "O-1B Visa renewal application", due: "2026-06-01", priority: "high", status: "upcoming" },
-      { id: "r3", title: "SA tax return filing", due: "2026-06-30", priority: "medium", status: "upcoming" },
-    ],
-    deals: [
-      { id: "dl1", brand: "Estée Lauder", type: "Global Ambassador", value: "$500,000/yr", start: "2025-03-01", end: "2027-02-28", status: "active" },
-      { id: "dl2", brand: "IMG Models", type: "Representation", value: "Commission-based", start: "2024-09-15", end: "2026-09-14", status: "active" },
-      { id: "dl3", brand: "Netflix SA", type: "Production Deal", value: "R4,500,000", start: "2026-01-01", end: "2026-12-31", status: "negotiating" },
-    ],
-    stats: { contractsActive: 2, totalDealValue: "$500K + R4.5M", complianceScore: 88, documentsCount: 4 },
-    serviceActive: true, lastDataSync: "2026-04-06T06:15:00Z",
-    commissionRate: 5, commissionEarned: "R225,000",
-  },
-  "4": {
-    id: "4", name: "Tyla Seethal", email: "tyla@example.com", phone: "+27 84 567 8901",
-    type: "artist", discipline: "Recording Artist", agency: "Epic Records / Columbia", status: "activated",
-    marketValue: "R85,000,000", age: 22, nationality: "South African",
-    location: "Johannesburg, SA", socialFollowers: "12.8M",
-    bio: "Grammy-winning artist. Global pop sensation blending Amapiano with mainstream pop.",
-    documents: [
-      { id: "d1", name: "Epic Records — Recording Agreement", type: "contract", date: "2024-03-15", status: "active", size: "4.2MB" },
-      { id: "d2", name: "Publishing Deal — Sony/ATV", type: "contract", date: "2024-06-01", status: "active", size: "3.8MB" },
-      { id: "d3", name: "US Tour Insurance Policy", type: "insurance", date: "2025-11-01", status: "active", size: "1.1MB" },
-      { id: "d4", name: "Trademark Registration — TYLA", type: "ip", date: "2024-08-20", status: "active", size: "560KB" },
-      { id: "d5", name: "Grammy Nomination Documents", type: "achievement", date: "2025-01-20", status: "archived", size: "780KB" },
-    ],
-    reminders: [
-      { id: "r1", title: "Album 2 delivery deadline — Epic Records", due: "2026-06-01", priority: "high", status: "upcoming" },
-      { id: "r2", title: "World tour insurance renewal", due: "2026-10-15", priority: "medium", status: "upcoming" },
-      { id: "r3", title: "Royalty audit — Q1 2026", due: "2026-04-30", priority: "high", status: "upcoming" },
-    ],
-    deals: [
-      { id: "dl1", brand: "Epic Records", type: "Recording Contract", value: "R35,000,000 (3-album)", start: "2024-03-15", end: "2028-03-14", status: "active" },
-      { id: "dl2", brand: "Sony/ATV", type: "Publishing", value: "R12,000,000 advance", start: "2024-06-01", end: "2029-05-31", status: "active" },
-      { id: "dl3", brand: "Pepsi Africa", type: "Brand Ambassador", value: "R6,000,000/yr", start: "2025-09-01", end: "2026-08-31", status: "active" },
-      { id: "dl4", brand: "Fashion Nova", type: "Collaboration", value: "R3,500,000", start: "2026-02-01", end: "2026-07-31", status: "negotiating" },
-    ],
-    stats: { contractsActive: 3, totalDealValue: "R56,500,000", complianceScore: 95, documentsCount: 5 },
-    serviceActive: true, lastDataSync: "2026-04-06T09:00:00Z",
-    commissionRate: 5, commissionEarned: "R2,825,000",
-  },
+interface Invitation {
+  id: string;
+  client_name: string;
+  client_email: string;
+  client_phone: string | null;
+  client_type: string;
+  status: string;
+  activated_user_id: string | null;
+  pre_populated_data: Record<string, unknown> | null;
+  created_at: string;
+  activated_at: string | null;
+  requested_share_sections: string[] | null;
+}
+
+interface Deal {
+  id: string;
+  brand: string;
+  deal_type: string;
+  value_amount: number | null;
+  value_text: string;
+  currency: string;
+  start_date: string | null;
+  end_date: string | null;
+  status: string;
+}
+
+interface ShareRow {
+  status: string;
+  sections: string[] | null;
+  expires_at: string | null;
+}
+
+const formatCurrency = (amount: number | null, currency = "ZAR") => {
+  if (amount === null || amount === undefined) return "—";
+  if (currency === "ZAR") return `R${amount.toLocaleString()}`;
+  return `${currency} ${amount.toLocaleString()}`;
 };
 
-// Fallback for pending clients
-const PENDING_FALLBACK = (id: string) => ({
-  id, name: id === "3" ? "Kagiso Rabada" : "Eben Etzebeth",
-  email: id === "3" ? "kagiso@example.com" : "eben@example.com",
-  phone: id === "3" ? "+27 83 456 7890" : "+27 85 678 9012",
-  type: "athlete", sport: "Cricket", team: id === "3" ? "Proteas / Punjab Kings" : "Sharks / Springboks",
-  status: "pending", marketValue: id === "3" ? "R28,000,000" : "R22,000,000",
-  age: id === "3" ? 30 : 34, nationality: "South African",
-  location: id === "3" ? "Centurion, SA" : "Durban, SA", socialFollowers: id === "3" ? "1.8M" : "1.2M",
-  bio: id === "3" ? "Premier fast bowler. ICC No.1 ranked bowler." : "Legendary Springbok lock. World Cup winner.",
-  documents: [], reminders: [], deals: [],
-  stats: { contractsActive: 0, totalDealValue: "—", complianceScore: 0, documentsCount: 0 },
-  serviceActive: false, lastDataSync: null, commissionRate: 0, commissionEarned: "R0",
-});
+const dealStatusColor = (s: string) => {
+  if (s === "active" || s === "closed_won") return "bg-green-500/10 text-green-700 border-green-200";
+  if (s === "negotiating" || s === "prospecting") return "bg-amber-500/10 text-amber-700 border-amber-200";
+  return "bg-muted text-muted-foreground";
+};
 
 const AgentClientDetail = () => {
   const { clientId } = useParams<{ clientId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [selectedReportSections, setSelectedReportSections] = useState<string[]>([
-    "bio", "deals", "stats", "documents",
-  ]);
-  const [serviceActive, setServiceActive] = useState<boolean>(true);
+  const { user } = useAuth();
 
-  const client = MOCK_CLIENTS[clientId || ""] || PENDING_FALLBACK(clientId || "1");
-  const isPending = client.status === "pending";
-  const isServiceActive = !isPending && (serviceActive ?? client.serviceActive);
-
-  // Live Life File data for the linked client (when invitation is activated)
+  const [invitation, setInvitation] = useState<Invitation | null>(null);
+  const [profile, setProfile] = useState<{ avatar_url: string | null; client_type: string | null } | null>(null);
+  const [deals, setDeals] = useState<Deal[]>([]);
+  const [share, setShare] = useState<ShareRow | null>(null);
   const [beneficiaries, setBeneficiaries] = useState<Beneficiary[]>([]);
   const [emergencyContacts, setEmergencyContacts] = useState<EmergencyContact[]>([]);
   const [documents, setDocuments] = useState<LifeFileDocument[]>([]);
   const [assets, setAssets] = useState<LifeFileAsset[]>([]);
-  const [lifeFileLoading, setLifeFileLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+  const [selectedReportSections, setSelectedReportSections] = useState<string[]>([
+    "bio", "deals", "stats", "documents",
+  ]);
 
-  useEffect(() => {
-    if (!clientId) return;
-    let cancelled = false;
-    (async () => {
-      setLifeFileLoading(true);
-      const { data: invite } = await supabase
-        .from("client_invitations")
-        .select("activated_user_id")
-        .eq("id", clientId)
-        .maybeSingle();
-      const activatedUserId = invite?.activated_user_id;
-      if (!activatedUserId) {
-        if (!cancelled) {
-          setBeneficiaries([]); setEmergencyContacts([]); setDocuments([]); setAssets([]);
-          setLifeFileLoading(false);
-        }
-        return;
-      }
-      const [b, c, d, a] = await Promise.all([
-        fetchBeneficiaries(activatedUserId),
-        fetchEmergencyContacts(activatedUserId),
-        fetchLifeFileDocuments(activatedUserId),
-        fetchLifeFileAssets(activatedUserId),
+  const isPending = !invitation?.activated_user_id;
+  const activatedUserId = invitation?.activated_user_id ?? null;
+  const shareAccepted = share?.status === "accepted";
+
+  // Fetch invitation + dependent data
+  const loadAll = useCallback(async () => {
+    if (!clientId || !user) return;
+    setLoading(true);
+
+    const { data: inv, error: invErr } = await supabase
+      .from("client_invitations")
+      .select("id, client_name, client_email, client_phone, client_type, status, activated_user_id, pre_populated_data, created_at, activated_at, requested_share_sections")
+      .eq("id", clientId)
+      .maybeSingle();
+
+    if (invErr || !inv) {
+      setNotFound(true);
+      setLoading(false);
+      return;
+    }
+    setInvitation(inv as unknown as Invitation);
+
+    // Deals belong to this agent + client name regardless of activation
+    const { data: dealsData } = await supabase
+      .from("agent_deals")
+      .select("id, brand, deal_type, value_amount, value_text, currency, start_date, end_date, status")
+      .eq("agent_id", user.id)
+      .eq("client_name", inv.client_name)
+      .order("created_at", { ascending: false });
+    setDeals((dealsData as Deal[]) ?? []);
+
+    if (inv.activated_user_id) {
+      const [profileRes, shareRes, b, c, d, a] = await Promise.all([
+        supabase.from("profiles").select("avatar_url, client_type").eq("user_id", inv.activated_user_id).maybeSingle(),
+        supabase.from("life_file_shares").select("status, sections, expires_at")
+          .eq("owner_id", inv.activated_user_id).eq("shared_with_user_id", user.id).maybeSingle(),
+        fetchBeneficiaries(inv.activated_user_id).catch(() => []),
+        fetchEmergencyContacts(inv.activated_user_id).catch(() => []),
+        fetchLifeFileDocuments(inv.activated_user_id).catch(() => []),
+        fetchLifeFileAssets(inv.activated_user_id).catch(() => []),
       ]);
-      if (cancelled) return;
+      setProfile(profileRes.data);
+      setShare(shareRes.data as ShareRow | null);
       setBeneficiaries(b as Beneficiary[]);
       setEmergencyContacts(c as EmergencyContact[]);
       setDocuments(d as LifeFileDocument[]);
-      setAssets(a);
-      setLifeFileLoading(false);
-    })();
-    return () => { cancelled = true; };
-  }, [clientId]);
+      setAssets(a as LifeFileAsset[]);
+    } else {
+      setProfile(null);
+      setShare(null);
+      setBeneficiaries([]); setEmergencyContacts([]); setDocuments([]); setAssets([]);
+    }
+
+    setLoading(false);
+  }, [clientId, user]);
+
+  useEffect(() => { loadAll(); }, [loadAll]);
+
+  // Realtime subscriptions
+  useEffect(() => {
+    if (!activatedUserId || !user) return;
+    const channel = supabase
+      .channel(`client-detail-${activatedUserId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "life_file_documents", filter: `user_id=eq.${activatedUserId}` }, () => loadAll())
+      .on("postgres_changes", { event: "*", schema: "public", table: "life_file_assets", filter: `user_id=eq.${activatedUserId}` }, () => loadAll())
+      .on("postgres_changes", { event: "*", schema: "public", table: "agent_deals", filter: `agent_id=eq.${user.id}` }, () => loadAll())
+      .on("postgres_changes", { event: "*", schema: "public", table: "life_file_shares", filter: `owner_id=eq.${activatedUserId}` }, () => loadAll())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [activatedUserId, user, loadAll]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (notFound || !invitation) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="max-w-md">
+          <CardContent className="py-8 text-center space-y-3">
+            <AlertTriangle className="w-10 h-10 text-amber-500 mx-auto" />
+            <h2 className="text-lg font-semibold">Client not found</h2>
+            <p className="text-sm text-muted-foreground">This invitation may have been removed or you don't have access.</p>
+            <Button onClick={() => navigate("/agent-dashboard")}><ArrowLeft className="w-4 h-4 mr-2" /> Back to dashboard</Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   const lifeFileSummary = getLifeFileSummary(beneficiaries, emergencyContacts, documents, assets);
-  const insuranceAssets = assets.filter(a => a.asset_category === "insurance");
-  const investmentAssets = assets.filter(a => a.asset_category === "investment");
+  const insuranceAssets = assets.filter((a) => a.asset_category === "insurance");
+  const investmentAssets = assets.filter((a) => a.asset_category === "investment");
   const hasLifeFileData = beneficiaries.length + emergencyContacts.length + documents.length + assets.length > 0;
 
-  const handleToggleService = (checked: boolean) => {
-    setServiceActive(checked);
-    toast({
-      title: checked ? "Service Activated" : "Service Deactivated",
-      description: checked
-        ? `Live data feed restored for ${client.name}. You will continue earning commission on CFP® referrals.`
-        : `Live data feed disconnected for ${client.name}. Commission accrual paused.`,
-      variant: checked ? "default" : "destructive",
-    });
-  };
+  const activeDealsCount = deals.filter((d) => d.status === "active" || d.status === "negotiating").length;
+  const totalDealValue = deals.reduce((sum, d) => sum + (d.value_amount ?? 0), 0);
+  const expiredDocs = documents.filter((d) => d.is_expired || (d.expiry_date && new Date(d.expiry_date) < new Date())).length;
+  const complianceScore = documents.length > 0
+    ? Math.round(((documents.length - expiredDocs) / documents.length) * 100)
+    : null;
+
+  const clientTypeLabel = invitation.client_type.charAt(0).toUpperCase() + invitation.client_type.slice(1);
+  const statusLabel = isPending ? "Pending" : "Activated";
+  const initials = invitation.client_name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
 
   const handleDownloadLifeFile = () => {
-    if (!isServiceActive) {
-      toast({ title: "Access Denied", description: "Activate servicing to download client Life File reports.", variant: "destructive" });
+    if (!shareAccepted) {
+      toast({ title: "Access not granted", description: "The client has not accepted your Life File share yet.", variant: "destructive" });
       return;
     }
     if (!hasLifeFileData) {
       toast({ title: "No Life File data", description: "This client has not populated their Life File yet.", variant: "destructive" });
       return;
     }
-    generateLifeFilePDF({
-      beneficiaries,
-      emergencyContacts,
-      documents,
-      assets,
-      userName: client.name,
-    });
-    toast({ title: "Life File PDF Generated", description: `Full Life File report for ${client.name} downloaded.` });
-  };
-
-  const handleContactCFP = () => {
-    const params = new URLSearchParams({
-      type: "financial_planning",
-      message: `Agent referral — Financial Shortfall Review requested on behalf of client: ${client.name}.\n\nClient type: ${client.type === "athlete" ? `Athlete — ${client.sport}` : `Artist — ${client.discipline}`}\nMarket value: ${client.marketValue}\n\nPlease contact the agent to discuss commission structure and client needs.`,
-    });
-    navigate(`/contact?${params.toString()}`);
-  };
-
-  const getTypeLabel = (category: string, type: string) => {
-    const list = category === "insurance" ? INSURANCE_TYPES : INVESTMENT_TYPES;
-    return list.find((t) => t.value === type)?.label || type;
+    generateLifeFilePDF({ beneficiaries, emergencyContacts, documents, assets, userName: invitation.client_name });
+    toast({ title: "Life File PDF Generated", description: `Full Life File report for ${invitation.client_name} downloaded.` });
   };
 
   const toggleReportSection = (section: string) => {
-    setSelectedReportSections((prev) =>
-      prev.includes(section) ? prev.filter((s) => s !== section) : [...prev, section]
-    );
+    setSelectedReportSections((prev) => prev.includes(section) ? prev.filter((s) => s !== section) : [...prev, section]);
   };
 
   const generateProfileReport = () => {
@@ -246,7 +223,6 @@ const AgentClientDetail = () => {
     const dark: [number, number, number] = [30, 30, 30];
     let y = 20;
 
-    // Header
     doc.setFillColor(...gold);
     doc.rect(0, 0, pageWidth, 40, "F");
     doc.setTextColor(255, 255, 255);
@@ -255,49 +231,43 @@ const AgentClientDetail = () => {
     doc.text("Client Profile Report", 20, 20);
     doc.setFontSize(11);
     doc.setFont("helvetica", "normal");
-    doc.text(`${client.name} — ${client.type === "athlete" ? client.sport : client.discipline}`, 20, 30);
+    doc.text(`${invitation.client_name} — ${clientTypeLabel}`, 20, 30);
     doc.text(`Generated: ${format(new Date(), "MMMM d, yyyy")}`, pageWidth - 20, 30, { align: "right" });
 
     y = 52;
     doc.setTextColor(...dark);
 
     if (selectedReportSections.includes("bio")) {
-      doc.setFontSize(13);
-      doc.setFont("helvetica", "bold");
-      doc.text("Client Overview", 20, y);
-      y += 10;
+      doc.setFontSize(13); doc.setFont("helvetica", "bold");
+      doc.text("Client Overview", 20, y); y += 10;
       autoTable(doc, {
         startY: y,
         body: [
-          ["Full Name", client.name],
-          ["Type", client.type === "athlete" ? `Athlete — ${client.sport}` : `Artist — ${client.discipline}`],
-          ["Age", `${client.age}`],
-          ["Market Value", client.marketValue],
-          ["Nationality", client.nationality],
-          ["Location", client.location],
-          ["Social Following", client.socialFollowers],
-          [client.type === "athlete" ? "Team" : "Agency", client.team || client.agency || "—"],
+          ["Full Name", invitation.client_name],
+          ["Type", clientTypeLabel],
+          ["Email", invitation.client_email],
+          ["Phone", invitation.client_phone || "—"],
+          ["Status", statusLabel],
+          ["Activated On", invitation.activated_at ? format(new Date(invitation.activated_at), "MMM d, yyyy") : "—"],
         ],
         theme: "plain",
         styles: { fontSize: 9, cellPadding: 4 },
         columnStyles: { 0: { fontStyle: "bold", cellWidth: 50 } },
         margin: { left: 20, right: 20 },
       });
-      y = (doc as any).lastAutoTable.finalY + 12;
+      y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 12;
     }
 
     if (selectedReportSections.includes("stats")) {
-      doc.setFontSize(13);
-      doc.setFont("helvetica", "bold");
-      doc.text("Key Metrics", 20, y);
-      y += 10;
+      doc.setFontSize(13); doc.setFont("helvetica", "bold");
+      doc.text("Key Metrics", 20, y); y += 10;
       autoTable(doc, {
         startY: y,
         body: [
-          ["Active Contracts", `${client.stats.contractsActive}`],
-          ["Total Deal Value", client.stats.totalDealValue],
-          ["Compliance Score", `${client.stats.complianceScore}%`],
-          ["Documents on File", `${client.stats.documentsCount}`],
+          ["Active Deals", `${activeDealsCount}`],
+          ["Total Deal Value", formatCurrency(totalDealValue)],
+          ["Compliance Score", complianceScore !== null ? `${complianceScore}%` : "—"],
+          ["Documents on File", `${documents.length}`],
         ],
         theme: "grid",
         headStyles: { fillColor: gold },
@@ -305,37 +275,39 @@ const AgentClientDetail = () => {
         columnStyles: { 0: { fontStyle: "bold", cellWidth: 55 } },
         margin: { left: 20, right: 20 },
       });
-      y = (doc as any).lastAutoTable.finalY + 12;
+      y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 12;
     }
 
-    if (selectedReportSections.includes("deals") && client.deals.length > 0) {
+    if (selectedReportSections.includes("deals") && deals.length > 0) {
       if (y > 220) { doc.addPage(); y = 20; }
-      doc.setFontSize(13);
-      doc.setFont("helvetica", "bold");
-      doc.text("Active Deals & Partnerships", 20, y);
-      y += 10;
+      doc.setFontSize(13); doc.setFont("helvetica", "bold");
+      doc.text("Deals & Partnerships", 20, y); y += 10;
       autoTable(doc, {
         startY: y,
-        head: [["Brand / Partner", "Deal Type", "Value", "Period", "Status"]],
-        body: client.deals.map((d: any) => [d.brand, d.type, d.value, `${d.start} → ${d.end}`, d.status]),
+        head: [["Brand", "Type", "Value", "Period", "Status"]],
+        body: deals.map((d) => [
+          d.brand,
+          d.deal_type,
+          d.value_text || formatCurrency(d.value_amount, d.currency),
+          `${d.start_date || "—"} → ${d.end_date || "ongoing"}`,
+          d.status,
+        ]),
         theme: "grid",
         headStyles: { fillColor: gold, textColor: [255, 255, 255], fontSize: 9 },
         styles: { fontSize: 8, cellPadding: 4 },
         margin: { left: 20, right: 20 },
       });
-      y = (doc as any).lastAutoTable.finalY + 12;
+      y = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 12;
     }
 
-    if (selectedReportSections.includes("documents") && client.documents.length > 0) {
+    if (selectedReportSections.includes("documents") && documents.length > 0) {
       if (y > 220) { doc.addPage(); y = 20; }
-      doc.setFontSize(13);
-      doc.setFont("helvetica", "bold");
-      doc.text("Documents on File", 20, y);
-      y += 10;
+      doc.setFontSize(13); doc.setFont("helvetica", "bold");
+      doc.text("Documents on File", 20, y); y += 10;
       autoTable(doc, {
         startY: y,
-        head: [["Document", "Type", "Date", "Status"]],
-        body: client.documents.map((d: any) => [d.name, d.type, d.date, d.status]),
+        head: [["Document", "Type", "Expiry", "Status"]],
+        body: documents.map((d) => [d.title, d.document_type, d.expiry_date || "—", d.status]),
         theme: "grid",
         headStyles: { fillColor: gold, textColor: [255, 255, 255], fontSize: 9 },
         styles: { fontSize: 8, cellPadding: 4 },
@@ -343,37 +315,16 @@ const AgentClientDetail = () => {
       });
     }
 
-    // Footer
     const pageCount = doc.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
-      doc.setFontSize(8);
-      doc.setTextColor(150, 150, 150);
-      doc.text(`CONFIDENTIAL — ${client.name} Profile Report`, 20, doc.internal.pageSize.getHeight() - 10);
+      doc.setFontSize(8); doc.setTextColor(150, 150, 150);
+      doc.text(`CONFIDENTIAL — ${invitation.client_name} Profile Report`, 20, doc.internal.pageSize.getHeight() - 10);
       doc.text(`Page ${i} of ${pageCount}`, pageWidth - 20, doc.internal.pageSize.getHeight() - 10, { align: "right" });
     }
 
-    doc.save(`ProfileReport_${client.name.replace(/\s+/g, "_")}_${format(new Date(), "yyyy-MM-dd")}.pdf`);
-    toast({ title: "Report Generated", description: `Profile report for ${client.name} downloaded.` });
-  };
-
-  const priorityColor = (p: string) => {
-    if (p === "high") return "text-red-600 bg-red-500/10 border-red-200";
-    if (p === "medium") return "text-amber-600 bg-amber-500/10 border-amber-200";
-    return "text-green-600 bg-green-500/10 border-green-200";
-  };
-
-  const dealStatusColor = (s: string) => {
-    if (s === "active") return "bg-green-500/10 text-green-700 border-green-200";
-    if (s === "negotiating") return "bg-amber-500/10 text-amber-700 border-amber-200";
-    return "bg-muted text-muted-foreground";
-  };
-
-  const docTypeIcon = (type: string) => {
-    if (type === "contract" || type === "endorsement" || type === "image_rights") return Handshake;
-    if (type === "compliance") return Shield;
-    if (type === "insurance") return Shield;
-    return FileText;
+    doc.save(`ProfileReport_${invitation.client_name.replace(/\s+/g, "_")}_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+    toast({ title: "Report Generated", description: `Profile report for ${invitation.client_name} downloaded.` });
   };
 
   return (
@@ -385,19 +336,21 @@ const AgentClientDetail = () => {
             <Button variant="ghost" size="icon" onClick={() => navigate("/agent-dashboard")}>
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-lg">
-              {client.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2)}
-            </div>
+            {profile?.avatar_url ? (
+              <img src={profile.avatar_url} alt={invitation.client_name} className="w-12 h-12 rounded-full object-cover" />
+            ) : (
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-lg">
+                {initials}
+              </div>
+            )}
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-lg font-display font-bold text-foreground">{client.name}</h1>
+                <h1 className="text-lg font-display font-bold text-foreground">{invitation.client_name}</h1>
                 <Badge variant={isPending ? "outline" : "default"} className={isPending ? "text-amber-600 border-amber-200" : "bg-green-500/10 text-green-700 border-green-200 hover:bg-green-500/10"}>
-                  {isPending ? "Pending" : "Active"}
+                  {statusLabel}
                 </Badge>
               </div>
-              <p className="text-xs text-muted-foreground">
-                {client.type === "athlete" ? `${client.sport} — ${client.team}` : `${client.discipline} — ${client.agency}`}
-              </p>
+              <p className="text-xs text-muted-foreground">{clientTypeLabel}</p>
             </div>
           </div>
           <Button onClick={generateProfileReport} disabled={isPending} className="bg-primary text-primary-foreground">
@@ -407,67 +360,41 @@ const AgentClientDetail = () => {
       </header>
 
       <div className="container py-6 max-w-6xl mx-auto space-y-6">
-        {/* Service Status Banner */}
-        {!isPending && (
-          <Card className={`border ${isServiceActive ? "border-green-300 bg-green-50 dark:bg-green-950/20" : "border-destructive/50 bg-destructive/5"}`}>
-            <CardContent className="py-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                {isServiceActive ? (
-                  <Wifi className="w-5 h-5 text-green-600 shrink-0" />
-                ) : (
-                  <WifiOff className="w-5 h-5 text-destructive shrink-0" />
-                )}
-                <div>
-                  <p className={`text-sm font-medium ${isServiceActive ? "text-green-800 dark:text-green-200" : "text-destructive"}`}>
-                    {isServiceActive ? "Actively Servicing — Live Data Connected" : "Service Inactive — Live Data Disconnected"}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {isServiceActive
-                      ? `Last synced: ${client.lastDataSync ? format(new Date(client.lastDataSync), "MMM d, yyyy 'at' h:mm a") : "Just now"} · Commission rate: ${client.commissionRate}%`
-                      : "Re-activate servicing to restore live data feed and resume commission accrual."}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 shrink-0">
-                {isServiceActive && (
-                  <Badge variant="outline" className="text-green-700 border-green-200 bg-green-500/10">
-                    <DollarSign className="w-3 h-3 mr-1" />
-                    {client.commissionEarned} earned
-                  </Badge>
-                )}
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">Service</span>
-                  <Switch checked={isServiceActive} onCheckedChange={handleToggleService} />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
+        {/* Pending banner */}
         {isPending && (
           <Card className="border-amber-300 bg-amber-50 dark:bg-amber-950/20">
             <CardContent className="py-4 flex items-center gap-3">
               <Clock className="w-5 h-5 text-amber-600 shrink-0" />
               <p className="text-sm text-amber-800 dark:text-amber-200">
-                This client hasn't activated their profile yet. Full dashboard data will be available after activation.
+                {invitation.client_name} hasn't activated their profile yet. Full dashboard data will appear after activation.
               </p>
             </CardContent>
           </Card>
         )}
 
+        {/* Contact strip */}
+        <Card>
+          <CardContent className="py-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+            <span className="flex items-center gap-2 text-muted-foreground"><Mail className="w-4 h-4" /> {invitation.client_email}</span>
+            {invitation.client_phone && (
+              <span className="flex items-center gap-2 text-muted-foreground"><Phone className="w-4 h-4" /> {invitation.client_phone}</span>
+            )}
+            <span className="flex items-center gap-2 text-muted-foreground"><Calendar className="w-4 h-4" /> Invited {format(new Date(invitation.created_at), "MMM d, yyyy")}</span>
+          </CardContent>
+        </Card>
+
         {/* Quick Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { icon: DollarSign, label: "Market Value", value: client.marketValue, color: "text-primary" },
-            { icon: Handshake, label: "Active Deals", value: client.stats.contractsActive, color: "text-green-600" },
-            { icon: TrendingUp, label: "Total Deal Value", value: client.stats.totalDealValue, color: "text-primary" },
-            { icon: Shield, label: "Compliance", value: `${client.stats.complianceScore}%`, color: "text-blue-600" },
-            { icon: Globe, label: "Social Reach", value: client.socialFollowers, color: "text-purple-600" },
+            { icon: Handshake, label: "Active Deals", value: isPending ? "—" : `${activeDealsCount}`, color: "text-green-600" },
+            { icon: TrendingUp, label: "Total Deal Value", value: isPending ? "—" : formatCurrency(totalDealValue), color: "text-primary" },
+            { icon: Shield, label: "Compliance", value: complianceScore !== null ? `${complianceScore}%` : "—", color: "text-blue-600" },
+            { icon: Globe, label: "Documents", value: isPending ? "—" : `${documents.length}`, color: "text-purple-600" },
           ].map((stat, i) => (
-            <Card key={i} className={`border-border/50 ${!isServiceActive ? "opacity-50" : ""}`}>
+            <Card key={i} className="border-border/50">
               <CardContent className="p-4">
                 <stat.icon className={`w-4 h-4 ${stat.color} mb-2`} />
-                <p className="text-xl font-display font-bold text-foreground">{isServiceActive ? stat.value : "—"}</p>
+                <p className="text-xl font-display font-bold text-foreground">{stat.value}</p>
                 <p className="text-xs text-muted-foreground">{stat.label}</p>
               </CardContent>
             </Card>
@@ -477,52 +404,44 @@ const AgentClientDetail = () => {
         {/* Tabs */}
         <Tabs defaultValue="deals" className="space-y-4">
           <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="deals" className="text-xs sm:text-sm">
-              <Handshake className="w-4 h-4 mr-1.5 hidden sm:inline" /> Deals
-            </TabsTrigger>
-            <TabsTrigger value="lifefile" className="text-xs sm:text-sm">
-              <HeartPulse className="w-4 h-4 mr-1.5 hidden sm:inline" /> Life File
-            </TabsTrigger>
-            <TabsTrigger value="documents" className="text-xs sm:text-sm">
-              <FileText className="w-4 h-4 mr-1.5 hidden sm:inline" /> Documents
-            </TabsTrigger>
-            <TabsTrigger value="reminders" className="text-xs sm:text-sm">
-              <Bell className="w-4 h-4 mr-1.5 hidden sm:inline" /> Reminders
-            </TabsTrigger>
-            <TabsTrigger value="report" className="text-xs sm:text-sm">
-              <BarChart3 className="w-4 h-4 mr-1.5 hidden sm:inline" /> Report
-            </TabsTrigger>
+            <TabsTrigger value="deals" className="text-xs sm:text-sm"><Handshake className="w-4 h-4 mr-1.5 hidden sm:inline" /> Deals</TabsTrigger>
+            <TabsTrigger value="lifefile" className="text-xs sm:text-sm"><HeartPulse className="w-4 h-4 mr-1.5 hidden sm:inline" /> Life File</TabsTrigger>
+            <TabsTrigger value="documents" className="text-xs sm:text-sm"><FileText className="w-4 h-4 mr-1.5 hidden sm:inline" /> Documents</TabsTrigger>
+            <TabsTrigger value="reminders" className="text-xs sm:text-sm"><Bell className="w-4 h-4 mr-1.5 hidden sm:inline" /> Reminders</TabsTrigger>
+            <TabsTrigger value="report" className="text-xs sm:text-sm"><BarChart3 className="w-4 h-4 mr-1.5 hidden sm:inline" /> Report</TabsTrigger>
           </TabsList>
 
-          {/* ─── Deals Tab ─── */}
+          {/* Deals Tab — live agent_deals */}
           <TabsContent value="deals">
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Deals & Partnerships</CardTitle>
-                <CardDescription>Active and negotiating deals for {client.name}</CardDescription>
+                <CardDescription>Deals you've recorded for {invitation.client_name}</CardDescription>
               </CardHeader>
               <CardContent>
-                {client.deals.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-8">No deals on record yet.</p>
+                {deals.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-8">
+                    No deals on record yet. Add deals from the Pipeline.
+                  </p>
                 ) : (
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Brand / Partner</TableHead>
-                        <TableHead>Deal Type</TableHead>
+                        <TableHead>Brand</TableHead>
+                        <TableHead>Type</TableHead>
                         <TableHead>Value</TableHead>
                         <TableHead className="hidden md:table-cell">Period</TableHead>
                         <TableHead>Status</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {client.deals.map((deal: any) => (
+                      {deals.map((deal) => (
                         <TableRow key={deal.id}>
                           <TableCell className="font-medium">{deal.brand}</TableCell>
-                          <TableCell>{deal.type}</TableCell>
-                          <TableCell className="font-semibold">{deal.value}</TableCell>
+                          <TableCell>{deal.deal_type}</TableCell>
+                          <TableCell className="font-semibold">{deal.value_text || formatCurrency(deal.value_amount, deal.currency)}</TableCell>
                           <TableCell className="hidden md:table-cell text-muted-foreground text-xs">
-                            {deal.start} → {deal.end}
+                            {deal.start_date || "—"} → {deal.end_date || "ongoing"}
                           </TableCell>
                           <TableCell>
                             <Badge variant="outline" className={dealStatusColor(deal.status)}>
@@ -539,54 +458,32 @@ const AgentClientDetail = () => {
             </Card>
           </TabsContent>
 
-          {/* ─── Life File Tab ─── */}
+          {/* Life File Tab — gated by share status */}
           <TabsContent value="lifefile">
-            {!isServiceActive ? (
-              <Card className="border-destructive/30">
+            {isPending ? (
+              <Card><CardContent className="py-12 text-center text-sm text-muted-foreground">Awaiting client activation.</CardContent></Card>
+            ) : !shareAccepted ? (
+              <Card className="border-amber-300/50">
                 <CardContent className="py-12 text-center space-y-3">
-                  <WifiOff className="w-10 h-10 text-destructive mx-auto" />
-                  <h3 className="text-lg font-semibold text-foreground">Service Inactive</h3>
+                  <Lock className="w-10 h-10 text-amber-600 mx-auto" />
+                  <h3 className="text-lg font-semibold text-foreground">Access not granted</h3>
                   <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                    Live data access is disconnected. Re-activate servicing for {client.name} to view their Life File, download reports, and earn CFP® referral commission.
+                    {invitation.client_name} hasn't accepted your Life File share request yet. Once they grant access, their estate snapshot will appear here.
                   </p>
-                  <Button onClick={() => handleToggleService(true)} className="mt-2">
-                    <Wifi className="w-4 h-4 mr-2" /> Re-activate Service
-                  </Button>
                 </CardContent>
               </Card>
             ) : (
               <div className="space-y-4">
-                {/* Life File Actions */}
                 <div className="flex flex-wrap gap-3">
                   <Button onClick={handleDownloadLifeFile} className="bg-primary text-primary-foreground">
                     <Download className="w-4 h-4 mr-2" /> Download Life File PDF
                   </Button>
-                  <Button variant="outline" onClick={handleContactCFP}>
-                    <PhoneCall className="w-4 h-4 mr-2" /> Contact a CFP® (Earn Commission)
-                  </Button>
                 </div>
 
-                {/* Commission Info */}
-                <Card className="border-primary/20 bg-primary/5">
-                  <CardContent className="py-4">
-                    <div className="flex items-center gap-3">
-                      <DollarSign className="w-5 h-5 text-primary shrink-0" />
-                      <div>
-                        <p className="text-sm font-medium text-foreground">CFP® Referral Commission</p>
-                        <p className="text-xs text-muted-foreground">
-                          Earn {client.commissionRate}% commission on financial products recommended through CFP® referrals.
-                          Total earned to date: <span className="font-semibold text-primary">{client.commissionEarned}</span>
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Life File Summary */}
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg">Estate Planning Snapshot</CardTitle>
-                    <CardDescription>Overview of {client.name}'s Life File</CardDescription>
+                    <CardDescription>Live overview of {invitation.client_name}'s Life File</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -606,86 +503,64 @@ const AgentClientDetail = () => {
                   </CardContent>
                 </Card>
 
-                {/* Insurance Policies */}
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg">Insurance Policies</CardTitle>
-                    <CardDescription>
-                      {insuranceAssets.length} active policies · Total cover: R{(lifeFileSummary.totalInsuranceCover / 1000000).toFixed(1)}M
-                    </CardDescription>
+                    <CardDescription>{insuranceAssets.length} policies · Total cover R{(lifeFileSummary.totalInsuranceCover / 1000000).toFixed(1)}M</CardDescription>
                   </CardHeader>
                   <CardContent>
                     {insuranceAssets.length === 0 ? (
-                      <p className="text-sm text-muted-foreground text-center py-6">
-                        {lifeFileLoading ? "Loading…" : "No insurance policies on file yet."}
-                      </p>
+                      <p className="text-sm text-muted-foreground text-center py-6">No insurance policies on file yet.</p>
                     ) : (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Type</TableHead>
-                          <TableHead>Institution</TableHead>
-                          <TableHead>Cover Amount</TableHead>
+                      <Table>
+                        <TableHeader><TableRow>
+                          <TableHead>Type</TableHead><TableHead>Institution</TableHead><TableHead>Cover</TableHead>
                           <TableHead className="hidden md:table-cell">Premium</TableHead>
-                          <TableHead className="hidden md:table-cell">Beneficiaries</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {insuranceAssets.map(asset => (
-                          <TableRow key={asset.id}>
-                            <TableCell className="font-medium">{getTypeLabel("insurance", asset.asset_type)}</TableCell>
-                            <TableCell>{asset.institution}</TableCell>
-                            <TableCell className="font-semibold">R{(asset.amount || 0).toLocaleString()}</TableCell>
-                            <TableCell className="hidden md:table-cell text-muted-foreground">
-                              {asset.premium_or_contribution ? `R${asset.premium_or_contribution.toLocaleString()}/m` : "—"}
-                            </TableCell>
-                            <TableCell className="hidden md:table-cell text-xs text-muted-foreground">{asset.beneficiary_names || "—"}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                        </TableRow></TableHeader>
+                        <TableBody>
+                          {insuranceAssets.map((asset) => (
+                            <TableRow key={asset.id}>
+                              <TableCell className="font-medium">{INSURANCE_TYPES.find((t) => t.value === asset.asset_type)?.label || asset.asset_type}</TableCell>
+                              <TableCell>{asset.institution}</TableCell>
+                              <TableCell className="font-semibold">R{(asset.amount || 0).toLocaleString()}</TableCell>
+                              <TableCell className="hidden md:table-cell text-muted-foreground">
+                                {asset.premium_or_contribution ? `R${asset.premium_or_contribution.toLocaleString()}/m` : "—"}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
                     )}
                   </CardContent>
                 </Card>
 
-                {/* Investments */}
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg">Investments</CardTitle>
-                    <CardDescription>
-                      {investmentAssets.length} active investments · Total value: R{(lifeFileSummary.totalInvestmentValue / 1000000).toFixed(1)}M
-                    </CardDescription>
+                    <CardDescription>{investmentAssets.length} investments · R{(lifeFileSummary.totalInvestmentValue / 1000000).toFixed(1)}M</CardDescription>
                   </CardHeader>
                   <CardContent>
                     {investmentAssets.length === 0 ? (
-                      <p className="text-sm text-muted-foreground text-center py-6">
-                        {lifeFileLoading ? "Loading…" : "No investments on file yet."}
-                      </p>
+                      <p className="text-sm text-muted-foreground text-center py-6">No investments on file yet.</p>
                     ) : (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Type</TableHead>
-                          <TableHead>Institution</TableHead>
-                          <TableHead>Value</TableHead>
+                      <Table>
+                        <TableHeader><TableRow>
+                          <TableHead>Type</TableHead><TableHead>Institution</TableHead><TableHead>Value</TableHead>
                           <TableHead className="hidden md:table-cell">Contribution</TableHead>
-                          <TableHead className="hidden md:table-cell">Beneficiaries</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {investmentAssets.map(asset => (
-                          <TableRow key={asset.id}>
-                            <TableCell className="font-medium">{getTypeLabel("investment", asset.asset_type)}</TableCell>
-                            <TableCell>{asset.institution}</TableCell>
-                            <TableCell className="font-semibold">R{(asset.amount || 0).toLocaleString()}</TableCell>
-                            <TableCell className="hidden md:table-cell text-muted-foreground">
-                              {asset.premium_or_contribution ? `R${asset.premium_or_contribution.toLocaleString()}/m` : "Lump sum"}
-                            </TableCell>
-                            <TableCell className="hidden md:table-cell text-xs text-muted-foreground">{asset.beneficiary_names || "—"}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                        </TableRow></TableHeader>
+                        <TableBody>
+                          {investmentAssets.map((asset) => (
+                            <TableRow key={asset.id}>
+                              <TableCell className="font-medium">{INVESTMENT_TYPES.find((t) => t.value === asset.asset_type)?.label || asset.asset_type}</TableCell>
+                              <TableCell>{asset.institution}</TableCell>
+                              <TableCell className="font-semibold">R{(asset.amount || 0).toLocaleString()}</TableCell>
+                              <TableCell className="hidden md:table-cell text-muted-foreground">
+                                {asset.premium_or_contribution ? `R${asset.premium_or_contribution.toLocaleString()}/m` : "Lump sum"}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
                     )}
                   </CardContent>
                 </Card>
@@ -693,74 +568,39 @@ const AgentClientDetail = () => {
             )}
           </TabsContent>
 
+          {/* Documents Tab — live life_file_documents */}
           <TabsContent value="documents">
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Client Documents</CardTitle>
-                <CardDescription>{client.documents.length} documents on file</CardDescription>
+                <CardDescription>{documents.length} documents on file</CardDescription>
               </CardHeader>
               <CardContent>
-                {client.documents.length === 0 ? (
+                {isPending ? (
+                  <p className="text-sm text-muted-foreground text-center py-8">Awaiting client activation.</p>
+                ) : !shareAccepted ? (
+                  <div className="text-center py-8 space-y-2">
+                    <Lock className="w-8 h-8 text-amber-600 mx-auto" />
+                    <p className="text-sm text-muted-foreground">Client has not granted access to documents.</p>
+                  </div>
+                ) : documents.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-8">No documents uploaded yet.</p>
                 ) : (
                   <div className="space-y-2">
-                    {client.documents.map((doc: any) => {
-                      const Icon = docTypeIcon(doc.type);
-                      return (
-                        <div key={doc.id} className="flex items-center gap-3 p-3 rounded-lg border border-border/50 hover:border-primary/30 transition-colors">
-                          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                            <Icon className="w-5 h-5 text-primary" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground truncate">{doc.name}</p>
-                            <p className="text-xs text-muted-foreground">{doc.type} · {doc.date} · {doc.size}</p>
-                          </div>
-                          <Badge variant="outline" className={doc.status === "active" || doc.status === "valid" ? "text-green-600 border-green-200" : "text-muted-foreground"}>
-                            {doc.status}
-                          </Badge>
+                    {documents.map((doc) => (
+                      <div key={doc.id} className="flex items-center gap-3 p-3 rounded-lg border border-border/50 hover:border-primary/30 transition-colors">
+                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                          <FileText className="w-5 h-5 text-primary" />
                         </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* ─── Reminders Tab ─── */}
-          <TabsContent value="reminders">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Upcoming Reminders</CardTitle>
-                <CardDescription>Deadlines and key dates for {client.name}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {client.reminders.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-8">No reminders set.</p>
-                ) : (
-                  <div className="space-y-3">
-                    {client.reminders.map((rem: any) => (
-                      <div key={rem.id} className="flex items-start gap-3 p-3 rounded-lg border border-border/50">
-                        <div className={`w-2 h-2 rounded-full mt-2 shrink-0 ${
-                          rem.status === "overdue" ? "bg-red-500" : rem.priority === "high" ? "bg-amber-500" : "bg-green-500"
-                        }`} />
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-foreground">{rem.title}</p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Calendar className="w-3 h-3 text-muted-foreground" />
-                            <span className="text-xs text-muted-foreground">{rem.due}</span>
-                          </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">{doc.title}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {doc.document_type}{doc.expiry_date ? ` · expires ${doc.expiry_date}` : ""}
+                          </p>
                         </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <Badge variant="outline" className={priorityColor(rem.priority)}>
-                            {rem.priority}
-                          </Badge>
-                          {rem.status === "overdue" && (
-                            <Badge variant="destructive" className="text-xs">
-                              <AlertTriangle className="w-3 h-3 mr-1" /> Overdue
-                            </Badge>
-                          )}
-                        </div>
+                        <Badge variant="outline" className={doc.is_expired ? "text-destructive border-destructive/30" : "text-green-600 border-green-200"}>
+                          {doc.is_expired ? "expired" : doc.status}
+                        </Badge>
                       </div>
                     ))}
                   </div>
@@ -769,33 +609,70 @@ const AgentClientDetail = () => {
             </Card>
           </TabsContent>
 
-          {/* ─── Report Generator Tab ─── */}
+          {/* Reminders Tab */}
+          <TabsContent value="reminders">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Upcoming Deadlines</CardTitle>
+                <CardDescription>Document expiries and deal end dates for {invitation.client_name}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {(() => {
+                  const upcoming: { id: string; title: string; due: string; kind: string }[] = [];
+                  documents.forEach((d) => {
+                    if (d.expiry_date) upcoming.push({ id: `doc-${d.id}`, title: `${d.title} expires`, due: d.expiry_date, kind: "Document" });
+                  });
+                  deals.forEach((d) => {
+                    if (d.end_date) upcoming.push({ id: `deal-${d.id}`, title: `${d.brand} deal ends`, due: d.end_date, kind: "Deal" });
+                  });
+                  upcoming.sort((a, b) => a.due.localeCompare(b.due));
+                  if (upcoming.length === 0) {
+                    return <p className="text-sm text-muted-foreground text-center py-8">No upcoming deadlines.</p>;
+                  }
+                  return (
+                    <div className="space-y-3">
+                      {upcoming.slice(0, 10).map((rem) => {
+                        const overdue = new Date(rem.due) < new Date();
+                        return (
+                          <div key={rem.id} className="flex items-start gap-3 p-3 rounded-lg border border-border/50">
+                            <div className={`w-2 h-2 rounded-full mt-2 shrink-0 ${overdue ? "bg-red-500" : "bg-green-500"}`} />
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-foreground">{rem.title}</p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <Calendar className="w-3 h-3 text-muted-foreground" />
+                                <span className="text-xs text-muted-foreground">{rem.due}</span>
+                              </div>
+                            </div>
+                            <Badge variant="outline" className="text-xs">{rem.kind}</Badge>
+                            {overdue && <Badge variant="destructive" className="text-xs"><AlertTriangle className="w-3 h-3 mr-1" /> Overdue</Badge>}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Report Tab */}
           <TabsContent value="report">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5 text-primary" />
-                  Profile Report Generator
-                </CardTitle>
-                <CardDescription>
-                  Select which sections to include when generating a client profile report for deal negotiations.
-                </CardDescription>
+                <CardTitle className="text-lg flex items-center gap-2"><BarChart3 className="w-5 h-5 text-primary" /> Profile Report Generator</CardTitle>
+                <CardDescription>Select sections to include in the PDF.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Section selector */}
                 <div className="grid grid-cols-2 gap-3">
                   {[
-                    { id: "bio", label: "Client Overview", description: "Name, type, market value, location, bio" },
-                    { id: "stats", label: "Key Metrics", description: "Active deals, compliance, document count" },
-                    { id: "deals", label: "Deals & Partnerships", description: "All current and negotiating deals" },
-                    { id: "documents", label: "Documents on File", description: "Contracts, compliance, insurance" },
+                    { id: "bio", label: "Client Overview", description: "Name, type, contact, status" },
+                    { id: "stats", label: "Key Metrics", description: "Deals, compliance, document count" },
+                    { id: "deals", label: "Deals & Partnerships", description: "All recorded deals" },
+                    { id: "documents", label: "Documents on File", description: "Life File documents" },
                   ].map((section) => (
-                    <div
-                      key={section.id}
+                    <div key={section.id}
                       className={`p-4 rounded-lg border cursor-pointer transition-all ${
-                        selectedReportSections.includes(section.id)
-                          ? "border-primary bg-primary/5"
-                          : "border-border/50 hover:border-border"
+                        selectedReportSections.includes(section.id) ? "border-primary bg-primary/5" : "border-border/50 hover:border-border"
                       }`}
                       onClick={() => toggleReportSection(section.id)}
                     >
@@ -808,72 +685,28 @@ const AgentClientDetail = () => {
                   ))}
                 </div>
 
-                {/* Report Preview Table */}
                 <div>
                   <h4 className="text-sm font-semibold text-foreground mb-3">Report Preview</h4>
                   <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Field</TableHead>
-                        <TableHead>Value</TableHead>
-                      </TableRow>
-                    </TableHeader>
+                    <TableHeader><TableRow><TableHead>Field</TableHead><TableHead>Value</TableHead></TableRow></TableHeader>
                     <TableBody>
-                      <TableRow>
-                        <TableCell className="font-medium">Client Name</TableCell>
-                        <TableCell>{client.name}</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="font-medium">Category</TableCell>
-                        <TableCell className="capitalize">{client.type === "athlete" ? `Athlete — ${client.sport}` : `Artist — ${client.discipline}`}</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="font-medium">Market Value</TableCell>
-                        <TableCell className="font-semibold">{client.marketValue}</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="font-medium">Active Deals</TableCell>
-                        <TableCell>{client.stats.contractsActive}</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="font-medium">Total Deal Value</TableCell>
-                        <TableCell className="font-semibold">{client.stats.totalDealValue}</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="font-medium">Compliance Score</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Progress value={client.stats.complianceScore} className="h-2 w-20" />
-                            <span>{client.stats.complianceScore}%</span>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="font-medium">Social Reach</TableCell>
-                        <TableCell>{client.socialFollowers}</TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="font-medium">Sections Included</TableCell>
-                        <TableCell>
-                          <div className="flex gap-1 flex-wrap">
-                            {selectedReportSections.map((s) => (
-                              <Badge key={s} variant="secondary" className="text-[10px] capitalize">{s}</Badge>
-                            ))}
-                          </div>
-                        </TableCell>
+                      <TableRow><TableCell className="font-medium">Client Name</TableCell><TableCell>{invitation.client_name}</TableCell></TableRow>
+                      <TableRow><TableCell className="font-medium">Type</TableCell><TableCell className="capitalize">{clientTypeLabel}</TableCell></TableRow>
+                      <TableRow><TableCell className="font-medium">Status</TableCell><TableCell>{statusLabel}</TableCell></TableRow>
+                      <TableRow><TableCell className="font-medium">Active Deals</TableCell><TableCell>{activeDealsCount}</TableCell></TableRow>
+                      <TableRow><TableCell className="font-medium">Total Deal Value</TableCell><TableCell className="font-semibold">{formatCurrency(totalDealValue)}</TableCell></TableRow>
+                      <TableRow><TableCell className="font-medium">Compliance</TableCell>
+                        <TableCell>{complianceScore !== null ? (
+                          <div className="flex items-center gap-2"><Progress value={complianceScore} className="h-2 w-20" /><span>{complianceScore}%</span></div>
+                        ) : "—"}</TableCell>
                       </TableRow>
                     </TableBody>
                   </Table>
                 </div>
 
-                <Button
-                  onClick={generateProfileReport}
-                  disabled={isPending || selectedReportSections.length === 0}
-                  className="w-full bg-primary text-primary-foreground"
-                  size="lg"
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  Generate & Download Profile Report ({selectedReportSections.length} sections)
+                <Button onClick={generateProfileReport} disabled={isPending || selectedReportSections.length === 0}
+                  className="w-full bg-primary text-primary-foreground" size="lg">
+                  <Download className="w-4 h-4 mr-2" /> Generate & Download Profile Report ({selectedReportSections.length} sections)
                 </Button>
               </CardContent>
             </Card>
