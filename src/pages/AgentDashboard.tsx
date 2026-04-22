@@ -734,6 +734,10 @@ const AgentDashboard = () => {
           <SectionGuard ownerOnly><SharePortal /></SectionGuard>
         ) : (
         <>
+        {staff.isStaff && !staff.sections.includes("clients") ? (
+          <SectionGuard section="clients"><div /></SectionGuard>
+        ) : (
+        <>
         {/* Main Content Grid */}
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Client List — 2 cols */}
