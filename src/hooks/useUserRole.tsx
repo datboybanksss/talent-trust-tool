@@ -1,36 +1,80 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
 export type UserRole = "athlete" | "artist" | "agent" | "admin" | "staff" | "user" | null;
 
+const ROLE_RESOLUTION_TIMEOUT_MS = 5000;
+
 export function useUserRole() {
   const { user } = useAuth();
   const [role, setRole] = useState<UserRole>(null);
-  const [loading, setLoading] = useState(true);
+  const [resolvedForUserId, setResolvedForUserId] = useState<string | null>(null);
+  const [timedOut, setTimedOut] = useState(false);
+  // Tracks whether we have EVER successfully resolved a role for the current
+  // user.id. Used to differentiate first-load timeout (sign user out) from a
+  // mid-session re-resolution timeout (warn + keep cached role).
+  const hasEverResolvedRef = useRef(false);
+  const lastUserIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!user) {
       setRole(null);
-      setLoading(false);
+      setResolvedForUserId(null);
+      setTimedOut(false);
+      hasEverResolvedRef.current = false;
+      lastUserIdRef.current = null;
       return;
     }
 
-    // Reset to loading on every user change so consumers wait for the real role
-    // instead of reading a stale `null` from a previous render (caused staff
-    // members to be routed to /dashboard instead of /agent-dashboard).
-    setLoading(true);
-    setRole(null);
+    const currentUserId = user.id;
+    let cancelled = false;
+
+    // On user identity change: clear cached role & reset the "ever resolved"
+    // flag so a fresh first-load timeout can sign out if needed.
+    if (lastUserIdRef.current !== currentUserId) {
+      hasEverResolvedRef.current = false;
+      setRole(null);
+      setResolvedForUserId(null);
+      setTimedOut(false);
+      lastUserIdRef.current = currentUserId;
+    }
+
+    const timeoutHandle = window.setTimeout(() => {
+      if (cancelled) return;
+      if (hasEverResolvedRef.current) {
+        // Mid-session re-resolution hang: keep the last-known-good role,
+        // do NOT sign the user out.
+        console.warn(
+          "[useUserRole] Role re-resolution timeout — falling back to cached role",
+          currentUserId,
+        );
+        return;
+      }
+      console.error(
+        "[useUserRole] Role resolution timeout for user",
+        currentUserId,
+      );
+      setTimedOut(true);
+    }, ROLE_RESOLUTION_TIMEOUT_MS);
+
+    const commit = (resolved: UserRole) => {
+      if (cancelled || lastUserIdRef.current !== currentUserId) return;
+      setRole(resolved);
+      setResolvedForUserId(currentUserId);
+      hasEverResolvedRef.current = true;
+    };
 
     const determine = async () => {
       // Check admin first
       const { data: isAdmin } = await supabase.rpc("has_role", {
-        _user_id: user.id,
+        _user_id: currentUserId,
         _role: "admin",
       });
+      if (cancelled) return;
       if (isAdmin) {
-        setRole("admin");
-        setLoading(false);
+        commit("admin");
         return;
       }
 
@@ -38,11 +82,11 @@ export function useUserRole() {
       const { data: agentProfile } = await supabase
         .from("agent_manager_profiles")
         .select("id")
-        .eq("user_id", user.id)
+        .eq("user_id", currentUserId)
         .maybeSingle();
+      if (cancelled) return;
       if (agentProfile) {
-        setRole("agent");
-        setLoading(false);
+        commit("agent");
         return;
       }
 
@@ -50,13 +94,13 @@ export function useUserRole() {
       const { data: staffRows } = await supabase
         .from("portal_staff_access")
         .select("id")
-        .eq("staff_user_id", user.id)
+        .eq("staff_user_id", currentUserId)
         .eq("status", "active")
         .not("confidentiality_accepted_at", "is", null)
         .limit(1);
+      if (cancelled) return;
       if (staffRows && staffRows.length > 0) {
-        setRole("staff");
-        setLoading(false);
+        commit("staff");
         return;
       }
 
@@ -64,42 +108,67 @@ export function useUserRole() {
       const { data: profile } = await supabase
         .from("profiles")
         .select("client_type")
-        .eq("user_id", user.id)
+        .eq("user_id", currentUserId)
         .maybeSingle();
+      if (cancelled) return;
 
       if (profile?.client_type === "athlete") {
-        setRole("athlete");
+        commit("athlete");
       } else if (profile?.client_type === "artist") {
-        setRole("artist");
+        commit("artist");
       } else {
-        // Also check user_metadata from sign-up
         const meta = user.user_metadata;
         if (meta?.client_type === "athlete_agent" || meta?.client_type === "artist_manager") {
-          setRole("agent");
+          commit("agent");
         } else if (meta?.client_type === "athlete") {
-          setRole("athlete");
+          commit("athlete");
         } else if (meta?.client_type === "artist") {
-          setRole("artist");
+          commit("artist");
         } else {
-          setRole("user");
+          commit("user");
         }
       }
-      setLoading(false);
     };
 
-    determine();
+    determine().catch((err) => {
+      if (!cancelled) console.error("[useUserRole] resolution error", err);
+    });
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeoutHandle);
+    };
   }, [user]);
 
-  const dashboardPath = (() => {
+  // First-load timeout side-effect: sign out + redirect with a referenced
+  // toast. Mid-session timeouts never reach this branch (timedOut stays false).
+  useEffect(() => {
+    if (!timedOut) return;
+    toast.error("We couldn't determine your account type. Please sign in again.", {
+      description: "Reference: role-resolution-timeout",
+      duration: 8000,
+    });
+    supabase.auth.signOut().finally(() => {
+      window.location.replace("/auth");
+    });
+  }, [timedOut]);
+
+  // Identity-tied loading: true whenever a signed-in user's role hasn't been
+  // resolved for THAT specific user.id yet. Eliminates the one-render stale
+  // `null` window that previously routed staff to `/dashboard`.
+  const loading = !!user && resolvedForUserId !== user.id && !timedOut;
+
+  // Nullable while loading so consumers cannot read a stale default route.
+  const dashboardPath: string | null = (() => {
+    if (loading) return null;
     switch (role) {
       case "admin": return "/admin";
       case "agent": return "/agent-dashboard";
-      // Staff route to /agent-dashboard (NOT /staff — dedicated staff dashboard
-      // deferred pending real-PA feedback; see KNOWN_LIMITATIONS.md).
+      // Staff route to /agent-dashboard (see KNOWN_LIMITATIONS.md).
       case "staff": return "/agent-dashboard";
       default: return "/dashboard";
     }
   })();
 
-  return { role, loading, dashboardPath };
+  return { role, loading, dashboardPath, timedOut };
 }
