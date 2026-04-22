@@ -14,6 +14,7 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Checkbox } from "@/components/ui/checkbox";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -48,6 +49,11 @@ interface Invitation {
   invitation_token: string;
   created_at: string;
   activated_user_id?: string | null;
+}
+
+interface ShareStatus {
+  status: "pending_client_approval" | "accepted" | "declined";
+  decline_reason: string | null;
 }
 
 // Helper: humanize a timestamp into "2h ago", "3d ago", etc.
@@ -149,6 +155,13 @@ const AgentDashboard = () => {
   const [notes, setNotes] = useState("");
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+
+  // Form state — agent's pending share request to the client
+  const [requestAccess, setRequestAccess] = useState(true);
+  const [requestedSections, setRequestedSections] = useState<string[]>(["contracts", "endorsements", "tax"]);
+
+  // Per-invitation share status (post-activation), keyed by invitation.id
+  const [shareStatuses, setShareStatuses] = useState<Record<string, ShareStatus>>({});
 
   // Form state — extended profile
   const [teamOrAgency, setTeamOrAgency] = useState("");
