@@ -982,6 +982,15 @@ const AgentDashboard = () => {
                             <User className="w-3 h-3 mr-1" /> Full Profile
                           </Button>
                         )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                          onClick={(e) => { e.stopPropagation(); setRemoveTarget(inv); }}
+                          aria-label={`Remove ${inv.client_name} from roster`}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>
