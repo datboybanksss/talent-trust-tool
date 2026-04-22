@@ -18,7 +18,7 @@ const DISMISS_KEY = "staff-banner-dismissed";
  *   next sign-in re-shows it.
  */
 const StaffContextBanner = () => {
-  const { isViewingAsStaff, agencyOwnerName, agencyName, loading } = useAgencyScope();
+  const { isViewingAsStaff, agencyOwnerName, agencyName, sections, loading } = useAgencyScope();
   const [dismissed, setDismissed] = useState<boolean>(() => {
     try { return sessionStorage.getItem(DISMISS_KEY) === "1"; } catch { return false; }
   });
@@ -35,6 +35,19 @@ const StaffContextBanner = () => {
     setDismissed(true);
   };
 
+  const SECTION_LABELS: Record<string, string> = {
+    clients: "Clients",
+    pipeline: "Pipeline",
+    compare: "Compare",
+    calendar: "Calendar",
+    templates: "Templates",
+    share: "Share Portal",
+    executive: "Executive Overview",
+  };
+  const sectionLabels = (sections ?? [])
+    .map((s) => SECTION_LABELS[s] ?? s)
+    .join(", ");
+
   return (
     <div
       role="status"
@@ -44,9 +57,12 @@ const StaffContextBanner = () => {
       <div className="max-w-6xl mx-auto px-6 py-2.5 flex items-center gap-3">
         <Eye className="w-4 h-4 shrink-0 text-gold-dark" aria-hidden="true" />
         <p className="text-sm leading-snug flex-1">
-          You're assisting <span className="font-semibold">{agencyOwnerName}</span>
-          {agencyName ? <> from <span className="font-semibold">{agencyName}</span></> : null}.
-          <span className="text-muted-foreground"> View-only access.</span>
+          You're working in <span className="font-semibold">{agencyName ?? "this"}</span>'s workspace
+          {agencyOwnerName ? <> with <span className="font-semibold">{agencyOwnerName}</span></> : null}.
+          {sectionLabels && (
+            <> Edit access: <span className="font-medium">{sectionLabels}</span>.</>
+          )}
+          <span className="text-muted-foreground"> Your actions are attributed to you.</span>
         </p>
         <button
           type="button"

@@ -63,9 +63,10 @@ const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, set
     return item.section ? staff.sections.includes(item.section) : false;
   });
 
-  // Quick Actions are write-actions (Add New Client, Bulk Import). Hide entirely
-  // for staff this sprint — see KNOWN_LIMITATIONS.md → "Staff write access".
-  const showQuickActions = !staff.isStaff;
+  // Quick Actions: New Client + Bulk Import are write actions on client_invitations.
+  // Show them when viewer is the owner OR staff with the 'clients' section.
+  const canCreateClients = !staff.isStaff || staff.sections.includes("clients");
+  const showQuickActions = canCreateClients;
   const showOwnerOnly = !staff.isStaff;
 
   const handleNavClick = (view: typeof activeView) => {
@@ -197,9 +198,6 @@ const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, set
                 <>
                   <p className="text-xs font-medium text-foreground truncate">Staff of {staff.agencyName}</p>
                   <p className="text-[10px] text-muted-foreground truncate">{user?.email} · {footerRoleLabel}</p>
-                  <span className="inline-flex items-center gap-1 mt-2 px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300 text-[10px] font-medium">
-                    <Shield className="w-2.5 h-2.5" /> View-only access
-                  </span>
                 </>
               ) : agentProfile ? (
                 <>
