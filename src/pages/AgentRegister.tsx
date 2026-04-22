@@ -62,8 +62,8 @@ const AgentRegister = () => {
   const { dashboardPath, loading: roleLoading } = useUserRole();
 
   useEffect(() => {
-    if (user && !roleLoading) {
-      navigate(dashboardPath);
+    if (user && !roleLoading && dashboardPath) {
+      navigate(dashboardPath, { replace: true });
     }
   }, [user, roleLoading, dashboardPath, navigate]);
 
