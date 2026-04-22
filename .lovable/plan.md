@@ -1,72 +1,54 @@
 
 
-## Purge remaining mock data: Executive Overview, Compare, Calendar
+## Restore demo data + keep demo accounts in sync going forward
 
-### Problem
-Three areas still render hardcoded mock data instead of the agent's real records, which corrupts reports and makes the UI lie to the user:
+### Goal
+Make the 5 seeded demo accounts feel "lived-in" again so they're presentation-ready, and lock in a rule that any future feature/logic/UI change ships with matching demo content.
 
-1. **Executive Overview** (`components/executive/*` + `utils/executiveFilters.ts` + `data/executiveMockData.ts`) — KPIs, Book Value, Revenue Analytics, Demographics, Overhead all read from `executiveMockData.ts`. The PDF export (`executiveOverviewPdf.ts`) also pulls from these constants.
-2. **Compare** (`components/dashboard/ClientComparison.tsx`) — currently renders a fixed comparison set of mock clients.
-3. **Calendar** (`components/agent/AgentCalendar.tsx`) — renders mock events instead of real `shared_meetings` / `compliance_reminders`.
+### Part 1 — Repopulate the 5 demo accounts
 
-### Solution — wire each to live agent-owned data
+Extend `supabase/functions/seed-demo-profiles` to insert realistic transactional data for each demo user, on top of the auth + Life File scaffolding it already creates. All inserts use `service_role` and are scoped by `user_id` / `agent_id`.
 
-#### 1. Executive Overview
-Aggregate from real tables the agent already owns:
-- `client_invitations` (active, non-archived) → Total Clients, New Clients YTD, client-type & demographic splits
-- `agent_deals` → Revenue Streams (group by `deal_type`), Book Value (sum `value_amount` by `client_type`), Top Clients (sum by `client_name`), monthly revenue series (group by `start_date` month), Concentration Risk (top-3 share)
-- Derived: Revenue Growth (this period vs prior), Avg Revenue / Client, Client Retention (1 − archived/total)
+**Per-account seed plan:**
 
-Replace `executiveMockData.ts` consumers:
-- Rewrite `utils/executiveFilters.ts` exports (`getFilteredKPIs`, `getFilteredClientTypeValues`, `getFilteredRevenueStreams`, demographics, overhead) to take **live datasets** + `ExecutiveFilters` and compute in-memory.
-- Add a single React Query hook `useExecutiveData(filters)` that fetches invitations + deals once and memoizes all derived slices.
-- Each section component (`ExecutiveKPICards`, `BookValueSection`, `RevenueAnalytics`, `DemographicsSection`, `OverheadSection`) reads from this hook.
-- Empty-state cards when there's no data ("Add deals and clients to populate this view").
+| Demo account | What gets seeded |
+|---|---|
+| `agent.demo@…` (Agent) | 8–10 `client_invitations` (mix of athlete/artist/executive, varied `engagement_type` in `pre_populated_data`, mostly `active`, 1 `archived`); 12–18 `agent_deals` across those clients (mix of statuses: `prospecting`, `negotiating`, `active`, `completed`; spread `start_date` over the last 18 months for revenue trendlines); 4–6 `shared_meetings` (past + upcoming); 3 `compliance_reminders` |
+| `athlete.demo@…` | 4 `athlete_contracts`, 3 `athlete_endorsements`, 6 `life_file_assets` (RA, life cover, TFSA, property, vehicle, emergency fund), 3 `beneficiaries`, 2 `emergency_contacts`, 4 `compliance_reminders` |
+| `artist.demo@…` | 3 `artist_projects`, 6 `artist_royalties` (last 6 months), 2 `social_media_accounts`, 4 `life_file_assets`, 2 `beneficiaries`, 2 `emergency_contacts` |
+| `rugby.demo@…` | 3 `athlete_contracts`, 2 `athlete_endorsements`, 5 `life_file_assets`, 2 `beneficiaries`, 2 `emergency_contacts` |
+| `sprinter.demo@…` | 2 `athlete_contracts`, 4 `athlete_endorsements` (kit/nutrition/eyewear/watches), 4 `life_file_assets`, 2 `beneficiaries`, 1 `emergency_contact` |
 
-**Overhead section**: no real cost-tracking table exists. Two options — chosen approach: **hide the Overhead tab entirely** until a future cost-tracking feature lands. (Alternative would be a new `agent_overhead_entries` table; out of scope for this pass.)
+**Idempotency**: Before each insert block, `DELETE … WHERE user_id = <demo_user_id>` on that table so re-running the seeder always produces the same dataset (no duplicate rows on repeat runs). Demo guard already in place via `is_demo` + `delete_agent_account` RPC.
 
-**Drill-Down sheet** (`DrillDownSheet.tsx` + `executiveDrillDownData.ts`): rewrite to filter the live deals/invitations arrays by the clicked segment instead of reading the mock drill-down file.
+**Realism**: 
+- All ZAR amounts in believable bands (deals R75k–R1.2M; assets R150k–R8M).
+- Names/brands stay fictional per existing `DEMO_SEED_NAME_SALT` rule.
+- Date spread anchored to "today minus N days" so KPIs always show recent activity regardless of when the seeder runs.
 
-**PDF export**: update `executiveOverviewPdf.ts` to accept the live aggregated payload as an argument.
+**Files touched**:
+- Modify: `supabase/functions/seed-demo-profiles/index.ts` (orchestrator)
+- Modify: `supabase/functions/seed-demo-profiles/seed-data.ts` (add deal/invitation/asset/contract/royalty constants)
+- Possibly add: `supabase/functions/seed-demo-profiles/transactional-seed.ts` to keep it under the 50-line guideline
 
-Files touched:
-- Modify: all of `src/components/executive/*`, `src/utils/executiveFilters.ts`, `src/utils/executiveOverviewPdf.ts`, `src/utils/executiveReportPdf.ts`, `src/pages/ExecutiveOverview.tsx`
-- Create: `src/hooks/useExecutiveData.ts`
-- Delete: `src/data/executiveMockData.ts`, `src/data/executiveDrillDownData.ts`
-- Hide Overhead tab in `ExecutiveOverviewInline.tsx`
+**Verification**:
+- Re-run the seeder → log into `agent.demo@…` → Executive Overview KPIs, Book Value pie, Revenue Analytics bars, Demographics, Compare, and Calendar all render populated.
+- Log into `athlete.demo@…` → Life File Summary, Asset Registry, Contracts all show data.
+- Re-run seeder a second time → no duplicate rows; counts identical.
 
-#### 2. Compare (Client Comparison)
-Rewrite `ClientComparison.tsx` to:
-- Pull the agent's real `client_invitations` (status `active`, archived_at null) as the selectable pool.
-- For each selected client, load their `agent_deals` totals (count, sum of `value_amount`, latest deal status) and — when the client has activated and shared their Life File — their Life File summary (assets, beneficiaries count) via the existing share-aware policies.
-- Multi-select up to 4 clients via a combobox; render a side-by-side comparison table with the live metrics.
-- Empty state: "Add at least 2 clients to compare."
+### Part 2 — Lock in the "demo accounts stay in sync" rule
 
-No mock array, no `executiveMockData` imports.
+Save a project memory rule so every future feature/UI/logic change automatically extends the seeder.
 
-#### 3. Calendar (Agent)
-Rewrite `AgentCalendar.tsx` to:
-- Query `shared_meetings` where the current agent is `created_by` OR in `attendee_user_ids`.
-- Query `compliance_reminders` where `user_id = auth.uid()` and overlay them as date markers.
-- Replace the mock event list with a live month/week view backed by these two sources.
-- Add an "Add Event" button that inserts into `shared_meetings` (creator = agent, attendees = empty by default; client picker optional).
-- Edit/delete via existing RLS (creator-only).
-- Empty-state day: "No events scheduled."
+**New memory file**: `mem://features/demo-profiles-sync-rule`
+> Whenever a new table, field, feature, or UI surface is added, also extend `seed-demo-profiles` with realistic demo content for the relevant accounts (agent.demo, athlete.demo, artist.demo, rugby.demo, sprinter.demo). Re-run the seeder after schema/data changes. These accounts are used for live sales demos — empty states are not acceptable on them.
 
-Files touched:
-- Modify: `src/components/agent/AgentCalendar.tsx`
-- Reuse: existing `shared_meetings` and `compliance_reminders` tables — no schema changes.
+**Update `mem://index.md` Core section** with a one-liner:
+> Demo accounts (agent/athlete/artist/rugby/sprinter `.demo@themvpbuilder.co.za`) must always be populated — extend `seed-demo-profiles` whenever features change.
 
 ### Out of scope
-- No new `agent_overhead_entries` table (Overhead tab hidden, not rebuilt).
-- No drag-and-drop on the calendar.
-- No edit-deal-from-Compare-view flow.
-- Mock data in `AgentAthleteProfile`, `AgentClientDetail`, `LifeFileSummaryCard`, `Guardian` tabs, `ImportFromIntegrationsDialog` — already addressed in earlier passes; not revisited here.
-
-### Verification
-- New agent with zero data: every section shows an empty state, no fake numbers.
-- Add a deal → Executive Overview KPIs, Book Value pie, Revenue Analytics bars all update.
-- Add a `shared_meeting` → it appears on Calendar immediately.
-- Select 2+ clients in Compare → live deal totals render; deselect → table updates.
-- PDF export uses live data only.
+- No schema changes (every table needed already exists).
+- No changes to non-demo user data.
+- No UI changes — this is purely backend seeding + a memory rule.
+- Athlete profile mock purge (`AgentAthleteProfile.tsx`) is still pending; not bundled here.
 
