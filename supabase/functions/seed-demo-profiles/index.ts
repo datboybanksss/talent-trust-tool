@@ -126,6 +126,20 @@ Deno.serve(async (req) => {
     await admin.from("user_roles").insert({ user_id: uid, role: "user" });
   }
 
+  // 3b. Demo agent needs an agent_manager_profiles row so they can reach
+  // /agent-dashboard without hitting the /welcome setup gate.
+  await admin.from("agent_manager_profiles").insert({
+    user_id: userIds.agent,
+    role: "athlete_agent",
+    company_name: audit.names.agent.agency,
+    phone: "+27 11 555 0100",
+  });
+  // Also clear the bogus client_type='agent' that the seed wrote into profiles
+  // — agent/manager users should not have a client_type at all.
+  await admin.from("profiles")
+    .update({ client_type: null })
+    .eq("user_id", userIds.agent);
+
   // 4. Athlete payload
   const athleteId = userIds.athlete;
   const agentId = userIds.agent;
