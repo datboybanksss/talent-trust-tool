@@ -556,6 +556,15 @@ const AgentDashboard = () => {
   const roleLabel = agentProfile?.role === "athlete_agent" ? "Athletes' Agent" : "Artists' Manager";
   const activatedCount = invitations.filter((i) => i.status === "activated").length;
   const pendingCount = invitations.filter((i) => i.status === "pending").length;
+  const rawName =
+    (user?.user_metadata?.display_name as string | undefined) ||
+    (user?.user_metadata?.full_name as string | undefined) ||
+    user?.email?.split("@")[0] ||
+    "";
+  const firstName = rawName.trim().split(/\s+/)[0] || "Agent";
+  const displayFirstName = firstName.charAt(0).toUpperCase() + firstName.slice(1);
+  const possessive = displayFirstName.endsWith("s") ? `${displayFirstName}'` : `${displayFirstName}'s`;
+  const portalTitle = `${possessive} Portal`;
   const activationRate = invitations.length > 0 ? Math.round((activatedCount / invitations.length) * 100) : 0;
 
   return (
@@ -578,7 +587,7 @@ const AgentDashboard = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <SidebarTrigger className="mr-1" />
-                <h1 className="text-lg font-display font-bold text-foreground">Agent Portal</h1>
+                <h1 className="text-lg font-display font-bold text-foreground">{portalTitle}</h1>
                 <CurrentTierBadge tierType="agent" />
               </div>
               <AgentNotifications
