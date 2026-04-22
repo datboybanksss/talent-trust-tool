@@ -719,17 +719,19 @@ const AgentDashboard = () => {
         </Card>
 
         {activeView === "executive" ? (
-          <ExecutiveOverviewInline />
+          <SectionGuard ownerOnly><ExecutiveOverviewInline /></SectionGuard>
         ) : activeView === "pipeline" ? (
-          <DealPipeline />
+          <SectionGuard section="pipeline"><DealPipeline /></SectionGuard>
         ) : activeView === "compare" ? (
-          <ClientComparison />
+          <SectionGuard section="compare"><ClientComparison /></SectionGuard>
         ) : activeView === "calendar" ? (
-          <AgentCalendar />
+          <SectionGuard section="calendar"><AgentCalendar /></SectionGuard>
         ) : activeView === "templates" ? (
-          <AgreementTemplates clients={invitations.filter(i => i.status === "activated").map(i => ({ id: i.id, name: i.client_name, email: i.client_email, phone: i.client_phone, type: i.client_type }))} />
+          <SectionGuard section="templates">
+            <AgreementTemplates clients={invitations.filter(i => i.status === "activated").map(i => ({ id: i.id, name: i.client_name, email: i.client_email, phone: i.client_phone, type: i.client_type }))} />
+          </SectionGuard>
         ) : activeView === "share" ? (
-          <SharePortal />
+          <SectionGuard ownerOnly><SharePortal /></SectionGuard>
         ) : (
         <>
         {/* Main Content Grid */}
