@@ -3,8 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { Badge } from "@/components/ui/badge";
 import { Accessibility } from "lucide-react";
-import { CHART_COLORS } from "@/data/executiveMockData";
+import { CHART_COLORS } from "@/data/executiveChartColors";
 import { getFilteredDemographics, ExecutiveFilters } from "@/utils/executiveFilters";
+import { useExecutiveData } from "@/hooks/useExecutiveData";
 
 interface DemographicsSectionProps {
   onSegmentClick?: (category: string, segment: string) => void;
@@ -55,7 +56,20 @@ const MiniPie = ({
 );
 
 const DemographicsSection = ({ onSegmentClick, filters }: DemographicsSectionProps) => {
-  const demo = useMemo(() => getFilteredDemographics(filters), [filters]);
+  const { data } = useExecutiveData();
+  const dataset = data ?? { invitations: [], deals: [] };
+  const demo = useMemo(() => getFilteredDemographics(dataset, filters), [dataset, filters]);
+
+  const hasAny = demo.clientType.length || demo.industry.length || demo.geography.length || demo.gender.length || demo.ageBand.length;
+  if (!hasAny) {
+    return (
+      <Card>
+        <CardContent className="py-12 text-center text-sm text-muted-foreground">
+          Add clients to populate demographics. Tag fields like gender, geography, and age band on each client invitation to break down further.
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-4">

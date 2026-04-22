@@ -1,8 +1,9 @@
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
-import { CHART_COLORS } from "@/data/executiveMockData";
+import { CHART_COLORS } from "@/data/executiveChartColors";
 import { getFilteredClientTypeValues, getFilteredRevenueStreams, ExecutiveFilters } from "@/utils/executiveFilters";
+import { useExecutiveData } from "@/hooks/useExecutiveData";
 
 const fmt = (n: number) => `R${(n / 1_000_000).toFixed(1)}M`;
 
@@ -12,9 +13,21 @@ interface BookValueSectionProps {
 }
 
 const BookValueSection = ({ onSegmentClick, filters }: BookValueSectionProps) => {
-  const clientData = useMemo(() => getFilteredClientTypeValues(filters), [filters]);
-  const streamData = useMemo(() => getFilteredRevenueStreams(filters), [filters]);
+  const { data } = useExecutiveData();
+  const dataset = data ?? { invitations: [], deals: [] };
+  const clientData = useMemo(() => getFilteredClientTypeValues(dataset, filters), [dataset, filters]);
+  const streamData = useMemo(() => getFilteredRevenueStreams(dataset, filters), [dataset, filters]);
   const totalPortfolio = useMemo(() => clientData.reduce((s, c) => s + c.value, 0), [clientData]);
+
+  if (clientData.length === 0 && streamData.length === 0) {
+    return (
+      <Card>
+        <CardContent className="py-12 text-center text-sm text-muted-foreground">
+          Add clients and deals to populate Book Value charts.
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
