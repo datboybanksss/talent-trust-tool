@@ -50,12 +50,20 @@ Deno.serve(async (req) => {
     let success = false;
     let errorMessage: string | null = null;
     const messageId = crypto.randomUUID();
+    const unsubscribeToken = crypto.randomUUID();
+
+    // Persist unsubscribe token so the unsubscribe URL can be honoured later
+    await supabase.from("email_unsubscribe_tokens").insert({
+      email: body.to,
+      token: unsubscribeToken,
+    });
 
     const { error: enqueueError } = await supabase.rpc("enqueue_email", {
       queue_name: "transactional_emails",
       payload: {
         message_id: messageId,
         idempotency_key: messageId,
+        unsubscribe_token: unsubscribeToken,
         to: body.to,
         from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
         sender_domain: SENDER_DOMAIN,
