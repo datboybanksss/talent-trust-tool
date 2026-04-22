@@ -572,7 +572,7 @@ const AgentDashboard = () => {
               </div>
               <AgentNotifications
                 pendingCount={pendingCount}
-                recentActivity={MOCK_RECENT_ACTIVITY}
+                recentActivity={recentActivity}
               />
             </div>
           </header>
