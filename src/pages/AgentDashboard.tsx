@@ -46,54 +46,23 @@ interface Invitation {
   created_at: string;
 }
 
-// Mock data for UI demonstration
-const MOCK_INVITATIONS: Invitation[] = [
-  {
-    id: "1", client_name: "Siya Kolisi", client_email: "siya@example.com",
-    client_phone: "+27 81 234 5678", client_type: "athlete", status: "activated",
-    invitation_token: "tok_abc123", created_at: "2026-03-15T10:00:00Z",
-  },
-  {
-    id: "2", client_name: "Zozibini Tunzi", client_email: "zozi@example.com",
-    client_phone: "+27 82 345 6789", client_type: "artist", status: "activated",
-    invitation_token: "tok_def456", created_at: "2026-03-12T14:30:00Z",
-  },
-  {
-    id: "3", client_name: "Kagiso Rabada", client_email: "kagiso@example.com",
-    client_phone: "+27 83 456 7890", client_type: "athlete", status: "pending",
-    invitation_token: "tok_ghi789", created_at: "2026-03-20T09:15:00Z",
-  },
-  {
-    id: "4", client_name: "Tyla Seethal", client_email: "tyla@example.com",
-    client_phone: "+27 84 567 8901", client_type: "artist", status: "activated",
-    invitation_token: "tok_jkl012", created_at: "2026-03-08T16:45:00Z",
-  },
-  {
-    id: "5", client_name: "Eben Etzebeth", client_email: "eben@example.com",
-    client_phone: "+27 85 678 9012", client_type: "athlete", status: "pending",
-    invitation_token: "tok_mno345", created_at: "2026-03-21T11:00:00Z",
-  },
-];
-
-const MOCK_STATS = {
-  totalClients: 5,
-  activated: 3,
-  pending: 2,
-  documentsUploaded: 14,
+// Helper: humanize a timestamp into "2h ago", "3d ago", etc.
+const timeAgo = (iso: string): string => {
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60_000);
+  if (m < 1) return "just now";
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  return `${d}d ago`;
 };
-
-const MOCK_RECENT_ACTIVITY = [
-  { action: "Profile activated", client: "Tyla Seethal", time: "2 hours ago", icon: CheckCircle2 },
-  { action: "Invitation sent", client: "Eben Etzebeth", time: "5 hours ago", icon: Mail },
-  { action: "Document uploaded", client: "Siya Kolisi", time: "1 day ago", icon: FileText },
-  { action: "Profile activated", client: "Zozibini Tunzi", time: "3 days ago", icon: CheckCircle2 },
-];
 
 const AgentDashboard = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [invitations, setInvitations] = useState<Invitation[]>(MOCK_INVITATIONS);
+  const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [agentProfile, setAgentProfile] = useState<{ role: string; company_name: string } | null>({
