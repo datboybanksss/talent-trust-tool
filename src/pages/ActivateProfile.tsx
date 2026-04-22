@@ -150,6 +150,32 @@ const ActivateProfile = () => {
     );
   }
 
+  if (expired) {
+    const subject = encodeURIComponent("My Legacy Builder activation link has expired");
+    const body = encodeURIComponent("Hi, my activation link has expired. Could you send me a new invitation? Thanks.");
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-forest-dark via-forest to-forest-light flex items-center justify-center p-4">
+        <Card className="w-full max-w-md bg-card/95 backdrop-blur-sm border-gold/20">
+          <CardContent className="pt-8 text-center space-y-4">
+            <AlertCircle className="w-12 h-12 text-warning mx-auto" />
+            <h2 className="text-xl font-bold text-foreground">This activation link has expired</h2>
+            <p className="text-muted-foreground text-sm">
+              {expired.agent_name
+                ? `Please ask ${expired.agent_name} to send you a new invitation.`
+                : "Please ask your agent or manager to send you a new invitation."}
+            </p>
+            {expired.agent_email ? (
+              <Button variant="gold" className="w-full" asChild>
+                <a href={`mailto:${expired.agent_email}?subject=${subject}&body=${body}`}>Email your agent</a>
+              </Button>
+            ) : null}
+            <Button variant="ghost" className="w-full" onClick={() => navigate("/auth")}>Go to Sign In</Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (activated) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-forest-dark via-forest to-forest-light flex items-center justify-center p-4">
@@ -157,12 +183,33 @@ const ActivateProfile = () => {
           <CardContent className="pt-8 text-center space-y-4">
             <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto" />
             <h2 className="text-xl font-bold text-foreground">Profile Activated!</h2>
-            <p className="text-muted-foreground text-sm">
-              Your LegacyBuilder profile is ready. Sign in with your email ({invitation?.client_email}) and the password you just set.
-            </p>
-            <Button variant="gold" className="w-full" onClick={() => navigate("/auth")}>
-              Sign In Now
-            </Button>
+            {autoSignedIn ? (
+              <p className="text-muted-foreground text-sm">
+                Taking you to your dashboard…
+              </p>
+            ) : (
+              <>
+                <p className="text-muted-foreground text-sm">
+                  Your LegacyBuilder profile is ready. Sign in with your email ({invitation?.client_email}) and the password you just set.
+                </p>
+                <Button variant="gold" className="w-full" onClick={() => navigate("/auth")}>
+                  Sign In Now
+                </Button>
+              </>
+            )}
+            {docFailures.length > 0 && (
+              <div className="mt-2 rounded-lg border border-warning/40 bg-warning/10 p-3 text-left">
+                <p className="text-xs font-semibold text-foreground">
+                  ⚠ {docFailures.length} document{docFailures.length === 1 ? "" : "s"} failed to transfer:
+                </p>
+                <ul className="mt-1 text-xs text-muted-foreground list-disc list-inside">
+                  {docFailures.map((f) => <li key={f.filename}>{f.filename}</li>)}
+                </ul>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Your agent can re-upload these to your Life File.
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
