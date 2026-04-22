@@ -15,7 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useToast } from "@/hooks/use-toast";
 import {
   UserPlus, Trash2, Shield, Eye, Users, Kanban, CalendarDays,
-  FileText, Mail, Copy, CheckCircle2, Clock, Settings2, Pencil, Send
+  FileText, Mail, Copy, CheckCircle2, Clock, Settings2, Pencil, Send, Crown
 } from "lucide-react";
 
 type PortalSection = "clients" | "pipeline" | "calendar" | "compare" | "templates";
@@ -79,20 +79,36 @@ interface SharedStaffMember {
 const SharePortal = () => {
   const { toast } = useToast();
   const { user } = useAuth();
-  // Page is gated by SectionGuard ownerOnly, so isViewingAsStaff should always
-  // be false here — but still scope reads defensively.
-  const { scopedAgentId } = useAgencyScope();
+  const { scopedAgentId, workspaceRole, agencyOwnerName } = useAgencyScope();
+  const isStaffViewer = workspaceRole === "staff";
   const [staff, setStaff] = useState<SharedStaffMember[]>([]);
   const [loadingStaff, setLoadingStaff] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [ownerRow, setOwnerRow] = useState<{ name: string; email: string | null; agencyName: string } | null>(null);
 
   const fetchStaff = useCallback(async () => {
     if (!user || !scopedAgentId) return;
-    const { data, error } = await supabase
+    let query = supabase
       .from("portal_staff_access")
       .select("*")
       .eq("agent_id", scopedAgentId)
       .order("created_at", { ascending: false });
+    if (isStaffViewer) {
+      // Staff only see active members (not pending invites)
+      query = query.eq("status", "active").not("activated_at", "is", null);
+    }
+    const { data, error } = await query;
+
+    // Load owner card
+    const [{ data: agency }, { data: ownerProfile }] = await Promise.all([
+      supabase.from("agent_manager_profiles").select("company_name").eq("user_id", scopedAgentId).maybeSingle(),
+      supabase.from("profiles").select("display_name").eq("user_id", scopedAgentId).maybeSingle(),
+    ]);
+    setOwnerRow({
+      name: ownerProfile?.display_name ?? agencyOwnerName ?? "Agency Owner",
+      email: isStaffViewer ? null : user.email ?? null,
+      agencyName: agency?.company_name ?? "Your Agency",
+    });
 
     if (!error && data) {
       setStaff(data.map((d: any) => ({
@@ -110,7 +126,7 @@ const SharePortal = () => {
       })));
     }
     setLoadingStaff(false);
-  }, [user, scopedAgentId]);
+  }, [user, scopedAgentId, isStaffViewer, agencyOwnerName]);
 
   useEffect(() => { fetchStaff(); }, [fetchStaff]);
 
