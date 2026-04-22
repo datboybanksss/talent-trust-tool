@@ -185,6 +185,7 @@ const AgentDashboard = () => {
       .from("client_invitations")
       .select("*")
       .eq("agent_id", user.id)
+      .is("archived_at", null)
       .order("created_at", { ascending: false });
     setInvitations(data ?? []);
   };
