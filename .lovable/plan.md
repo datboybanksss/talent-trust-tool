@@ -1,83 +1,59 @@
 
 
-## Replace the mock-driven Client Detail page with live invitation + activated-user data
+## Sprint Scope: Routing Fix + Staff Context Banner
 
-### What's actually broken
+Ship the routing bug fix and one persona-clarity banner. Defer the dedicated `/staff` dashboard until real PAs have used the platform.
 
-`/agent-dashboard/client/:clientId` receives the invitation UUID and looks it up in a hard-coded `MOCK_CLIENTS` map keyed by `"1"`/`"2"`/`"4"`. Every real invitation misses → falls to `PENDING_FALLBACK` which hard-codes **Eben Etzebeth, Pending, no data**. That's why every activated client opens to the same Springbok shell. Live Life File queries already exist in the file but are wrapped around dead mock context.
+### The Bug
 
-### The fix — one file, surgical replacement
+Staff sign in via `/auth` and land on `/dashboard` (the client portal — "Welcome back, naledi · Member"). Root cause: `useUserRole.tsx` checks admin → agent → client_type, but never checks `portal_staff_access`. So `dashboardPath` resolves to `/dashboard` for staff, shipping them to the wrong portal entirely. Last sprint's fixes only kicked in *after* they reached `/agent-dashboard` — but nothing was sending them there.
 
-**`src/pages/AgentClientDetail.tsx`**
+### Files Changed
 
-1. **Delete `MOCK_CLIENTS` and `PENDING_FALLBACK` entirely.**
+**Edit `src/hooks/useUserRole.tsx`**
+- Add `"staff"` to `UserRole` union.
+- After the agent-profile check (and before client_type fallback), query `portal_staff_access` for an active row with non-null `confidentiality_accepted_at` for `user.id`. If found → `role = "staff"`.
+- Update `dashboardPath`: staff → `/agent-dashboard` (NOT `/staff` — that route does not exist this sprint).
+- Precedence stays: admin > agent > staff > client.
 
-2. **Load the real invitation row** by `clientId`:
-   ```ts
-   supabase.from("client_invitations")
-     .select("id, client_name, client_email, client_phone, client_type,
-              status, activated_user_id, pre_populated_data, created_at, activated_at")
-     .eq("id", clientId).single()
-   ```
+**Verify `src/components/AgentRoute.tsx`** (no edit expected)
+- Last sprint already allows `staff.isStaff`. Confirm `naledi` passes the gate after the `useUserRole` change routes her here.
 
-3. **Drive the header from invitation fields**: name, email, phone, type. Status badge uses real `invitation.status` (`pending` / `activated` / `expired`). The "Pending" pill only appears when `activated_user_id IS NULL`.
+**Edit `src/pages/Dashboard.tsx`**
+- Add an early guard: if `useAgencyScope().isViewingAsStaff === true`, `<Navigate to="/agent-dashboard" replace />`. Prevents staff from manually typing `/dashboard` into the URL bar to escape into the client portal.
 
-4. **Pull activated-client context** (only when `activated_user_id` is set) in parallel with the existing Life File fetches:
-   - `profiles` row (avatar, location, DOB → age)
-   - `agent_deals` rows where `agent_id = me AND client_name = invitation.client_name` → drives Deals tab + Total Deal Value KPI
-   - `athlete_endorsements` + `athlete_contracts` if `client_type = 'athlete'` → Active Contracts / Market Value KPIs
-   - Existing `fetchBeneficiaries / EmergencyContacts / LifeFileDocuments / LifeFileAssets` already wired — keep.
-   - `life_file_shares` row where `owner_id = activated_user_id AND shared_with_user_id = me` → if not `accepted`, gate Life File / Documents tabs behind a "Client has not granted access to this section" empty state instead of a misleading data view.
+**Verify `src/pages/StaffActivate.tsx`** (no edit expected)
+- Post-confidentiality redirect already targets `/agent-dashboard`. Confirm.
 
-5. **KPI cards compute from live data, not strings**:
-   - Active Deals = count of `agent_deals` with `status IN ('active','negotiating')`
-   - Total Deal Value = sum of `value_amount`
-   - Compliance = % of life-file documents not expired (computed from `expiry_date`)
-   - Social Reach = `profiles.social_followers_total` if present, else "—"
-   - Market Value = `profiles.market_value` if present, else "—"
+**Create `src/components/agent/StaffContextBanner.tsx`**
+- Renders only when `useAgencyScope().isViewingAsStaff === true`.
+- Copy: *"You're assisting {agencyOwnerName} from {agencyName}. View-only access."*
+- Needs the agency owner's display name — extend `useStaffAccess` to also fetch `display_name` from the owner's `profiles` row (one extra select alongside the existing `agent_manager_profiles` query). Surface as `agencyOwnerName` on `useAgencyScope`.
+- Small `×` dismiss button → sets `sessionStorage["staff-banner-dismissed"] = "1"`. Cleared automatically on sign-out (sessionStorage dies with the tab; also explicitly clear it inside `signOut` in `useAuth.tsx` for safety).
+- Visual: amber/gold tinted strip at the very top of the page content, inside the main column, above the page header. Coexists with the existing sidebar footer badge — redundancy is intentional.
 
-6. **Pending state is honest**: when `status='pending'`, render the existing yellow banner *unchanged*, KPIs show "—", tabs stay empty with a single "Awaiting client activation" message. No more fake bio/team data.
+**Edit `src/pages/AgentDashboard.tsx`** + **`src/pages/MyAgency.tsx`** + **`src/pages/AgentClientDetail.tsx`** + **`src/pages/AgentAthleteProfile.tsx`**
+- Mount `<StaffContextBanner />` as the first child of the main content area on every page reachable inside `AgentRoute`. The banner self-hides for non-staff so it's a no-op for owners and admins.
+- (`MyAgency` is already owner-only; banner there is dead code but harmless — staff get redirected before render.)
 
-7. **Realtime freshness**: subscribe to `postgres_changes` on `life_file_documents`, `life_file_assets`, `agent_deals` filtered to the activated user → invalidate the local fetch so the page reflects new data within ~1s without a manual refresh. (Pattern from the existing realtime guidance.)
+**Edit `src/hooks/useAuth.tsx`**
+- In the `signOut` flow, `sessionStorage.removeItem("staff-banner-dismissed")` so a fresh sign-in always re-shows the banner.
 
-8. **PDF generator** (`generateProfileReport`) — rewire to read from the live state objects instead of `client.deals` / `client.documents`. Same layout, real numbers.
+**Edit `KNOWN_LIMITATIONS.md`** — append:
+> ## Dedicated staff dashboard deferred
+> Staff currently use `/agent-dashboard` with view-only scoping (`useAgencyScope` + `<OwnerOnly>`) and a persistent `<StaffContextBanner>`. A dedicated `/staff` route with PA-specific layout (Today's Schedule, Action Queue, agency-owner framing, slimmer sidebar) was designed but deferred pending real-user feedback. Build after first 2–3 real PAs have used the platform for at least a week each — design from observed behaviour, not speculation.
 
-### Migration
+### Verification After Ship
 
-None required. All tables and columns exist. Realtime publication needs three additions (additive only, no data change):
-```sql
-ALTER PUBLICATION supabase_realtime ADD TABLE public.life_file_documents;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.life_file_assets;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.agent_deals;
-```
-(If any are already in the publication, the `ADD` is a no-op-with-error — handle by checking `pg_publication_tables` first in the migration.)
+1. Sign in as `naledi` → lands on `/agent-dashboard` (not `/dashboard`, not `/staff`).
+2. Amber banner at top of every agent-portal page reads *"You're assisting {Owner Name} from {Agency}. View-only access."*
+3. Click `×` → banner gone for the rest of the session, persists across navigation.
+4. Sign out, sign back in → banner reappears.
+5. Direct visit to `/dashboard` as `naledi` → instant redirect to `/agent-dashboard`.
+6. Sign in as the agency owner → no banner. Sign in as admin → routes to `/admin`, no banner.
+7. Last sprint's behavior intact: data scoped to agency, write buttons hidden, sidebar footer badge present, revocation Realtime still fires.
 
-### What this fixes for you
+### Explicitly NOT Building This Sprint
 
-- Open Kgosi Banks (activated artist) → header reads "Kgosi Banks", status "Activated", Life File data populates the tabs, deals you've added show in Deals tab, KPIs reflect the real share state.
-- Open a still-pending client → still shows "Pending" banner but with their real name/email/type — no more "Eben Etzebeth" ghost.
-- Client adds a beneficiary or uploads a doc → your client detail page updates within seconds without refresh.
-- Client revokes access → tabs flip to "access not granted" state on next render.
-
-### Files
-
-**Modified**
-- `src/pages/AgentClientDetail.tsx` (gut + rebuild around live queries)
-
-**New**
-- `supabase/migrations/<ts>_realtime_publish_client_tables.sql` (3 additive `ADD TABLE` statements with existence guard)
-
-### Out of scope (defer)
-- Editing client deals/contracts directly from this page (already done in `DealDialog` elsewhere)
-- Commission column on this page (waiting on the revenue-capture sprint)
-- Demo-data overlay for the 5 demo accounts — they already render through the same live path because their invitations are real rows; no special casing needed
-
-### Verification after deploy
-1. Open Kgosi Banks → header "Kgosi Banks · Artist · Activated", deals/docs/beneficiaries reflect what's in the DB.
-2. Open a pending invitation → real name in header, "Pending" banner, KPIs show "—".
-3. Add a deal for Kgosi from the Pipeline → Deals tab on detail page updates within ~2 seconds (realtime).
-4. Sign in as Kgosi in another tab, upload a doc → Documents tab on agent detail page updates without refresh.
-5. Generate Report → PDF contains real values, not Springbok placeholders.
-6. Demo agent (`agent.demo`) opens any of the 5 demo clients → real seeded data renders, no fallback.
-7. Revoke share as the client → agent detail page Life File tab flips to "access not granted" state.
+`/staff` route, `StaffDashboard`, `StaffRoute`, `StaffHeader`, `StaffStatsRow`, `TodayScheduleCard`, `ActionQueueCard`, `QuickAccessTiles`, `StaffSidebar`. Logged in `KNOWN_LIMITATIONS.md` for the post-dogfood revisit.
 
