@@ -16,6 +16,12 @@ export function useUserRole() {
       return;
     }
 
+    // Reset to loading on every user change so consumers wait for the real role
+    // instead of reading a stale `null` from a previous render (caused staff
+    // members to be routed to /dashboard instead of /agent-dashboard).
+    setLoading(true);
+    setRole(null);
+
     const determine = async () => {
       // Check admin first
       const { data: isAdmin } = await supabase.rpc("has_role", {

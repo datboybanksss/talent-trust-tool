@@ -80,9 +80,9 @@ const AgentRegister = () => {
           : "An error occurred during sign in.",
         variant: "destructive",
       });
-    } else {
-      navigate("/agent-dashboard");
     }
+    // On success, the useEffect above routes to the correct dashboard once
+    // useUserRole resolves (admin → /admin, agent/staff → /agent-dashboard).
   };
 
   const handleSignUp = async (data: SignUpFormData) => {
