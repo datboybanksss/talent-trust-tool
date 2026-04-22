@@ -670,20 +670,21 @@ const AgentDashboard = () => {
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-display font-bold text-foreground">Client Invitations</h2>
-              <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-                    <UserPlus className="w-4 h-4 mr-2" /> New Client
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl max-h-[90vh]">
-                  <DialogHeader>
-                    <DialogTitle>Create Client Profile</DialogTitle>
-                    <DialogDescription>
-                      Pre-populate your client's profile with detailed information, deals, and documents. Import from a spreadsheet or fill in manually.
-                    </DialogDescription>
-                  </DialogHeader>
+              <Button
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+                onClick={() => setDialogOpen(true)}
+              >
+                <UserPlus className="w-4 h-4 mr-2" /> New Client
+              </Button>
+            </div>
 
+            {/* placeholder: dialog lifted to top-level so it works from any view */}
+            <div className="hidden">
+              <Dialog open={false} onOpenChange={() => {}}>
+                <DialogContent className="hidden">
+                  <DialogHeader>
+                    <DialogTitle>placeholder</DialogTitle>
+                  </DialogHeader>
                   {/* Spreadsheet Import Banner */}
                   <div className="border border-dashed border-primary/40 bg-primary/5 rounded-lg p-3 flex items-center gap-3">
                     <FileSpreadsheet className="w-5 h-5 text-primary shrink-0" />
