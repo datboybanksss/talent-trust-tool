@@ -1,96 +1,72 @@
 
 
-## Invitation email system — final approved plan
+## Smoke test: staff invitation email end-to-end
 
-### Pre-deploy check (run before migration)
+### What we're proving
+1. Clicking "Invite" in SharePortal writes the row + invokes `send-invitation-email`
+2. The email actually lands in a real inbox
+3. The activation link in the email opens `/staff-activate/:token` and works
 
-```sql
-SELECT COUNT(*) FROM client_invitations
-  WHERE created_at >= now() - interval '14 days'
-    AND activated_at IS NULL AND archived_at IS NULL;
-```
+### Blocker we already see in logs
+`send-email` is returning **401 UNAUTHORIZED_INVALID_JWT_FORMAT** from the Lovable Cloud email gateway. That means the Resend on element 1712 from your last attempt produced a "Resend failed" toast — the email never left the platform. We must fix this before any smoke test can succeed.
 
-If non-zero, pause and report per-case before touching anything else. If zero, proceed.
+Likely cause: the `LOVABLE_API_KEY` secret used by `send-email` to call the Cloud email gateway is either missing, stale, or being sent in the wrong header. We'll inspect `send-email/index.ts` and the secret, then patch.
 
-### Migration (additive, force-expires entire pre-email-infra batch)
+### Test plan (3 phases)
 
-```sql
-ALTER TABLE public.portal_staff_access
-  ADD COLUMN invitation_token uuid NOT NULL DEFAULT gen_random_uuid(),
-  ADD COLUMN activated_at     timestamptz NULL,
-  ADD COLUMN expires_at       timestamptz NULL DEFAULT (now() + interval '7 days');
-CREATE UNIQUE INDEX portal_staff_access_invitation_token_key
-  ON public.portal_staff_access(invitation_token);
+**Phase 0 — Fix the 401 (mandatory prerequisite)**
+- Read `supabase/functions/send-email/index.ts` to confirm how it authenticates to the Cloud email service
+- Check the secret it uses (likely `LOVABLE_API_KEY`) is present and valid
+- Patch + redeploy `send-email` so it returns `{ success: true }` for a basic test send
+- Re-run a 1-line `curl` test against `send-email` directly to confirm 200 OK
 
-ALTER TABLE public.client_invitations
-  ADD COLUMN expires_at timestamptz NULL DEFAULT (now() + interval '14 days');
+**Phase 1 — Send a real invite to YOUR inbox**
+You provide one real email address you control (Gmail, Outlook, etc. — NOT a `.demo@themvpbuilder.co.za` address, since the `is_demo` guard blocks demo agents).
 
-UPDATE public.portal_staff_access
-  SET expires_at = created_at + interval '7 days' WHERE expires_at IS NULL;
-UPDATE public.client_invitations
-  SET expires_at = created_at + interval '14 days' WHERE expires_at IS NULL;
+Steps you take in the preview:
+1. Log in as a **non-demo** agent account
+2. Navigate to **SharePortal** (Agent Dashboard → Share Portal section)
+3. Click "Invite Staff Member", enter:
+   - Name: `Test Staffer`
+   - Email: *your real address*
+   - Role: `Personal Assistant` (or any)
+   - Sections: tick 2-3
+4. Submit
 
--- Force-expire ALL pending staff invites (pre-email-infra batch needs deliberate resend)
-UPDATE public.portal_staff_access
-  SET expires_at = now() WHERE status = 'pending';
+Expected:
+- Toast: "Invitation emailed to Test Staffer"
+- New row appears in the staff table with status `pending`
+- Email arrives within ~30 seconds in your inbox
 
--- Force-expire stale client invites (>14d, not activated/archived)
-UPDATE public.client_invitations
-  SET expires_at = now()
-  WHERE created_at < now() - interval '14 days'
-    AND activated_at IS NULL AND archived_at IS NULL;
-```
+I will verify on my side:
+- `audit_log` row with `action='invitation_email_sent'`, recipient = your email
+- `portal_staff_access` row exists with `invitation_token`, `expires_at` ~7 days out
+- `send-email` and `send-invitation-email` logs show no errors
 
-### Post-migration verification (must match exactly)
+**Phase 2 — Activate via the email link**
+1. Open the email, click the activation button
+2. Browser should land on `/staff-activate/<token>`
+3. Page shows the agency name + role + signup form (your real email pre-filled)
+4. Set a password and submit
+5. Confidentiality gate appears — accept it
+6. You land on `/agent-dashboard` as the staff member
 
-| Query | Expected |
-|---|---|
-| `portal_staff_access` pending | 3 |
-| `client_invitations` not activated/archived | 2 |
-| `portal_staff_access expires_at <= now()` | 3 |
-| `client_invitations expires_at <= now() AND activated_at IS NULL` | 2 |
+I will verify:
+- `portal_staff_access.staff_user_id` is now populated
+- `activated_at` is set
+- `confidentiality_accepted_at` is set
+- `status` = `active`
+- A new `auth.users` row exists for that email
 
-If any number is off, halt and report before code.
+**Phase 3 — Failure-mode check (optional but recommended)**
+- On the SharePortal table, click **Copy Link** on a row → confirm the link in clipboard matches `/staff-activate/<token>`
+- Click **Resend** on an expired row (one of the 3 force-expired ones) → confirm a fresh email arrives with a new `expires_at` ~7 days out
+- Try to reuse the original activation link after it's already been used → should show "already activated" message
 
-### Edge functions
+### What I need from you to start
+1. **One real email address** you can read (for Phases 1-3)
+2. **Confirmation** that you want me to fix the `send-email` 401 first (Phase 0) — this is unavoidable, the smoke test can't pass without it
+3. Confirmation of which **non-demo** agent account you'll log in as (so I can correlate audit logs)
 
-**`send-invitation-email/index.ts`** — single entry, two templates. Order:
-1. Validate body
-2. Load invitation (service role)
-3. Verify caller owns it (or is service role)
-4. **`is_demo` guard** on inviter → short-circuit + audit log
-5. **Then** profiles → auth.users join for returning-user detection
-6. Build template → send via existing `send-email` wrapper → audit log
-
-**`get-invitation-by-token/index.ts`** — service-role lookup for both activation pages. Validates expiry/status, returns minimal payload.
-
-### Email templates (added to `_shared/email-templates.ts`)
-- `staffInvitationEmail` — agency, inviter, role label, sections list, activation URL, expiry, returning-user variant
-- `clientInvitationEmail` — agency, inviter, client_type framing, activation URL, expiry, returning-user variant
-
-### UI changes
-- **`SharePortal.tsx`**: invoke email after insert; per-row **Copy Link** + **Resend** (resend on expired row pushes `expires_at = now() + 7d` first); failure toast keeps row + offers Copy Link
-- **`AgentDashboard.tsx`** (`handleCreateInvitation` + bulk import): same pattern; existing clipboard fallback stays; **Resend** on non-activated rows (refreshes `expires_at + 14d` if expired); bulk via `Promise.allSettled` with summary toast
-- Audit actions: `invitation_email_sent`, `invitation_resent`, `invitation_email_skipped_demo`, `invitation_email_failed`. Resend rate-limit: 1/min per `invitation_id`
-
-### Routes
-- **NEW** `/staff-activate/:token` → `StaffActivate.tsx` (lookup → signup or sign-in → set `staff_user_id` + `activated_at` + `status='active_pending_confidentiality'` → `<ConfidentialityGate />` → `confidentiality_accepted_at` → `/agent-dashboard`)
-- **NEW** `/client-activate/:token` → existing `ActivateProfile` (canonical for new emails)
-- **PERMANENT ALIAS** `/activate/:token` → existing `ActivateProfile` (no deprecation, no removal — old WhatsApp/email links resolve forever)
-
-### Demo seed (per sync rule)
-Add to `seed-demo-profiles/index.ts` — 2 `portal_staff_access` rows on `agent.demo`:
-- `assistant.demo@themvpbuilder.co.za` (Personal Assistant, status=`active`, confidentiality_accepted_at populated)
-- `accountant.demo@themvpbuilder.co.za` (Accountant, status=`pending`)
-
-Both use the `@themvpbuilder.co.za` fake domain so even a defense-in-depth guard failure cannot hit a real inbox. The `is_demo` short-circuit in `send-invitation-email` is the primary block.
-
-### Files
-
-**New**: `supabase/migrations/<ts>_invitation_email_columns.sql`, `supabase/functions/send-invitation-email/index.ts`, `supabase/functions/get-invitation-by-token/index.ts`, `src/pages/StaffActivate.tsx`
-
-**Modified**: `supabase/functions/_shared/email-templates.ts`, `src/components/agent/SharePortal.tsx`, `src/pages/AgentDashboard.tsx`, `src/App.tsx`, `supabase/functions/seed-demo-profiles/index.ts`
-
-### Out of scope
-`Sharing.tsx` mock rewrite, `ShareLifeFileDialog`/`InviteGuardianDialog` email wiring (separate flows), automated mass-resend (agents self-serve via Resend buttons).
+Once you reply with those, I'll switch to default mode, fix the 401, and walk through Phases 1-3 with you live.
 
