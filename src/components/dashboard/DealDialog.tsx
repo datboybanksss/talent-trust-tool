@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useAgencyScope } from "@/hooks/useAgencyScope";
 import { toast } from "sonner";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter,
@@ -41,6 +42,7 @@ interface DealDialogProps {
 
 const DealDialog = ({ open, onOpenChange, dealId, initialData }: DealDialogProps) => {
   const { user } = useAuth();
+  const { scopedAgentId } = useAgencyScope();
   const queryClient = useQueryClient();
   const isEdit = Boolean(dealId);
 
@@ -57,18 +59,18 @@ const DealDialog = ({ open, onOpenChange, dealId, initialData }: DealDialogProps
   const [submitting, setSubmitting] = useState(false);
 
   const { data: invitations = [] } = useQuery({
-    queryKey: ["client_invitations_for_deals", user?.id],
+    queryKey: ["client_invitations_for_deals", scopedAgentId],
     queryFn: async () => {
-      if (!user) return [];
+      if (!scopedAgentId) return [];
       const { data } = await supabase
         .from("client_invitations")
         .select("id, client_name, client_type")
-        .eq("agent_id", user.id)
+        .eq("agent_id", scopedAgentId)
         .is("archived_at", null)
         .order("client_name");
       return data ?? [];
     },
-    enabled: open && !!user,
+    enabled: open && !!scopedAgentId,
   });
 
   useEffect(() => {
@@ -112,11 +114,11 @@ const DealDialog = ({ open, onOpenChange, dealId, initialData }: DealDialogProps
   const isValid = brand.trim() && dealType.trim() && valueText.trim() && clientName.trim();
 
   const handleSubmit = async () => {
-    if (!user || !isValid) return;
+    if (!user || !scopedAgentId || !isValid) return;
     setSubmitting(true);
 
-    const payload = {
-      agent_id: user.id,
+    const basePayload = {
+      agent_id: scopedAgentId,
       client_invitation_id: clientChoice === MANUAL ? null : clientChoice,
       client_name: clientName.trim(),
       client_type: clientType,
@@ -130,8 +132,13 @@ const DealDialog = ({ open, onOpenChange, dealId, initialData }: DealDialogProps
     };
 
     const { error } = isEdit
-      ? await supabase.from("agent_deals").update(payload).eq("id", dealId!)
-      : await supabase.from("agent_deals").insert(payload);
+      ? await supabase
+          .from("agent_deals")
+          .update({ ...basePayload, updated_by: user.id })
+          .eq("id", dealId!)
+      : await supabase
+          .from("agent_deals")
+          .insert({ ...basePayload, created_by: user.id, updated_by: user.id });
 
     setSubmitting(false);
 
@@ -144,6 +151,19 @@ const DealDialog = ({ open, onOpenChange, dealId, initialData }: DealDialogProps
 
     toast.success(isEdit ? "Deal updated" : "Deal added to pipeline");
     queryClient.invalidateQueries({ queryKey: ["agent_deals"] });
+    // Audit trail
+    await supabase.from("audit_log").insert({
+      action: isEdit ? "deal_updated" : "deal_created",
+      entity_type: "deal",
+      entity_id: dealId ?? null,
+      user_id: user.id,
+      metadata: {
+        agency_id: scopedAgentId,
+        brand: basePayload.brand,
+        client_name: basePayload.client_name,
+        status: basePayload.status,
+      },
+    });
     onOpenChange(false);
   };
 
