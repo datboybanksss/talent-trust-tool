@@ -10,6 +10,7 @@ import AgentSidebar from "@/components/agent/AgentSidebar";
 import AgencyIdentityHeader from "@/components/myagency/AgencyIdentityHeader";
 import AgencyStatsRow from "@/components/myagency/AgencyStatsRow";
 import POPIACompliancePanel from "@/components/myagency/POPIACompliancePanel";
+import WorkspaceActivityPanel from "@/components/myagency/WorkspaceActivityPanel";
 import { useStaffAccess } from "@/hooks/useStaffAccess";
 
 export interface AgencyProfile {
@@ -112,6 +113,7 @@ const MyAgency = () => {
               }
             />
             <AgencyStatsRow agentUserId={profile.user_id} memberSince={profile.created_at} />
+            <WorkspaceActivityPanel />
             <POPIACompliancePanel
               profile={profile}
               isDemo={isDemo}
