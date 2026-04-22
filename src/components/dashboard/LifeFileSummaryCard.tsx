@@ -1,25 +1,37 @@
-import { Heart, Shield, TrendingUp, Users, Phone, FileText, AlertTriangle } from "lucide-react";
+import { Heart, Shield, TrendingUp, Users, Phone, FileText, AlertTriangle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import {
-  mockBeneficiaries,
-  mockEmergencyContacts,
-  mockDocuments,
-  mockAssets,
-  getLifeFileSummary,
-} from "@/data/mockLifeFileData";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
+import { fetchBeneficiaries, fetchEmergencyContacts, fetchLifeFileDocuments } from "@/services/lifeFileService";
+import { fetchLifeFileAssets } from "@/services/lifeFileAssetService";
+import { getLifeFileSummary } from "@/data/mockLifeFileData";
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR", maximumFractionDigits: 0 }).format(amount);
 
 const LifeFileSummaryCard = () => {
-  const summary = getLifeFileSummary(
-    mockBeneficiaries,
-    mockEmergencyContacts,
-    mockDocuments,
-    mockAssets,
-  );
+  const { user } = useAuth();
+  const userId = user?.id;
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["life-file-summary", userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const [beneficiaries, contacts, documents, assets] = await Promise.all([
+        fetchBeneficiaries(userId!),
+        fetchEmergencyContacts(userId!),
+        fetchLifeFileDocuments(userId!),
+        fetchLifeFileAssets(userId!),
+      ]);
+      return { beneficiaries, contacts, documents, assets };
+    },
+  });
+
+  const summary = data
+    ? getLifeFileSummary(data.beneficiaries as any, data.contacts as any, data.documents as any, data.assets as any)
+    : null;
 
   return (
     <div className="bg-card rounded-2xl border border-border p-6 shadow-soft">
@@ -34,7 +46,7 @@ const LifeFileSummaryCard = () => {
             <p className="text-xs text-muted-foreground">Estate planning snapshot</p>
           </div>
         </div>
-        {summary.needsAttention > 0 && (
+        {summary && summary.needsAttention > 0 && (
           <span className="flex items-center gap-1 text-xs font-medium text-warning bg-warning/10 px-2 py-1 rounded-full">
             <AlertTriangle className="w-3 h-3" />
             {summary.needsAttention} pending
@@ -42,6 +54,26 @@ const LifeFileSummaryCard = () => {
         )}
       </div>
 
+      {isLoading && (
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+        </div>
+      )}
+
+      {!isLoading && (!summary || summary.documentCount + summary.beneficiaryCount + summary.contactCount === 0) && (
+        <div className="text-center py-6 space-y-3">
+          <p className="text-sm text-muted-foreground">No Life File data yet.</p>
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/dashboard/life-file">
+              <FileText className="w-4 h-4" />
+              Start your Life File
+            </Link>
+          </Button>
+        </div>
+      )}
+
+      {!isLoading && summary && summary.documentCount + summary.beneficiaryCount + summary.contactCount > 0 && (
+        <>
       {/* Progress */}
       <div className="mb-5">
         <div className="flex items-center justify-between text-sm mb-1.5">
@@ -114,6 +146,8 @@ const LifeFileSummaryCard = () => {
           Manage Life File
         </Link>
       </Button>
+        </>
+      )}
     </div>
   );
 };

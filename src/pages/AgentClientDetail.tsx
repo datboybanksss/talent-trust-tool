@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -18,9 +18,13 @@ import {
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
-import { mockBeneficiaries, mockEmergencyContacts, mockDocuments, mockAssets, getLifeFileSummary } from "@/data/mockLifeFileData";
+import { getLifeFileSummary } from "@/data/mockLifeFileData";
 import { generateLifeFilePDF } from "@/utils/lifeFilePdfExport";
-import { INSURANCE_TYPES, INVESTMENT_TYPES } from "@/types/lifeFileAsset";
+import { INSURANCE_TYPES, INVESTMENT_TYPES, type LifeFileAsset } from "@/types/lifeFileAsset";
+import type { Beneficiary, EmergencyContact, LifeFileDocument } from "@/types/lifeFile";
+import { supabase } from "@/integrations/supabase/client";
+import { fetchBeneficiaries, fetchEmergencyContacts, fetchLifeFileDocuments } from "@/services/lifeFileService";
+import { fetchLifeFileAssets } from "@/services/lifeFileAssetService";
 
 // ─── Mock Client Data ───────────────────────────────────────────────
 const MOCK_CLIENTS: Record<string, any> = {
@@ -140,8 +144,51 @@ const AgentClientDetail = () => {
   const isPending = client.status === "pending";
   const isServiceActive = !isPending && (serviceActive ?? client.serviceActive);
 
-  // Life File mock data for the client
-  const lifeFileSummary = getLifeFileSummary(mockBeneficiaries, mockEmergencyContacts, mockDocuments, mockAssets);
+  // Live Life File data for the linked client (when invitation is activated)
+  const [beneficiaries, setBeneficiaries] = useState<Beneficiary[]>([]);
+  const [emergencyContacts, setEmergencyContacts] = useState<EmergencyContact[]>([]);
+  const [documents, setDocuments] = useState<LifeFileDocument[]>([]);
+  const [assets, setAssets] = useState<LifeFileAsset[]>([]);
+  const [lifeFileLoading, setLifeFileLoading] = useState(false);
+
+  useEffect(() => {
+    if (!clientId) return;
+    let cancelled = false;
+    (async () => {
+      setLifeFileLoading(true);
+      const { data: invite } = await supabase
+        .from("client_invitations")
+        .select("activated_user_id")
+        .eq("id", clientId)
+        .maybeSingle();
+      const activatedUserId = invite?.activated_user_id;
+      if (!activatedUserId) {
+        if (!cancelled) {
+          setBeneficiaries([]); setEmergencyContacts([]); setDocuments([]); setAssets([]);
+          setLifeFileLoading(false);
+        }
+        return;
+      }
+      const [b, c, d, a] = await Promise.all([
+        fetchBeneficiaries(activatedUserId),
+        fetchEmergencyContacts(activatedUserId),
+        fetchLifeFileDocuments(activatedUserId),
+        fetchLifeFileAssets(activatedUserId),
+      ]);
+      if (cancelled) return;
+      setBeneficiaries(b as Beneficiary[]);
+      setEmergencyContacts(c as EmergencyContact[]);
+      setDocuments(d as LifeFileDocument[]);
+      setAssets(a);
+      setLifeFileLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [clientId]);
+
+  const lifeFileSummary = getLifeFileSummary(beneficiaries, emergencyContacts, documents, assets);
+  const insuranceAssets = assets.filter(a => a.asset_category === "insurance");
+  const investmentAssets = assets.filter(a => a.asset_category === "investment");
+  const hasLifeFileData = beneficiaries.length + emergencyContacts.length + documents.length + assets.length > 0;
 
   const handleToggleService = (checked: boolean) => {
     setServiceActive(checked);
@@ -159,11 +206,15 @@ const AgentClientDetail = () => {
       toast({ title: "Access Denied", description: "Activate servicing to download client Life File reports.", variant: "destructive" });
       return;
     }
+    if (!hasLifeFileData) {
+      toast({ title: "No Life File data", description: "This client has not populated their Life File yet.", variant: "destructive" });
+      return;
+    }
     generateLifeFilePDF({
-      beneficiaries: mockBeneficiaries,
-      emergencyContacts: mockEmergencyContacts,
-      documents: mockDocuments,
-      assets: mockAssets,
+      beneficiaries,
+      emergencyContacts,
+      documents,
+      assets,
       userName: client.name,
     });
     toast({ title: "Life File PDF Generated", description: `Full Life File report for ${client.name} downloaded.` });
@@ -560,10 +611,15 @@ const AgentClientDetail = () => {
                   <CardHeader>
                     <CardTitle className="text-lg">Insurance Policies</CardTitle>
                     <CardDescription>
-                      {mockAssets.filter(a => a.asset_category === "insurance").length} active policies · Total cover: R{(lifeFileSummary.totalInsuranceCover / 1000000).toFixed(1)}M
+                      {insuranceAssets.length} active policies · Total cover: R{(lifeFileSummary.totalInsuranceCover / 1000000).toFixed(1)}M
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
+                    {insuranceAssets.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-6">
+                        {lifeFileLoading ? "Loading…" : "No insurance policies on file yet."}
+                      </p>
+                    ) : (
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -575,7 +631,7 @@ const AgentClientDetail = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {mockAssets.filter(a => a.asset_category === "insurance").map(asset => (
+                        {insuranceAssets.map(asset => (
                           <TableRow key={asset.id}>
                             <TableCell className="font-medium">{getTypeLabel("insurance", asset.asset_type)}</TableCell>
                             <TableCell>{asset.institution}</TableCell>
@@ -588,6 +644,7 @@ const AgentClientDetail = () => {
                         ))}
                       </TableBody>
                     </Table>
+                    )}
                   </CardContent>
                 </Card>
 
@@ -596,10 +653,15 @@ const AgentClientDetail = () => {
                   <CardHeader>
                     <CardTitle className="text-lg">Investments</CardTitle>
                     <CardDescription>
-                      {mockAssets.filter(a => a.asset_category === "investment").length} active investments · Total value: R{(lifeFileSummary.totalInvestmentValue / 1000000).toFixed(1)}M
+                      {investmentAssets.length} active investments · Total value: R{(lifeFileSummary.totalInvestmentValue / 1000000).toFixed(1)}M
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
+                    {investmentAssets.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-6">
+                        {lifeFileLoading ? "Loading…" : "No investments on file yet."}
+                      </p>
+                    ) : (
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -611,7 +673,7 @@ const AgentClientDetail = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {mockAssets.filter(a => a.asset_category === "investment").map(asset => (
+                        {investmentAssets.map(asset => (
                           <TableRow key={asset.id}>
                             <TableCell className="font-medium">{getTypeLabel("investment", asset.asset_type)}</TableCell>
                             <TableCell>{asset.institution}</TableCell>
@@ -624,6 +686,7 @@ const AgentClientDetail = () => {
                         ))}
                       </TableBody>
                     </Table>
+                    )}
                   </CardContent>
                 </Card>
               </div>
