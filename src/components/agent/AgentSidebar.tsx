@@ -29,6 +29,7 @@ import {
   Share2,
   Crown,
   Building2,
+  UserCircle2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
