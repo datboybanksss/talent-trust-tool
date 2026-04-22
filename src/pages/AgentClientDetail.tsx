@@ -144,8 +144,51 @@ const AgentClientDetail = () => {
   const isPending = client.status === "pending";
   const isServiceActive = !isPending && (serviceActive ?? client.serviceActive);
 
-  // Life File mock data for the client
-  const lifeFileSummary = getLifeFileSummary(mockBeneficiaries, mockEmergencyContacts, mockDocuments, mockAssets);
+  // Live Life File data for the linked client (when invitation is activated)
+  const [beneficiaries, setBeneficiaries] = useState<Beneficiary[]>([]);
+  const [emergencyContacts, setEmergencyContacts] = useState<EmergencyContact[]>([]);
+  const [documents, setDocuments] = useState<LifeFileDocument[]>([]);
+  const [assets, setAssets] = useState<LifeFileAsset[]>([]);
+  const [lifeFileLoading, setLifeFileLoading] = useState(false);
+
+  useEffect(() => {
+    if (!clientId) return;
+    let cancelled = false;
+    (async () => {
+      setLifeFileLoading(true);
+      const { data: invite } = await supabase
+        .from("client_invitations")
+        .select("activated_user_id")
+        .eq("id", clientId)
+        .maybeSingle();
+      const activatedUserId = invite?.activated_user_id;
+      if (!activatedUserId) {
+        if (!cancelled) {
+          setBeneficiaries([]); setEmergencyContacts([]); setDocuments([]); setAssets([]);
+          setLifeFileLoading(false);
+        }
+        return;
+      }
+      const [b, c, d, a] = await Promise.all([
+        fetchBeneficiaries(activatedUserId),
+        fetchEmergencyContacts(activatedUserId),
+        fetchLifeFileDocuments(activatedUserId),
+        fetchLifeFileAssets(activatedUserId),
+      ]);
+      if (cancelled) return;
+      setBeneficiaries(b as Beneficiary[]);
+      setEmergencyContacts(c as EmergencyContact[]);
+      setDocuments(d as LifeFileDocument[]);
+      setAssets(a);
+      setLifeFileLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [clientId]);
+
+  const lifeFileSummary = getLifeFileSummary(beneficiaries, emergencyContacts, documents, assets);
+  const insuranceAssets = assets.filter(a => a.asset_category === "insurance");
+  const investmentAssets = assets.filter(a => a.asset_category === "investment");
+  const hasLifeFileData = beneficiaries.length + emergencyContacts.length + documents.length + assets.length > 0;
 
   const handleToggleService = (checked: boolean) => {
     setServiceActive(checked);
