@@ -87,10 +87,21 @@ const AgentRegister = () => {
 
   const handleSignUp = async (data: SignUpFormData) => {
     setIsLoading(true);
-    
-    // Sign up with agent role metadata
-    const { error } = await signUp(data.email, data.password, data.displayName, data.role);
-    
+
+    // Sign up with agent role metadata + agency details so the post-verification
+    // self-heal in useAccountSetupGate can create the agent_manager_profiles row.
+    const { error } = await signUp(
+      data.email,
+      data.password,
+      data.displayName,
+      data.role,
+      {
+        company_name: data.companyName,
+        registration_number: data.registrationNumber || null,
+        phone: data.phone || null,
+      },
+    );
+
     if (error) {
       setIsLoading(false);
       toast({
@@ -102,15 +113,6 @@ const AgentRegister = () => {
       });
       return;
     }
-
-    // We need to wait for the user to verify email, so store agent details for later
-    // The agent profile will be created after email verification and first sign-in
-    localStorage.setItem("pending_agent_profile", JSON.stringify({
-      companyName: data.companyName,
-      registrationNumber: data.registrationNumber,
-      phone: data.phone,
-      role: data.role,
-    }));
 
     setIsLoading(false);
     toast({

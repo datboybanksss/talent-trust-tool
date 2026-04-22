@@ -48,6 +48,7 @@ import GuardianManagement from "./pages/GuardianManagement";
 import FinancialIntegrations from "./pages/FinancialIntegrations";
 import MyAgency from "./pages/MyAgency";
 import AgentAccount from "./pages/AgentAccount";
+import Welcome from "./pages/Welcome";
 
 const queryClient = new QueryClient();
 
@@ -65,6 +66,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/agent-register" element={<AgentRegister />} />
+            <Route path="/welcome" element={<Welcome />} />
             <Route path="/agent-dashboard" element={<AgentRoute><AgentDashboard /></AgentRoute>} />
             <Route path="/agent-dashboard/client/:clientId" element={<AgentRoute><AgentClientDetail /></AgentRoute>} />
             <Route path="/agent-dashboard/athlete/:athleteId" element={<AgentRoute><AgentAthleteProfile /></AgentRoute>} />
