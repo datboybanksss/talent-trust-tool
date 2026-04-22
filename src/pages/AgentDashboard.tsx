@@ -786,12 +786,14 @@ const AgentDashboard = () => {
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-display font-bold text-foreground">Client Invitations</h2>
-              <Button
-                className="bg-primary text-primary-foreground hover:bg-primary/90"
-                onClick={() => setDialogOpen(true)}
-              >
-                <UserPlus className="w-4 h-4 mr-2" /> New Client
-              </Button>
+              <OwnerOnly>
+                <Button
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                  onClick={() => setDialogOpen(true)}
+                >
+                  <UserPlus className="w-4 h-4 mr-2" /> New Client
+                </Button>
+              </OwnerOnly>
             </div>
 
 
@@ -898,15 +900,17 @@ const AgentDashboard = () => {
                             <User className="w-3 h-3 mr-1" /> Full Profile
                           </Button>
                         )}
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                          onClick={(e) => { e.stopPropagation(); setRemoveTarget(inv); }}
-                          aria-label={`Remove ${inv.client_name} from roster`}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        <OwnerOnly>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                            onClick={(e) => { e.stopPropagation(); setRemoveTarget(inv); }}
+                            aria-label={`Remove ${inv.client_name} from roster`}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </OwnerOnly>
                       </div>
                     </CardContent>
                   </Card>
