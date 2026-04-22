@@ -88,8 +88,10 @@ export function useStaffAccess(): StaffAccessState {
     let subscribedOk = false;
 
     const handleRevoked = async () => {
-      try { await supabase.auth.signOut(); } catch { /* noop */ }
       toast({ title: "Access revoked", description: "Your access to this agency has been revoked." });
+      // Give the toast time to render and be readable before tearing down auth state
+      await new Promise((r) => setTimeout(r, 1500));
+      try { await supabase.auth.signOut(); } catch { /* noop */ }
       navigate("/auth");
     };
 
