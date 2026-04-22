@@ -139,7 +139,7 @@ const AgentDashboard = () => {
   // Form state — extended profile
   const [teamOrAgency, setTeamOrAgency] = useState("");
   const [sportOrDiscipline, setSportOrDiscipline] = useState("");
-  const [marketValue, setMarketValue] = useState("");
+  const [engagementType, setEngagementType] = useState("");
   const [location, setLocation] = useState("");
   const [nationality, setNationality] = useState("South African");
   const [dateOfBirth, setDateOfBirth] = useState("");
@@ -220,7 +220,7 @@ const AgentDashboard = () => {
         if (keyMap["type"] || keyMap["client type"]) setClientType((keyMap["type"] || keyMap["client type"]).toLowerCase());
         if (keyMap["team"] || keyMap["agency"]) setTeamOrAgency(keyMap["team"] || keyMap["agency"]);
         if (keyMap["sport"] || keyMap["discipline"]) setSportOrDiscipline(keyMap["sport"] || keyMap["discipline"]);
-        if (keyMap["market value"] || keyMap["value"]) setMarketValue(keyMap["market value"] || keyMap["value"]);
+        if (keyMap["engagement type"] || keyMap["engagement"]) setEngagementType(keyMap["engagement type"] || keyMap["engagement"]);
         if (keyMap["location"] || keyMap["city"]) setLocation(keyMap["location"] || keyMap["city"]);
         if (keyMap["nationality"]) setNationality(keyMap["nationality"]);
         if (keyMap["date of birth"] || keyMap["dob"]) setDateOfBirth(keyMap["date of birth"] || keyMap["dob"]);
@@ -278,7 +278,7 @@ const AgentDashboard = () => {
 
   const resetForm = () => {
     setClientName(""); setClientEmail(""); setClientPhone(""); setClientType(""); setNotes("");
-    setUploadedFiles([]); setTeamOrAgency(""); setSportOrDiscipline(""); setMarketValue("");
+    setUploadedFiles([]); setTeamOrAgency(""); setSportOrDiscipline(""); setEngagementType("");
     setLocation(""); setNationality("South African"); setDateOfBirth(""); setIdNumber("");
     setSocialHandle(""); setPreDeals([]); setImportedData(null); setImportErrors([]);
     setFormTab("basic");
@@ -337,7 +337,7 @@ const AgentDashboard = () => {
           profile: {
             team_or_agency: teamOrAgency,
             sport_or_discipline: sportOrDiscipline,
-            market_value: marketValue,
+            engagement_type: engagementType,
             location,
             nationality,
             date_of_birth: dateOfBirth,
@@ -919,8 +919,18 @@ const AgentDashboard = () => {
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <Label className="text-xs">Market Value (estimated)</Label>
-                          <Input value={marketValue} onChange={(e) => setMarketValue(e.target.value)} placeholder="e.g. R45,000,000" />
+                          <Label className="text-xs">Engagement Type</Label>
+                          <Select value={engagementType} onValueChange={setEngagementType}>
+                            <SelectTrigger><SelectValue placeholder="Select engagement type" /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Full Representation">Full Representation</SelectItem>
+                              <SelectItem value="Commercial Rights Only">Commercial Rights Only</SelectItem>
+                              <SelectItem value="Brand & Endorsements">Brand & Endorsements</SelectItem>
+                              <SelectItem value="Contract Negotiation">Contract Negotiation</SelectItem>
+                              <SelectItem value="Advisory / Consultation">Advisory / Consultation</SelectItem>
+                              <SelectItem value="Other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
                         <div>
                           <Label className="text-xs">Location</Label>
@@ -1048,7 +1058,7 @@ const AgentDashboard = () => {
                       {sportOrDiscipline && <Badge variant="secondary" className="text-[10px]">{sportOrDiscipline}</Badge>}
                       {preDeals.length > 0 && <Badge variant="secondary" className="text-[10px]">{preDeals.length} deal{preDeals.length > 1 ? "s" : ""}</Badge>}
                       {uploadedFiles.length > 0 && <Badge variant="secondary" className="text-[10px]">{uploadedFiles.length} file{uploadedFiles.length > 1 ? "s" : ""}</Badge>}
-                      {marketValue && <Badge variant="secondary" className="text-[10px]">{marketValue}</Badge>}
+                      {engagementType && <Badge variant="secondary" className="text-[10px]">{engagementType}</Badge>}
                     </div>
                     <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90" onClick={handleCreateInvitation} disabled={isCreating || !clientName || !clientEmail}>
                       {isCreating ? (isUploading ? "Uploading documents..." : "Creating...") : "Create Profile & Generate Link"}
