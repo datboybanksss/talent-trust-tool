@@ -79,6 +79,9 @@ const AgentDashboard = () => {
   const [bulkProgress, setBulkProgress] = useState(0);
   const bulkInputRef = useRef<HTMLInputElement>(null);
 
+  // Remove-from-roster dialog state
+  const [removeTarget, setRemoveTarget] = useState<Invitation | null>(null);
+
   // Staff confidentiality gate state
   const [staffAccess, setStaffAccess] = useState<{
     id: string;
