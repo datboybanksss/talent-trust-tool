@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useStaffAccess } from "@/hooks/useStaffAccess";
 import EmailVerificationGate from "@/components/auth/EmailVerificationGate";
+import { useAccountSetupGate } from "@/hooks/useAccountSetupGate";
 
 interface AgentRouteProps {
   children: React.ReactNode;
@@ -24,8 +25,9 @@ const AgentRoute = ({ children }: AgentRouteProps) => {
   const { role, loading: roleLoading } = useUserRole();
   const staff = useStaffAccess();
   const location = useLocation();
+  const gate = useAccountSetupGate();
 
-  if (authLoading || roleLoading || staff.loading) {
+  if (authLoading || roleLoading || staff.loading || gate.loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-pulse text-muted-foreground">Loading...</div>
@@ -39,6 +41,12 @@ const AgentRoute = ({ children }: AgentRouteProps) => {
 
   if (!user.email_confirmed_at) {
     return <EmailVerificationGate />;
+  }
+
+  // Setup gate (pending staff → /staff-activate, no role → /welcome) takes
+  // precedence over the agent-allow check, so users finish setup first.
+  if (gate.redirectTo && gate.redirectTo !== location.pathname) {
+    return <Navigate to={gate.redirectTo} replace />;
   }
 
   const isAllowed = role === "admin" || role === "agent" || staff.isStaff;
