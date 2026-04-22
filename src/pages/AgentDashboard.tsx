@@ -139,7 +139,7 @@ const AgentDashboard = () => {
   // Form state — extended profile
   const [teamOrAgency, setTeamOrAgency] = useState("");
   const [sportOrDiscipline, setSportOrDiscipline] = useState("");
-  const [marketValue, setMarketValue] = useState("");
+  const [engagementType, setEngagementType] = useState("");
   const [location, setLocation] = useState("");
   const [nationality, setNationality] = useState("South African");
   const [dateOfBirth, setDateOfBirth] = useState("");
@@ -278,7 +278,7 @@ const AgentDashboard = () => {
 
   const resetForm = () => {
     setClientName(""); setClientEmail(""); setClientPhone(""); setClientType(""); setNotes("");
-    setUploadedFiles([]); setTeamOrAgency(""); setSportOrDiscipline(""); setMarketValue("");
+    setUploadedFiles([]); setTeamOrAgency(""); setSportOrDiscipline(""); setEngagementType("");
     setLocation(""); setNationality("South African"); setDateOfBirth(""); setIdNumber("");
     setSocialHandle(""); setPreDeals([]); setImportedData(null); setImportErrors([]);
     setFormTab("basic");
@@ -337,7 +337,7 @@ const AgentDashboard = () => {
           profile: {
             team_or_agency: teamOrAgency,
             sport_or_discipline: sportOrDiscipline,
-            market_value: marketValue,
+            engagement_type: engagementType,
             location,
             nationality,
             date_of_birth: dateOfBirth,
