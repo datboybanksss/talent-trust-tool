@@ -985,7 +985,9 @@ const AgentDashboard = () => {
                   Recent Activity
                 </h3>
                 <div className="space-y-4">
-                  {MOCK_RECENT_ACTIVITY.map((activity, i) => (
+                  {recentActivity.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">No recent activity yet.</p>
+                  ) : recentActivity.map((activity, i) => (
                     <div key={i} className="flex items-start gap-3">
                       <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center shrink-0 mt-0.5">
                         <activity.icon className="w-3.5 h-3.5 text-muted-foreground" />
