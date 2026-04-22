@@ -795,7 +795,9 @@ const AgentDashboard = () => {
             <AgreementTemplates clients={invitations.filter(i => i.status === "activated").map(i => ({ id: i.id, name: i.client_name, email: i.client_email, phone: i.client_phone, type: i.client_type }))} />
           </SectionGuard>
         ) : activeView === "share" ? (
-          <SectionGuard ownerOnly><SharePortal /></SectionGuard>
+          <SharePortal />
+        ) : activeView === "agency" ? (
+          <AgencyDirectory />
         ) : (
         <>
         {staff.isStaff && !staff.sections.includes("clients") ? (
