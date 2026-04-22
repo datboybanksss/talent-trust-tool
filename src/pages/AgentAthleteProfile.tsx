@@ -25,6 +25,7 @@ import TravelSection from "@/components/agent/athlete-profile/TravelSection";
 import DocumentVaultSection from "@/components/agent/athlete-profile/DocumentVaultSection";
 import AccessConsentSection from "@/components/agent/athlete-profile/AccessConsentSection";
 import ExpiryAlertsPanel from "@/components/agent/athlete-profile/ExpiryAlertsPanel";
+import StaffContextBanner from "@/components/agent/StaffContextBanner";
 
 const tabs = [
   { id: "personal", label: "Personal", icon: User, section: "personal" },
@@ -83,6 +84,7 @@ const AgentAthleteProfile = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <StaffContextBanner />
       {/* Header */}
       <div className="border-b border-border bg-card">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">

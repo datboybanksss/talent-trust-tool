@@ -24,6 +24,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { fetchBeneficiaries, fetchEmergencyContacts, fetchLifeFileDocuments } from "@/services/lifeFileService";
 import { fetchLifeFileAssets } from "@/services/lifeFileAssetService";
+import StaffContextBanner from "@/components/agent/StaffContextBanner";
 
 interface Invitation {
   id: string;
@@ -358,6 +359,8 @@ const AgentClientDetail = () => {
           </Button>
         </div>
       </header>
+
+      <StaffContextBanner />
 
       <div className="container py-6 max-w-6xl mx-auto space-y-6">
         {/* Pending banner */}

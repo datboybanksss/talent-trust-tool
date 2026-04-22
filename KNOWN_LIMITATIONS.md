@@ -57,3 +57,10 @@ Current: when the `agency_costs` table is built (revenue capture sprint), column
 Limitation: no SARS-aligned tax reporting from cost entries; agents must reconcile externally.
 Future fix: include those columns in the initial migration and surface them in the cost entry dialog with a "VAT-inclusive (15%)" toggle.
 Deferred at: 2026-04-22
+
+## Dedicated staff dashboard deferred
+
+Current: staff users sign in via `/auth`, are routed to `/agent-dashboard` (via `useUserRole` precedence: admin > agent > staff > client), see all agency-scoped data via `useAgencyScope`, have all write actions hidden via `<OwnerOnly>`, and see a persistent `<StaffContextBanner>` at the top of every page reinforcing "you are assisting {Owner} from {Agency}".
+Limitation: staff use the same dashboard layout as agency owners. Information density and section ordering are tuned for principals, not assistants. A PA's most-needed view (today's schedule + action queue) is not the landing surface.
+Future fix: a dedicated `/staff` route with PA-specific layout (StaffHeader, StaffStatsRow, TodayScheduleCard, ActionQueueCard, QuickAccessTiles, slimmer StaffSidebar) was designed but deferred. Build AFTER 2–3 real PAs have used the platform for at least a week each — design from observed behaviour, not speculation.
+Deferred at: 2026-04-22 (staff routing-fix sprint)
