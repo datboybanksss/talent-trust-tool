@@ -1,25 +1,37 @@
-import { Heart, Shield, TrendingUp, Users, Phone, FileText, AlertTriangle } from "lucide-react";
+import { Heart, Shield, TrendingUp, Users, Phone, FileText, AlertTriangle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import {
-  mockBeneficiaries,
-  mockEmergencyContacts,
-  mockDocuments,
-  mockAssets,
-  getLifeFileSummary,
-} from "@/data/mockLifeFileData";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
+import { fetchBeneficiaries, fetchEmergencyContacts, fetchLifeFileDocuments } from "@/services/lifeFileService";
+import { fetchLifeFileAssets } from "@/services/lifeFileAssetService";
+import { getLifeFileSummary } from "@/data/mockLifeFileData";
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat("en-ZA", { style: "currency", currency: "ZAR", maximumFractionDigits: 0 }).format(amount);
 
 const LifeFileSummaryCard = () => {
-  const summary = getLifeFileSummary(
-    mockBeneficiaries,
-    mockEmergencyContacts,
-    mockDocuments,
-    mockAssets,
-  );
+  const { user } = useAuth();
+  const userId = user?.id;
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["life-file-summary", userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const [beneficiaries, contacts, documents, assets] = await Promise.all([
+        fetchBeneficiaries(userId!),
+        fetchEmergencyContacts(userId!),
+        fetchLifeFileDocuments(userId!),
+        fetchLifeFileAssets(userId!),
+      ]);
+      return { beneficiaries, contacts, documents, assets };
+    },
+  });
+
+  const summary = data
+    ? getLifeFileSummary(data.beneficiaries as any, data.contacts as any, data.documents as any, data.assets as any)
+    : null;
 
   return (
     <div className="bg-card rounded-2xl border border-border p-6 shadow-soft">
