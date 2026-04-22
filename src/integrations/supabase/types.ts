@@ -14,6 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_deals: {
+        Row: {
+          agent_id: string
+          brand: string
+          client_invitation_id: string | null
+          client_name: string
+          client_type: string
+          created_at: string
+          currency: string
+          deal_type: string
+          end_date: string | null
+          id: string
+          notes: string | null
+          start_date: string | null
+          status: string
+          updated_at: string
+          value_amount: number | null
+          value_text: string
+        }
+        Insert: {
+          agent_id: string
+          brand: string
+          client_invitation_id?: string | null
+          client_name: string
+          client_type?: string
+          created_at?: string
+          currency?: string
+          deal_type?: string
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+          value_amount?: number | null
+          value_text: string
+        }
+        Update: {
+          agent_id?: string
+          brand?: string
+          client_invitation_id?: string | null
+          client_name?: string
+          client_type?: string
+          created_at?: string
+          currency?: string
+          deal_type?: string
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+          value_amount?: number | null
+          value_text?: string
+        }
+        Relationships: []
+      }
       agent_manager_profiles: {
         Row: {
           company_name: string
