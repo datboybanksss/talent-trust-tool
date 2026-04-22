@@ -678,6 +678,159 @@ const AgentDashboard = () => {
               </Button>
             </div>
 
+
+            <div className="space-y-3">
+              {invitations.length === 0 ? (
+                <Card className="border-dashed">
+                  <CardContent className="p-8 text-center space-y-3">
+                    <div className="w-12 h-12 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
+                      <UserPlus className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">No clients yet</p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        You haven't invited any clients yet. Click <strong>New Client</strong> to send your first invitation.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : invitations.map((inv) => {
+                const initials = inv.client_name.split(" ").map((n) => n[0]).join("").slice(0, 2);
+                const isActivated = inv.status === "activated";
+                const date = new Date(inv.created_at).toLocaleDateString("en-ZA", { day: "numeric", month: "short", year: "numeric" });
+
+                return (
+                  <Card
+                    key={inv.id}
+                    className="hover:border-primary/30 transition-all duration-200 hover:shadow-sm cursor-pointer"
+                    onClick={() => navigate(`/agent-dashboard/client/${inv.id}`)}
+                  >
+                    <CardContent className="p-4 flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-4 min-w-0">
+                        <div className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 font-semibold text-sm ${
+                          isActivated
+                            ? "bg-green-500/10 text-green-700"
+                            : "bg-primary/10 text-primary"
+                        }`}>
+                          {initials}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-medium text-foreground truncate">{inv.client_name}</p>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5 flex-wrap">
+                            <span className="flex items-center gap-1">
+                              <Mail className="w-3 h-3 shrink-0" />
+                              <span className="truncate">{inv.client_email}</span>
+                            </span>
+                            <span className="hidden sm:inline">·</span>
+                            <span className="hidden sm:inline">{date}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Badge variant="secondary" className="text-[10px] capitalize">
+                          {inv.client_type}
+                        </Badge>
+                        <Badge
+                          variant={isActivated ? "default" : "outline"}
+                          className={isActivated
+                            ? "bg-green-500/10 text-green-700 border-green-200 hover:bg-green-500/10"
+                            : "text-amber-600 border-amber-200"
+                          }
+                        >
+                          {isActivated ? (
+                            <><CheckCircle2 className="w-3 h-3 mr-1" />Active</>
+                          ) : (
+                            <><Clock className="w-3 h-3 mr-1" />Pending</>
+                          )}
+                        </Badge>
+                        {!isActivated && (
+                          <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); copyLink(inv.invitation_token); }} className="hidden sm:flex">
+                            <Copy className="w-3 h-3 mr-1" /> Copy Link
+                          </Button>
+                        )}
+                        {isActivated && (
+                          <Button variant="ghost" size="sm" className="text-primary hidden sm:flex" onClick={(e) => { e.stopPropagation(); navigate(`/agent-dashboard/client/${inv.id}`); }}>
+                            <Eye className="w-3 h-3 mr-1" /> View
+                          </Button>
+                        )}
+                        {inv.client_type === "athlete" && (
+                          <Button variant="outline" size="sm" className="text-primary border-primary/30 hidden sm:flex" onClick={(e) => { e.stopPropagation(); navigate(`/agent-dashboard/athlete/${inv.id}`); }}>
+                            <User className="w-3 h-3 mr-1" /> Full Profile
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                          onClick={(e) => { e.stopPropagation(); setRemoveTarget(inv); }}
+                          aria-label={`Remove ${inv.client_name} from roster`}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Sidebar — 1 col */}
+          <div className="space-y-6">
+            {/* Recent Activity */}
+            <Card className="border-border/50">
+              <CardContent className="p-5">
+                <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4 text-primary" />
+                  Recent Activity
+                </h3>
+                <div className="space-y-4">
+                  {recentActivity.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">No recent activity yet.</p>
+                  ) : recentActivity.map((activity, i) => (
+                    <div key={i} className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center shrink-0 mt-0.5">
+                        <activity.icon className="w-3.5 h-3.5 text-muted-foreground" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm text-foreground">{activity.action}</p>
+                        <p className="text-xs text-muted-foreground">{activity.client} · {activity.time}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-border/50">
+              <CardContent className="p-5">
+                <h3 className="font-semibold text-foreground mb-4">Client Breakdown</h3>
+                <div className="space-y-3">
+                  {[
+                    { label: "Athletes", count: invitations.filter((i) => i.client_type === "athlete").length, color: "bg-primary" },
+                    { label: "Artists", count: invitations.filter((i) => i.client_type === "artist").length, color: "bg-accent" },
+                  ].map((item) => (
+                    <div key={item.label}>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="text-muted-foreground">{item.label}</span>
+                        <span className="font-medium text-foreground">{item.count}</span>
+                      </div>
+                      <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                        <div
+                          className={`h-full ${item.color} rounded-full transition-all`}
+                          style={{ width: `${invitations.length > 0 ? (item.count / invitations.length) * 100 : 0}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+        </>
+        )}
+
             {/* New Client dialog: kept here for now, but always mounted regardless of view */}
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogContent className="max-w-2xl max-h-[90vh]">
@@ -903,159 +1056,6 @@ const AgentDashboard = () => {
                   </div>
                 </DialogContent>
               </Dialog>
-
-            <div className="space-y-3">
-              {invitations.length === 0 ? (
-                <Card className="border-dashed">
-                  <CardContent className="p-8 text-center space-y-3">
-                    <div className="w-12 h-12 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
-                      <UserPlus className="w-6 h-6 text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-foreground">No clients yet</p>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        You haven't invited any clients yet. Click <strong>New Client</strong> to send your first invitation.
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ) : invitations.map((inv) => {
-                const initials = inv.client_name.split(" ").map((n) => n[0]).join("").slice(0, 2);
-                const isActivated = inv.status === "activated";
-                const date = new Date(inv.created_at).toLocaleDateString("en-ZA", { day: "numeric", month: "short", year: "numeric" });
-
-                return (
-                  <Card
-                    key={inv.id}
-                    className="hover:border-primary/30 transition-all duration-200 hover:shadow-sm cursor-pointer"
-                    onClick={() => navigate(`/agent-dashboard/client/${inv.id}`)}
-                  >
-                    <CardContent className="p-4 flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-4 min-w-0">
-                        <div className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 font-semibold text-sm ${
-                          isActivated
-                            ? "bg-green-500/10 text-green-700"
-                            : "bg-primary/10 text-primary"
-                        }`}>
-                          {initials}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="font-medium text-foreground truncate">{inv.client_name}</p>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5 flex-wrap">
-                            <span className="flex items-center gap-1">
-                              <Mail className="w-3 h-3 shrink-0" />
-                              <span className="truncate">{inv.client_email}</span>
-                            </span>
-                            <span className="hidden sm:inline">·</span>
-                            <span className="hidden sm:inline">{date}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <Badge variant="secondary" className="text-[10px] capitalize">
-                          {inv.client_type}
-                        </Badge>
-                        <Badge
-                          variant={isActivated ? "default" : "outline"}
-                          className={isActivated
-                            ? "bg-green-500/10 text-green-700 border-green-200 hover:bg-green-500/10"
-                            : "text-amber-600 border-amber-200"
-                          }
-                        >
-                          {isActivated ? (
-                            <><CheckCircle2 className="w-3 h-3 mr-1" />Active</>
-                          ) : (
-                            <><Clock className="w-3 h-3 mr-1" />Pending</>
-                          )}
-                        </Badge>
-                        {!isActivated && (
-                          <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); copyLink(inv.invitation_token); }} className="hidden sm:flex">
-                            <Copy className="w-3 h-3 mr-1" /> Copy Link
-                          </Button>
-                        )}
-                        {isActivated && (
-                          <Button variant="ghost" size="sm" className="text-primary hidden sm:flex" onClick={(e) => { e.stopPropagation(); navigate(`/agent-dashboard/client/${inv.id}`); }}>
-                            <Eye className="w-3 h-3 mr-1" /> View
-                          </Button>
-                        )}
-                        {inv.client_type === "athlete" && (
-                          <Button variant="outline" size="sm" className="text-primary border-primary/30 hidden sm:flex" onClick={(e) => { e.stopPropagation(); navigate(`/agent-dashboard/athlete/${inv.id}`); }}>
-                            <User className="w-3 h-3 mr-1" /> Full Profile
-                          </Button>
-                        )}
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                          onClick={(e) => { e.stopPropagation(); setRemoveTarget(inv); }}
-                          aria-label={`Remove ${inv.client_name} from roster`}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Sidebar — 1 col */}
-          <div className="space-y-6">
-            {/* Recent Activity */}
-            <Card className="border-border/50">
-              <CardContent className="p-5">
-                <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-                  <BarChart3 className="w-4 h-4 text-primary" />
-                  Recent Activity
-                </h3>
-                <div className="space-y-4">
-                  {recentActivity.length === 0 ? (
-                    <p className="text-xs text-muted-foreground">No recent activity yet.</p>
-                  ) : recentActivity.map((activity, i) => (
-                    <div key={i} className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center shrink-0 mt-0.5">
-                        <activity.icon className="w-3.5 h-3.5 text-muted-foreground" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm text-foreground">{activity.action}</p>
-                        <p className="text-xs text-muted-foreground">{activity.client} · {activity.time}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-border/50">
-              <CardContent className="p-5">
-                <h3 className="font-semibold text-foreground mb-4">Client Breakdown</h3>
-                <div className="space-y-3">
-                  {[
-                    { label: "Athletes", count: invitations.filter((i) => i.client_type === "athlete").length, color: "bg-primary" },
-                    { label: "Artists", count: invitations.filter((i) => i.client_type === "artist").length, color: "bg-accent" },
-                  ].map((item) => (
-                    <div key={item.label}>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span className="text-muted-foreground">{item.label}</span>
-                        <span className="font-medium text-foreground">{item.count}</span>
-                      </div>
-                      <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                        <div
-                          className={`h-full ${item.color} rounded-full transition-all`}
-                          style={{ width: `${invitations.length > 0 ? (item.count / invitations.length) * 100 : 0}%` }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-        </>
-        )}
-
       {/* Bulk Import Dialog */}
       <Dialog open={bulkDialogOpen} onOpenChange={setBulkDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[85vh]">
