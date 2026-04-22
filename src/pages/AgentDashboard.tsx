@@ -678,13 +678,15 @@ const AgentDashboard = () => {
               </Button>
             </div>
 
-            {/* New Client dialog moved to top level so it opens from any view */}
-
-            <div className="hidden">
-              {/* placeholder kept empty — real dialog lives at root */}
-            </div>
-            {false && (
-              <div>
+            {/* New Client dialog: kept here for now, but always mounted regardless of view */}
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogContent className="max-w-2xl max-h-[90vh]">
+                <DialogHeader>
+                  <DialogTitle>Create Client Profile</DialogTitle>
+                  <DialogDescription>
+                    Pre-populate your client's profile with detailed information, deals, and documents. Import from a spreadsheet or fill in manually.
+                  </DialogDescription>
+                </DialogHeader>
                 <div className="border border-dashed border-primary/40 bg-primary/5 rounded-lg p-3 flex items-center gap-3">
                     <FileSpreadsheet className="w-5 h-5 text-primary shrink-0" />
                     <div className="flex-1 min-w-0">
