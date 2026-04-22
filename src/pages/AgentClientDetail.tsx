@@ -206,11 +206,15 @@ const AgentClientDetail = () => {
       toast({ title: "Access Denied", description: "Activate servicing to download client Life File reports.", variant: "destructive" });
       return;
     }
+    if (!hasLifeFileData) {
+      toast({ title: "No Life File data", description: "This client has not populated their Life File yet.", variant: "destructive" });
+      return;
+    }
     generateLifeFilePDF({
-      beneficiaries: mockBeneficiaries,
-      emergencyContacts: mockEmergencyContacts,
-      documents: mockDocuments,
-      assets: mockAssets,
+      beneficiaries,
+      emergencyContacts,
+      documents,
+      assets,
       userName: client.name,
     });
     toast({ title: "Life File PDF Generated", description: `Full Life File report for ${client.name} downloaded.` });
