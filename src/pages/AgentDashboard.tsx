@@ -40,6 +40,7 @@ import SectionGuard from "@/components/agent/SectionGuard";
 import { useStaffAccess } from "@/hooks/useStaffAccess";
 import { useAgencyScope } from "@/hooks/useAgencyScope";
 import OwnerOnly from "@/components/agent/OwnerOnly";
+import StaffContextBanner from "@/components/agent/StaffContextBanner";
 
 interface Invitation {
   id: string;
@@ -687,6 +688,8 @@ const AgentDashboard = () => {
               />
             </div>
           </header>
+
+          <StaffContextBanner />
 
           <div className="p-6 max-w-6xl mx-auto w-full space-y-8">
         {/* Stats Row */}

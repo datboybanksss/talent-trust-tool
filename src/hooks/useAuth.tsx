@@ -66,6 +66,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = async () => {
+    // Clear per-session UI flags so a fresh sign-in shows context banners again.
+    try { sessionStorage.removeItem("staff-banner-dismissed"); } catch { /* noop */ }
     await supabase.auth.signOut();
   };
 

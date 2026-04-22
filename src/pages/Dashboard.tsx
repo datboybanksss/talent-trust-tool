@@ -1,5 +1,7 @@
+import { Navigate } from "react-router-dom";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { useProfile } from "@/hooks/useProfile";
+import { useAgencyScope } from "@/hooks/useAgencyScope";
 import CurrentTierBadge from "@/components/subscription/CurrentTierBadge";
 import StatsCard from "@/components/dashboard/StatsCard";
 import PropertyInvestments from "@/components/dashboard/PropertyInvestments";
@@ -31,7 +33,22 @@ import {
 import { Link } from "react-router-dom";
 
 const Dashboard = () => {
+  // Staff users should never see the client portal — bounce them to the agent
+  // portal where their view-only scoping and context banner live.
+  const { isViewingAsStaff, loading: scopeLoading } = useAgencyScope();
   const { profile, isAthlete, isArtist, clientType } = useProfile();
+
+  if (scopeLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-pulse text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
+  if (isViewingAsStaff) {
+    return <Navigate to="/agent-dashboard" replace />;
+  }
+
   const displayName = profile?.display_name || "there";
 
   const greeting = isAthlete
