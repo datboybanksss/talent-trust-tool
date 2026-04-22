@@ -1,49 +1,72 @@
 
 
-## Work Streams Status — Where We Are
+## Purge remaining mock data: Executive Overview, Compare, Calendar
 
-Below is the running ledger across the three work streams from your original brief. Nothing here changes code — it's a status report so you can pick what to do next.
+### Problem
+Three areas still render hardcoded mock data instead of the agent's real records, which corrupts reports and makes the UI lie to the user:
 
----
+1. **Executive Overview** (`components/executive/*` + `utils/executiveFilters.ts` + `data/executiveMockData.ts`) — KPIs, Book Value, Revenue Analytics, Demographics, Overhead all read from `executiveMockData.ts`. The PDF export (`executiveOverviewPdf.ts`) also pulls from these constants.
+2. **Compare** (`components/dashboard/ClientComparison.tsx`) — currently renders a fixed comparison set of mock clients.
+3. **Calendar** (`components/agent/AgentCalendar.tsx`) — renders mock events instead of real `shared_meetings` / `compliance_reminders`.
 
-### ✅ Work Stream 4 — Wire up "Add New Client" — **DONE**
+### Solution — wire each to live agent-owned data
 
-- New Client dialog lifted to top level of `AgentDashboard`, opens from sidebar Quick Action and from in-tab header button.
-- Clients tab routes correctly (no longer triggers the dialog).
-- Form writes to `client_invitations` with real `agent_id`, archived rows filtered out.
-- "Market Value" replaced with "Engagement Type" select (universal across athlete/artist/exec).
-- `MOCK_INVITATIONS` and `MOCK_STATS` removed; KPI cards compute from live invitations.
+#### 1. Executive Overview
+Aggregate from real tables the agent already owns:
+- `client_invitations` (active, non-archived) → Total Clients, New Clients YTD, client-type & demographic splits
+- `agent_deals` → Revenue Streams (group by `deal_type`), Book Value (sum `value_amount` by `client_type`), Top Clients (sum by `client_name`), monthly revenue series (group by `start_date` month), Concentration Risk (top-3 share)
+- Derived: Revenue Growth (this period vs prior), Avg Revenue / Client, Client Retention (1 − archived/total)
 
-### ✅ Work Stream 5 — Remove Client (archive flow) — **DONE**
+Replace `executiveMockData.ts` consumers:
+- Rewrite `utils/executiveFilters.ts` exports (`getFilteredKPIs`, `getFilteredClientTypeValues`, `getFilteredRevenueStreams`, demographics, overhead) to take **live datasets** + `ExecutiveFilters` and compute in-memory.
+- Add a single React Query hook `useExecutiveData(filters)` that fetches invitations + deals once and memoizes all derived slices.
+- Each section component (`ExecutiveKPICards`, `BookValueSection`, `RevenueAnalytics`, `DemographicsSection`, `OverheadSection`) reads from this hook.
+- Empty-state cards when there's no data ("Add deals and clients to populate this view").
 
-- `client_invitations.archived_at` column added.
-- `RemoveClientDialog` archives the invitation (status = `archived`, `archived_at` stamped) and clears the matching `life_file_shares` row.
-- Client's own account is left untouched.
-- Invitations query filters `archived_at IS NULL`, so removed clients drop off the roster immediately.
+**Overhead section**: no real cost-tracking table exists. Two options — chosen approach: **hide the Overhead tab entirely** until a future cost-tracking feature lands. (Alternative would be a new `agent_overhead_entries` table; out of scope for this pass.)
 
-### 🟡 Work Stream 6 — Mock Data Purge — **NOT STARTED**
+**Drill-Down sheet** (`DrillDownSheet.tsx` + `executiveDrillDownData.ts`): rewrite to filter the live deals/invitations arrays by the clicked segment instead of reading the mock drill-down file.
 
-This was deferred pending per-location decisions. Below is the full inventory of remaining mock-data sites I found, grouped by call-site so you can decide each one independently.
+**PDF export**: update `executiveOverviewPdf.ts` to accept the live aggregated payload as an argument.
 
-| # | Location | Mock source | Suggested direction |
-|---|---|---|---|
-| 1 | `pages/AgentAthleteProfile.tsx` | `mockAthleteProfiles` | Replace with live `athlete_profiles` query keyed off `client_invitation_id` (biggest job — 10 tabs of fields). |
-| 2 | `pages/AgentClientDetail.tsx` | `mockBeneficiaries`, `mockEmergencyContacts`, `mockDocuments`, `mockAssets` from `mockLifeFileData` | Reuse the live `life_file_*` services already powering the client-side Life File. |
-| 3 | `components/dashboard/LifeFileSummaryCard.tsx` | `mockAssets` from `mockLifeFileData` | Point at `lifeFileAssetService` for the signed-in user. |
-| 4 | `components/executive/*` (Revenue, BookValue, Overhead, Demographics) + `utils/executiveFilters.ts` | `executiveMockData` | Largest unknown — needs an aggregation strategy. Options: (a) leave as illustrative demo data behind an `is_demo` flag, (b) build real aggregation views over `client_invitations` + `agent_deals`, (c) hide section until data exists. |
-| 5 | `components/guardian/*` (Overview, Access, Consent, Audit tabs) | `mockGuardianData` | Wire to real `guardian_*` tables (these exist per memory) — CRUD probably already partial. |
-| 6 | `components/life-file/ImportFromIntegrationsDialog.tsx` | `mockConnectedAccounts`, `AVAILABLE_PROVIDERS` from `mockIntegrationData` | Per `mem://features/financial-integrations`, integrations are intentionally a waitlist/simulator. Likely **keep as-is** and label clearly. |
+Files touched:
+- Modify: all of `src/components/executive/*`, `src/utils/executiveFilters.ts`, `src/utils/executiveOverviewPdf.ts`, `src/utils/executiveReportPdf.ts`, `src/pages/ExecutiveOverview.tsx`
+- Create: `src/hooks/useExecutiveData.ts`
+- Delete: `src/data/executiveMockData.ts`, `src/data/executiveDrillDownData.ts`
+- Hide Overhead tab in `ExecutiveOverviewInline.tsx`
 
-### Recommendation
+#### 2. Compare (Client Comparison)
+Rewrite `ClientComparison.tsx` to:
+- Pull the agent's real `client_invitations` (status `active`, archived_at null) as the selectable pool.
+- For each selected client, load their `agent_deals` totals (count, sum of `value_amount`, latest deal status) and — when the client has activated and shared their Life File — their Life File summary (assets, beneficiaries count) via the existing share-aware policies.
+- Multi-select up to 4 clients via a combobox; render a side-by-side comparison table with the live metrics.
+- Empty state: "Add at least 2 clients to compare."
 
-Tackle WS6 in this order, one PR at a time:
+No mock array, no `executiveMockData` imports.
 
-1. **#3 LifeFileSummaryCard** — smallest, isolated, high user-visibility on the client dashboard.
-2. **#2 AgentClientDetail** — reuses existing services, no new schema.
-3. **#5 Guardian tabs** — schema already exists, mostly query wiring.
-4. **#1 AgentAthleteProfile** — biggest; needs `athlete_profiles` schema design first if not already built.
-5. **#4 Executive dashboard** — decide strategy before touching code (ask first).
-6. **#6 Integrations dialog** — likely no action; just confirm "demo by design" labelling.
+#### 3. Calendar (Agent)
+Rewrite `AgentCalendar.tsx` to:
+- Query `shared_meetings` where the current agent is `created_by` OR in `attendee_user_ids`.
+- Query `compliance_reminders` where `user_id = auth.uid()` and overlay them as date markers.
+- Replace the mock event list with a live month/week view backed by these two sources.
+- Add an "Add Event" button that inserts into `shared_meetings` (creator = agent, attendees = empty by default; client picker optional).
+- Edit/delete via existing RLS (creator-only).
+- Empty-state day: "No events scheduled."
 
-Tell me which one to start on and I'll come back with a focused plan for that single location.
+Files touched:
+- Modify: `src/components/agent/AgentCalendar.tsx`
+- Reuse: existing `shared_meetings` and `compliance_reminders` tables — no schema changes.
+
+### Out of scope
+- No new `agent_overhead_entries` table (Overhead tab hidden, not rebuilt).
+- No drag-and-drop on the calendar.
+- No edit-deal-from-Compare-view flow.
+- Mock data in `AgentAthleteProfile`, `AgentClientDetail`, `LifeFileSummaryCard`, `Guardian` tabs, `ImportFromIntegrationsDialog` — already addressed in earlier passes; not revisited here.
+
+### Verification
+- New agent with zero data: every section shows an empty state, no fake numbers.
+- Add a deal → Executive Overview KPIs, Book Value pie, Revenue Analytics bars all update.
+- Add a `shared_meeting` → it appears on Calendar immediately.
+- Select 2+ clients in Compare → live deal totals render; deselect → table updates.
+- PDF export uses live data only.
 
