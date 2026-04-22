@@ -188,11 +188,20 @@ const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, set
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
-        {!collapsed && agentProfile && (
+        {!collapsed && (
           <div className="px-2 pb-2">
             <div className="bg-secondary rounded-xl p-3">
-              <p className="text-xs font-medium text-foreground truncate">{agentProfile.company_name}</p>
-              <p className="text-[10px] text-muted-foreground truncate">{roleLabel}</p>
+              {staff.isStaff ? (
+                <>
+                  <p className="text-xs font-medium text-foreground truncate">Staff of {staff.agencyName}</p>
+                  <p className="text-[10px] text-muted-foreground truncate">{user?.email} · {footerRoleLabel}</p>
+                </>
+              ) : agentProfile ? (
+                <>
+                  <p className="text-xs font-medium text-foreground truncate">{agentProfile.company_name}</p>
+                  <p className="text-[10px] text-muted-foreground truncate">{footerRoleLabel}</p>
+                </>
+              ) : null}
             </div>
           </div>
         )}
