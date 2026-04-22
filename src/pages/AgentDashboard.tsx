@@ -1149,6 +1149,14 @@ const AgentDashboard = () => {
       </div>
     </SidebarProvider>
     <AgentChatBot />
+    <RemoveClientDialog
+      open={!!removeTarget}
+      onOpenChange={(o) => { if (!o) setRemoveTarget(null); }}
+      invitationId={removeTarget?.id ?? null}
+      clientName={removeTarget?.client_name ?? ""}
+      clientUserId={removeTarget?.activated_user_id ?? null}
+      onDone={fetchInvitations}
+    />
     </>
   );
 };
