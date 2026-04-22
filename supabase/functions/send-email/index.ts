@@ -1,5 +1,9 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
+const SITE_NAME = "legacybuilderapp";
+const SENDER_DOMAIN = "admin.themvpbuilder.co.za";
+const FROM_DOMAIN = "themvpbuilder.co.za";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -50,11 +54,15 @@ Deno.serve(async (req) => {
     const { error: enqueueError } = await supabase.rpc("enqueue_email", {
       queue_name: "transactional_emails",
       payload: {
+        run_id: messageId,
         message_id: messageId,
         idempotency_key: messageId,
         to: body.to,
+        from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
+        sender_domain: SENDER_DOMAIN,
         subject: body.subject,
         html: body.html,
+        text: body.html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim(),
         replyTo: body.replyTo ?? null,
         label: "transactional",
         purpose: "transactional",
