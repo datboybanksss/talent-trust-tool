@@ -150,8 +150,12 @@ Deno.serve(async (req) => {
   if (existingUser) isReturningUser = true;
 
   // 7. Build template + activation URL
+  // Always use the published public domain so invitees (who don't have Lovable accounts)
+  // never get routed through the Lovable preview login. The caller's app_origin is ignored
+  // for activation links to keep external users on a public, auth-free landing page.
+  const PUBLIC_APP_ORIGIN = "https://themvpbuilder.co.za";
   const path = body.invitation_type === "staff" ? "staff-activate" : "client-activate";
-  const activationUrl = `${body.app_origin.replace(/\/$/, "")}/${path}/${token}`;
+  const activationUrl = `${PUBLIC_APP_ORIGIN}/${path}/${token}`;
 
   const tpl = body.invitation_type === "staff"
     ? staffInvitationEmail({
