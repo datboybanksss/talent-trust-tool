@@ -42,36 +42,48 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Attempt to send email
+    // Enqueue email via pgmq → process-email-queue worker (cron) sends it
     let success = false;
     let errorMessage: string | null = null;
+    const messageId = crypto.randomUUID();
 
-    try {
-      // Try Lovable Cloud's native email sending
-      const emailResponse = await fetch(`${supabaseUrl}/functions/v1/process-email-queue`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${supabaseServiceKey}`,
-        },
-        body: JSON.stringify({
-          to: body.to,
-          subject: body.subject,
-          html: body.html,
-          replyTo: body.replyTo,
-        }),
-      });
+    const { error: enqueueError } = await supabase.rpc("enqueue_email", {
+      queue_name: "transactional_emails",
+      payload: {
+        message_id: messageId,
+        to: body.to,
+        subject: body.subject,
+        html: body.html,
+        replyTo: body.replyTo ?? null,
+        label: "transactional",
+        purpose: "transactional",
+        queued_at: new Date().toISOString(),
+      },
+    });
 
-      if (emailResponse.ok) {
-        success = true;
-      } else {
-        const errText = await emailResponse.text();
-        errorMessage = `Email service responded with ${emailResponse.status}: ${errText}`;
-        console.warn("Email send failed (domain may not be configured yet):", errorMessage);
+    if (enqueueError) {
+      errorMessage = enqueueError.message;
+      console.error("Enqueue failed:", errorMessage);
+    } else {
+      success = true;
+    }
+
+    // Trigger the worker once so the email goes out within seconds
+    // (instead of waiting up to 1 min for the cron tick)
+    if (success) {
+      try {
+        await fetch(`${supabaseUrl}/functions/v1/process-email-queue`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${supabaseServiceKey}`,
+          },
+          body: "{}",
+        });
+      } catch (kickErr) {
+        // Worker kick is best-effort; cron will pick it up
+        console.warn("Worker kick failed (cron will retry):", kickErr);
       }
-    } catch (sendErr) {
-      errorMessage = sendErr instanceof Error ? sendErr.message : "Unknown send error";
-      console.warn("Email send error (domain may not be configured yet):", errorMessage);
     }
 
     // Log to audit_log regardless of outcome
@@ -83,8 +95,9 @@ Deno.serve(async (req) => {
         to: body.to,
         subject: body.subject,
         replyTo: body.replyTo || null,
-        status: success ? "sent" : "failed",
+        status: success ? "queued" : "failed",
         error: errorMessage,
+        message_id: messageId,
         timestamp: new Date().toISOString(),
       },
     });
@@ -92,7 +105,8 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         success,
-        error: success ? undefined : (errorMessage || "Email domain not configured"),
+        message_id: success ? messageId : undefined,
+        error: success ? undefined : (errorMessage || "Failed to queue email"),
       }),
       {
         status: 200,
