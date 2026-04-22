@@ -180,11 +180,13 @@ const AgentDashboard = () => {
   };
 
   const fetchInvitations = async () => {
+    if (!user) return;
     const { data } = await supabase
       .from("client_invitations")
       .select("*")
+      .eq("agent_id", user.id)
       .order("created_at", { ascending: false });
-    if (data && data.length > 0) setInvitations(data);
+    setInvitations(data ?? []);
   };
 
   const handleSpreadsheetImport = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
