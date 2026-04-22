@@ -18,6 +18,7 @@ export interface StaffAccessState {
   isStaff: boolean;
   agencyOwnerId: string | null;
   agencyName: string | null;
+  agencyOwnerName: string | null;
   sections: string[];
   roleLabel: string | null;
   loading: boolean;
@@ -27,6 +28,7 @@ const initial: StaffAccessState = {
   isStaff: false,
   agencyOwnerId: null,
   agencyName: null,
+  agencyOwnerName: null,
   sections: [...ALL_SECTIONS],
   roleLabel: null,
   loading: true,
@@ -59,6 +61,7 @@ export function useStaffAccess(): StaffAccessState {
         isStaff: false,
         agencyOwnerId: null,
         agencyName: null,
+        agencyOwnerName: null,
         sections: [...ALL_SECTIONS],
         roleLabel: null,
         loading: false,
@@ -66,16 +69,24 @@ export function useStaffAccess(): StaffAccessState {
       return null;
     }
 
-    const { data: agency } = await supabase
-      .from("agent_manager_profiles")
-      .select("company_name")
-      .eq("user_id", row.agent_id)
-      .maybeSingle();
+    const [{ data: agency }, { data: ownerProfile }] = await Promise.all([
+      supabase
+        .from("agent_manager_profiles")
+        .select("company_name")
+        .eq("user_id", row.agent_id)
+        .maybeSingle(),
+      supabase
+        .from("profiles")
+        .select("display_name")
+        .eq("user_id", row.agent_id)
+        .maybeSingle(),
+    ]);
 
     setState({
       isStaff: true,
       agencyOwnerId: row.agent_id,
       agencyName: agency?.company_name ?? "Your Agency",
+      agencyOwnerName: ownerProfile?.display_name ?? "your agent",
       sections: (row.sections as string[]) ?? [],
       roleLabel: row.role_label ?? "Staff",
       loading: false,

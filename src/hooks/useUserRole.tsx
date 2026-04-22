@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
-export type UserRole = "athlete" | "artist" | "agent" | "admin" | "user" | null;
+export type UserRole = "athlete" | "artist" | "agent" | "admin" | "staff" | "user" | null;
 
 export function useUserRole() {
   const { user } = useAuth();
@@ -36,6 +36,20 @@ export function useUserRole() {
         .maybeSingle();
       if (agentProfile) {
         setRole("agent");
+        setLoading(false);
+        return;
+      }
+
+      // Check active staff membership (precedence: admin > agent > staff > client)
+      const { data: staffRows } = await supabase
+        .from("portal_staff_access")
+        .select("id")
+        .eq("staff_user_id", user.id)
+        .eq("status", "active")
+        .not("confidentiality_accepted_at", "is", null)
+        .limit(1);
+      if (staffRows && staffRows.length > 0) {
+        setRole("staff");
         setLoading(false);
         return;
       }
@@ -74,6 +88,9 @@ export function useUserRole() {
     switch (role) {
       case "admin": return "/admin";
       case "agent": return "/agent-dashboard";
+      // Staff route to /agent-dashboard (NOT /staff — dedicated staff dashboard
+      // deferred pending real-PA feedback; see KNOWN_LIMITATIONS.md).
+      case "staff": return "/agent-dashboard";
       default: return "/dashboard";
     }
   })();

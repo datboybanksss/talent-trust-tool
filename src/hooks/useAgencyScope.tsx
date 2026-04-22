@@ -28,6 +28,8 @@ export interface AgencyScope {
   sections: string[];
   /** Display name of the agency being viewed (for badges/headers). */
   agencyName: string | null;
+  /** Display name of the agency owner (for the staff context banner). */
+  agencyOwnerName: string | null;
   /** Display label for the staff member's role (e.g. "Personal Assistant"). */
   roleLabel: string | null;
   loading: boolean;
@@ -45,6 +47,7 @@ export const useAgencyScope = (): AgencyScope => {
       isViewingAsStaff: false,
       sections: [],
       agencyName: null,
+      agencyOwnerName: null,
       roleLabel: null,
       loading: true,
     };
@@ -56,6 +59,7 @@ export const useAgencyScope = (): AgencyScope => {
       isViewingAsStaff: true,
       sections: staff.sections,
       agencyName: staff.agencyName,
+      agencyOwnerName: staff.agencyOwnerName,
       roleLabel: staff.roleLabel,
       loading: false,
     };
@@ -66,6 +70,7 @@ export const useAgencyScope = (): AgencyScope => {
     isViewingAsStaff: false,
     sections: [],
     agencyName: null,
+    agencyOwnerName: null,
     roleLabel: null,
     loading: false,
   };
