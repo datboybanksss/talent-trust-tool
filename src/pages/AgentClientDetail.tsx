@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -18,9 +18,13 @@ import {
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
-import { mockBeneficiaries, mockEmergencyContacts, mockDocuments, mockAssets, getLifeFileSummary } from "@/data/mockLifeFileData";
+import { getLifeFileSummary } from "@/data/mockLifeFileData";
 import { generateLifeFilePDF } from "@/utils/lifeFilePdfExport";
-import { INSURANCE_TYPES, INVESTMENT_TYPES } from "@/types/lifeFileAsset";
+import { INSURANCE_TYPES, INVESTMENT_TYPES, type LifeFileAsset } from "@/types/lifeFileAsset";
+import type { Beneficiary, EmergencyContact, LifeFileDocument } from "@/types/lifeFile";
+import { supabase } from "@/integrations/supabase/client";
+import { fetchBeneficiaries, fetchEmergencyContacts, fetchLifeFileDocuments } from "@/services/lifeFileService";
+import { fetchLifeFileAssets } from "@/services/lifeFileAssetService";
 
 // ─── Mock Client Data ───────────────────────────────────────────────
 const MOCK_CLIENTS: Record<string, any> = {
