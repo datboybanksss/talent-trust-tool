@@ -22,7 +22,6 @@ import {
   UserPlus,
   FileSpreadsheet,
   Mail,
-  LogOut,
   Shield,
   Settings,
   FileText,
@@ -31,7 +30,6 @@ import {
   Building2,
   UserCircle2,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 interface AgentSidebarProps {
   onNewClient: () => void;
@@ -54,7 +52,7 @@ const mainNavItems = [
 const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, setActiveView }: AgentSidebarProps) => {
   const { state, isMobile, toggleSidebar } = useSidebar();
   const collapsed = state === "collapsed";
-  const { signOut, user } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const staff = useStaffAccess();
 
@@ -82,11 +80,6 @@ const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, set
 
   const roleLabel = agentProfile?.role === "athlete_agent" ? "Athletes' Agent" : "Artists' Manager";
   const footerRoleLabel = staff.isStaff ? (staff.roleLabel ?? "Staff") : roleLabel;
-
-  const handleSignOut = async () => {
-    await signOut();
-    navigate("/");
-  };
 
   return (
     <Sidebar collapsible="offcanvas">
