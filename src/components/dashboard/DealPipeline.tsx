@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAgencyScope } from "@/hooks/useAgencyScope";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import OwnerOnly from "@/components/agent/OwnerOnly";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -49,8 +49,11 @@ const stageLabel = (id: string) => PIPELINE_STAGES.find((s) => s.id === id)?.lab
 
 const DealPipeline = () => {
   const navigate = useNavigate();
-  const { scopedAgentId, loading: scopeLoading, isViewingAsStaff } = useAgencyScope();
+  const { scopedAgentId, loading: scopeLoading, canEdit, canDelete } = useAgencyScope();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
+  const writePipeline = canEdit("pipeline");
+  const deletePipeline = canDelete("pipeline");
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingDeal, setEditingDeal] = useState<Deal | null>(null);
@@ -70,6 +73,8 @@ const DealPipeline = () => {
       return (data ?? []) as Deal[];
     },
     enabled: !scopeLoading && !!scopedAgentId,
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: true,
   });
 
   const handleAdd = () => {
@@ -90,7 +95,7 @@ const DealPipeline = () => {
   const handleMoveStage = async (deal: Deal, newStatus: string) => {
     const { error } = await supabase
       .from("agent_deals")
-      .update({ status: newStatus })
+      .update({ status: newStatus, updated_by: user?.id ?? null })
       .eq("id", deal.id);
     if (error) {
       toast.error("Failed to move deal", { description: error.message });
@@ -111,11 +116,11 @@ const DealPipeline = () => {
           <h2 className="text-xl font-display font-semibold text-foreground">Deal Pipeline</h2>
           <p className="text-xs text-muted-foreground">Track opportunities across stages</p>
         </div>
-        <OwnerOnly>
+        {writePipeline && (
           <Button onClick={handleAdd} size="sm" className="gap-2">
             <Plus className="w-4 h-4" /> Add Deal
           </Button>
-        </OwnerOnly>
+        )}
       </div>
 
       {/* Summary */}
@@ -149,11 +154,11 @@ const DealPipeline = () => {
             <p className="text-xs text-muted-foreground mb-4">
               Click <span className="font-medium">Add Deal</span> to start tracking your pipeline.
             </p>
-            <OwnerOnly>
+            {writePipeline && (
               <Button onClick={handleAdd} size="sm" variant="outline" className="gap-2">
                 <Plus className="w-4 h-4" /> Add your first deal
               </Button>
-            </OwnerOnly>
+            )}
           </CardContent>
         </Card>
       )}
@@ -197,7 +202,7 @@ const DealPipeline = () => {
                               <p className="text-sm font-semibold text-foreground leading-tight flex-1">
                                 {deal.brand}
                               </p>
-                              {!isViewingAsStaff && (
+                              {writePipeline && (
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <button

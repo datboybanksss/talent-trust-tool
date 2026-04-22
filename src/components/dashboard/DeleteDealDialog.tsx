@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -16,6 +17,7 @@ interface DeleteDealDialogProps {
 
 const DeleteDealDialog = ({ dealId, dealLabel, open, onOpenChange }: DeleteDealDialogProps) => {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
 
   const handleDelete = async () => {
@@ -29,6 +31,15 @@ const DeleteDealDialog = ({ dealId, dealLabel, open, onOpenChange }: DeleteDealD
     }
     toast.success("Deal deleted");
     queryClient.invalidateQueries({ queryKey: ["agent_deals"] });
+    if (user) {
+      await supabase.from("audit_log").insert({
+        action: "deal_deleted",
+        entity_type: "deal",
+        entity_id: dealId,
+        user_id: user.id,
+        metadata: { label: dealLabel },
+      });
+    }
     onOpenChange(false);
   };
 

@@ -22,6 +22,7 @@ export type Database = {
           client_name: string
           client_type: string
           created_at: string
+          created_by: string | null
           currency: string
           deal_type: string
           end_date: string | null
@@ -30,6 +31,7 @@ export type Database = {
           start_date: string | null
           status: string
           updated_at: string
+          updated_by: string | null
           value_amount: number | null
           value_text: string
         }
@@ -40,6 +42,7 @@ export type Database = {
           client_name: string
           client_type?: string
           created_at?: string
+          created_by?: string | null
           currency?: string
           deal_type?: string
           end_date?: string | null
@@ -48,6 +51,7 @@ export type Database = {
           start_date?: string | null
           status?: string
           updated_at?: string
+          updated_by?: string | null
           value_amount?: number | null
           value_text: string
         }
@@ -58,6 +62,7 @@ export type Database = {
           client_name?: string
           client_type?: string
           created_at?: string
+          created_by?: string | null
           currency?: string
           deal_type?: string
           end_date?: string | null
@@ -66,6 +71,7 @@ export type Database = {
           start_date?: string | null
           status?: string
           updated_at?: string
+          updated_by?: string | null
           value_amount?: number | null
           value_text?: string
         }
@@ -403,12 +409,15 @@ export type Database = {
           client_phone: string | null
           client_type: string
           created_at: string
+          created_by: string | null
           expires_at: string | null
           id: string
           invitation_token: string
           pre_populated_data: Json | null
           requested_share_sections: string[] | null
           status: string
+          updated_at: string
+          updated_by: string | null
         }
         Insert: {
           activated_at?: string | null
@@ -420,12 +429,15 @@ export type Database = {
           client_phone?: string | null
           client_type: string
           created_at?: string
+          created_by?: string | null
           expires_at?: string | null
           id?: string
           invitation_token?: string
           pre_populated_data?: Json | null
           requested_share_sections?: string[] | null
           status?: string
+          updated_at?: string
+          updated_by?: string | null
         }
         Update: {
           activated_at?: string | null
@@ -437,12 +449,15 @@ export type Database = {
           client_phone?: string | null
           client_type?: string
           created_at?: string
+          created_by?: string | null
           expires_at?: string | null
           id?: string
           invitation_token?: string
           pre_populated_data?: Json | null
           requested_share_sections?: string[] | null
           status?: string
+          updated_at?: string
+          updated_by?: string | null
         }
         Relationships: []
       }
@@ -1155,6 +1170,7 @@ export type Database = {
       }
       shared_meetings: {
         Row: {
+          agency_owner_id: string | null
           attendee_user_ids: string[]
           created_at: string
           created_by: string
@@ -1165,8 +1181,10 @@ export type Database = {
           starts_at: string
           title: string
           updated_at: string
+          updated_by: string | null
         }
         Insert: {
+          agency_owner_id?: string | null
           attendee_user_ids?: string[]
           created_at?: string
           created_by: string
@@ -1177,8 +1195,10 @@ export type Database = {
           starts_at: string
           title: string
           updated_at?: string
+          updated_by?: string | null
         }
         Update: {
+          agency_owner_id?: string | null
           attendee_user_ids?: string[]
           created_at?: string
           created_by?: string
@@ -1189,6 +1209,7 @@ export type Database = {
           starts_at?: string
           title?: string
           updated_at?: string
+          updated_by?: string | null
         }
         Relationships: []
       }

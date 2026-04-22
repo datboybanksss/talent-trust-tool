@@ -11,10 +11,28 @@ Deferred at: 2026-04-22 (staff shared-journey sprint)
 
 ## Staff write access
 
-Current: staff users have view-only access. All write-action UI (Add Client, Bulk Import, Add Deal, Add Event, Edit/Delete on records, Remove from Roster) is hidden via the `<OwnerOnly>` wrapper regardless of which sections they were granted.
-Limitation: a PA with the `pipeline` section cannot add a deal on behalf of the agent — they must ask the agent to do it.
-Future fix: extend RLS to allow INSERT/UPDATE under the agency owner's context with audit trail (`acted_by` column on writes), then loosen `<OwnerOnly>` gates per-action.
-Deferred at: 2026-04-22 (staff shared-journey sprint)
+Status: SHIPPED in 2026-04-22 workspace sprint.
+Staff with a granted section can now full-CRUD on agency-scoped tables (`agent_deals`, `client_invitations`, `shared_meetings`). Writes are scoped to `agency_id = scopedAgentId` via `useAgencyScope`; attribution is captured in `created_by` / `updated_by` columns and surfaced via `audit_log`.
+Owner-only surfaces remain owner-only: `agent_manager_profiles`, `portal_staff_access`, `life_file_shares`, `delete_agent_account` RPC, `MyAgency` page.
+
+## Staff writes on client-owned tables
+
+Current: staff cannot write to client-owned tables (`athlete_contracts`, `athlete_endorsements`, `artist_royalties`, `artist_projects`). These rows are keyed by the client's `user_id`, not the agency's, so the simple "owner OR staff with section" RLS pattern does not apply.
+Limitation: a PA cannot add or edit a contract on the client's record — only the client (or owner via existing impersonation paths) can.
+Future fix: model decision needed — either chain through `life_file_shares` (PA inherits owner's accepted-share access) or add explicit per-client agent-write grants.
+Deferred at: 2026-04-22 (workspace sprint)
+
+## Staff self-activity view
+
+Current: workspace activity log lives in `MyAgency` and is owner-only. Staff cannot see their own action history in the UI.
+Future fix: add a "My Activity" view accessible to staff, filtered to actions they personally performed.
+Deferred at: 2026-04-22 (workspace sprint)
+
+## Multi-agency switcher
+
+Current: a user belongs to one agency at a time (most-recently-updated active staff row wins; see `useStaffAccess`).
+Future fix: agency switcher in the sidebar header when `portal_staff_access` returns >1 active row.
+Deferred at: 2026-04-22 (workspace sprint)
 
 ## Multi-agency staff switcher
 

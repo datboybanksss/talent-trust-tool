@@ -32,6 +32,12 @@ export interface AgencyScope {
   agencyOwnerName: string | null;
   /** Display label for the staff member's role (e.g. "Personal Assistant"). */
   roleLabel: string | null;
+  /** 'owner' if the viewer owns this workspace, 'staff' if they are a granted member. */
+  workspaceRole: 'owner' | 'staff';
+  /** True if the viewer can write within the given section (owner always; staff if granted). */
+  canEdit: (section: string) => boolean;
+  /** True if the viewer can delete within the given section (mirrors canEdit this sprint). */
+  canDelete: (section: string) => boolean;
   loading: boolean;
 }
 
@@ -49,18 +55,26 @@ export const useAgencyScope = (): AgencyScope => {
       agencyName: null,
       agencyOwnerName: null,
       roleLabel: null,
+      workspaceRole: 'owner',
+      canEdit: () => false,
+      canDelete: () => false,
       loading: true,
     };
   }
 
   if (staff.isStaff && staff.agencyOwnerId) {
+    const sections = staff.sections ?? [];
+    const can = (section: string) => sections.includes(section);
     return {
       scopedAgentId: staff.agencyOwnerId,
       isViewingAsStaff: true,
-      sections: staff.sections,
+      sections,
       agencyName: staff.agencyName,
       agencyOwnerName: staff.agencyOwnerName,
       roleLabel: staff.roleLabel,
+      workspaceRole: 'staff',
+      canEdit: can,
+      canDelete: can,
       loading: false,
     };
   }
@@ -72,6 +86,9 @@ export const useAgencyScope = (): AgencyScope => {
     agencyName: null,
     agencyOwnerName: null,
     roleLabel: null,
+    workspaceRole: 'owner',
+    canEdit: () => true,
+    canDelete: () => true,
     loading: false,
   };
 };
