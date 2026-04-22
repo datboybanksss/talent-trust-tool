@@ -1,54 +1,96 @@
 
 
-## Restore demo data + keep demo accounts in sync going forward
+## Invitation email system — final approved plan
 
-### Goal
-Make the 5 seeded demo accounts feel "lived-in" again so they're presentation-ready, and lock in a rule that any future feature/logic/UI change ships with matching demo content.
+### Pre-deploy check (run before migration)
 
-### Part 1 — Repopulate the 5 demo accounts
+```sql
+SELECT COUNT(*) FROM client_invitations
+  WHERE created_at >= now() - interval '14 days'
+    AND activated_at IS NULL AND archived_at IS NULL;
+```
 
-Extend `supabase/functions/seed-demo-profiles` to insert realistic transactional data for each demo user, on top of the auth + Life File scaffolding it already creates. All inserts use `service_role` and are scoped by `user_id` / `agent_id`.
+If non-zero, pause and report per-case before touching anything else. If zero, proceed.
 
-**Per-account seed plan:**
+### Migration (additive, force-expires entire pre-email-infra batch)
 
-| Demo account | What gets seeded |
+```sql
+ALTER TABLE public.portal_staff_access
+  ADD COLUMN invitation_token uuid NOT NULL DEFAULT gen_random_uuid(),
+  ADD COLUMN activated_at     timestamptz NULL,
+  ADD COLUMN expires_at       timestamptz NULL DEFAULT (now() + interval '7 days');
+CREATE UNIQUE INDEX portal_staff_access_invitation_token_key
+  ON public.portal_staff_access(invitation_token);
+
+ALTER TABLE public.client_invitations
+  ADD COLUMN expires_at timestamptz NULL DEFAULT (now() + interval '14 days');
+
+UPDATE public.portal_staff_access
+  SET expires_at = created_at + interval '7 days' WHERE expires_at IS NULL;
+UPDATE public.client_invitations
+  SET expires_at = created_at + interval '14 days' WHERE expires_at IS NULL;
+
+-- Force-expire ALL pending staff invites (pre-email-infra batch needs deliberate resend)
+UPDATE public.portal_staff_access
+  SET expires_at = now() WHERE status = 'pending';
+
+-- Force-expire stale client invites (>14d, not activated/archived)
+UPDATE public.client_invitations
+  SET expires_at = now()
+  WHERE created_at < now() - interval '14 days'
+    AND activated_at IS NULL AND archived_at IS NULL;
+```
+
+### Post-migration verification (must match exactly)
+
+| Query | Expected |
 |---|---|
-| `agent.demo@…` (Agent) | 8–10 `client_invitations` (mix of athlete/artist/executive, varied `engagement_type` in `pre_populated_data`, mostly `active`, 1 `archived`); 12–18 `agent_deals` across those clients (mix of statuses: `prospecting`, `negotiating`, `active`, `completed`; spread `start_date` over the last 18 months for revenue trendlines); 4–6 `shared_meetings` (past + upcoming); 3 `compliance_reminders` |
-| `athlete.demo@…` | 4 `athlete_contracts`, 3 `athlete_endorsements`, 6 `life_file_assets` (RA, life cover, TFSA, property, vehicle, emergency fund), 3 `beneficiaries`, 2 `emergency_contacts`, 4 `compliance_reminders` |
-| `artist.demo@…` | 3 `artist_projects`, 6 `artist_royalties` (last 6 months), 2 `social_media_accounts`, 4 `life_file_assets`, 2 `beneficiaries`, 2 `emergency_contacts` |
-| `rugby.demo@…` | 3 `athlete_contracts`, 2 `athlete_endorsements`, 5 `life_file_assets`, 2 `beneficiaries`, 2 `emergency_contacts` |
-| `sprinter.demo@…` | 2 `athlete_contracts`, 4 `athlete_endorsements` (kit/nutrition/eyewear/watches), 4 `life_file_assets`, 2 `beneficiaries`, 1 `emergency_contact` |
+| `portal_staff_access` pending | 3 |
+| `client_invitations` not activated/archived | 2 |
+| `portal_staff_access expires_at <= now()` | 3 |
+| `client_invitations expires_at <= now() AND activated_at IS NULL` | 2 |
 
-**Idempotency**: Before each insert block, `DELETE … WHERE user_id = <demo_user_id>` on that table so re-running the seeder always produces the same dataset (no duplicate rows on repeat runs). Demo guard already in place via `is_demo` + `delete_agent_account` RPC.
+If any number is off, halt and report before code.
 
-**Realism**: 
-- All ZAR amounts in believable bands (deals R75k–R1.2M; assets R150k–R8M).
-- Names/brands stay fictional per existing `DEMO_SEED_NAME_SALT` rule.
-- Date spread anchored to "today minus N days" so KPIs always show recent activity regardless of when the seeder runs.
+### Edge functions
 
-**Files touched**:
-- Modify: `supabase/functions/seed-demo-profiles/index.ts` (orchestrator)
-- Modify: `supabase/functions/seed-demo-profiles/seed-data.ts` (add deal/invitation/asset/contract/royalty constants)
-- Possibly add: `supabase/functions/seed-demo-profiles/transactional-seed.ts` to keep it under the 50-line guideline
+**`send-invitation-email/index.ts`** — single entry, two templates. Order:
+1. Validate body
+2. Load invitation (service role)
+3. Verify caller owns it (or is service role)
+4. **`is_demo` guard** on inviter → short-circuit + audit log
+5. **Then** profiles → auth.users join for returning-user detection
+6. Build template → send via existing `send-email` wrapper → audit log
 
-**Verification**:
-- Re-run the seeder → log into `agent.demo@…` → Executive Overview KPIs, Book Value pie, Revenue Analytics bars, Demographics, Compare, and Calendar all render populated.
-- Log into `athlete.demo@…` → Life File Summary, Asset Registry, Contracts all show data.
-- Re-run seeder a second time → no duplicate rows; counts identical.
+**`get-invitation-by-token/index.ts`** — service-role lookup for both activation pages. Validates expiry/status, returns minimal payload.
 
-### Part 2 — Lock in the "demo accounts stay in sync" rule
+### Email templates (added to `_shared/email-templates.ts`)
+- `staffInvitationEmail` — agency, inviter, role label, sections list, activation URL, expiry, returning-user variant
+- `clientInvitationEmail` — agency, inviter, client_type framing, activation URL, expiry, returning-user variant
 
-Save a project memory rule so every future feature/UI/logic change automatically extends the seeder.
+### UI changes
+- **`SharePortal.tsx`**: invoke email after insert; per-row **Copy Link** + **Resend** (resend on expired row pushes `expires_at = now() + 7d` first); failure toast keeps row + offers Copy Link
+- **`AgentDashboard.tsx`** (`handleCreateInvitation` + bulk import): same pattern; existing clipboard fallback stays; **Resend** on non-activated rows (refreshes `expires_at + 14d` if expired); bulk via `Promise.allSettled` with summary toast
+- Audit actions: `invitation_email_sent`, `invitation_resent`, `invitation_email_skipped_demo`, `invitation_email_failed`. Resend rate-limit: 1/min per `invitation_id`
 
-**New memory file**: `mem://features/demo-profiles-sync-rule`
-> Whenever a new table, field, feature, or UI surface is added, also extend `seed-demo-profiles` with realistic demo content for the relevant accounts (agent.demo, athlete.demo, artist.demo, rugby.demo, sprinter.demo). Re-run the seeder after schema/data changes. These accounts are used for live sales demos — empty states are not acceptable on them.
+### Routes
+- **NEW** `/staff-activate/:token` → `StaffActivate.tsx` (lookup → signup or sign-in → set `staff_user_id` + `activated_at` + `status='active_pending_confidentiality'` → `<ConfidentialityGate />` → `confidentiality_accepted_at` → `/agent-dashboard`)
+- **NEW** `/client-activate/:token` → existing `ActivateProfile` (canonical for new emails)
+- **PERMANENT ALIAS** `/activate/:token` → existing `ActivateProfile` (no deprecation, no removal — old WhatsApp/email links resolve forever)
 
-**Update `mem://index.md` Core section** with a one-liner:
-> Demo accounts (agent/athlete/artist/rugby/sprinter `.demo@themvpbuilder.co.za`) must always be populated — extend `seed-demo-profiles` whenever features change.
+### Demo seed (per sync rule)
+Add to `seed-demo-profiles/index.ts` — 2 `portal_staff_access` rows on `agent.demo`:
+- `assistant.demo@themvpbuilder.co.za` (Personal Assistant, status=`active`, confidentiality_accepted_at populated)
+- `accountant.demo@themvpbuilder.co.za` (Accountant, status=`pending`)
+
+Both use the `@themvpbuilder.co.za` fake domain so even a defense-in-depth guard failure cannot hit a real inbox. The `is_demo` short-circuit in `send-invitation-email` is the primary block.
+
+### Files
+
+**New**: `supabase/migrations/<ts>_invitation_email_columns.sql`, `supabase/functions/send-invitation-email/index.ts`, `supabase/functions/get-invitation-by-token/index.ts`, `src/pages/StaffActivate.tsx`
+
+**Modified**: `supabase/functions/_shared/email-templates.ts`, `src/components/agent/SharePortal.tsx`, `src/pages/AgentDashboard.tsx`, `src/App.tsx`, `supabase/functions/seed-demo-profiles/index.ts`
 
 ### Out of scope
-- No schema changes (every table needed already exists).
-- No changes to non-demo user data.
-- No UI changes — this is purely backend seeding + a memory rule.
-- Athlete profile mock purge (`AgentAthleteProfile.tsx`) is still pending; not bundled here.
+`Sharing.tsx` mock rewrite, `ShareLifeFileDialog`/`InviteGuardianDialog` email wiring (separate flows), automated mass-resend (agents self-serve via Resend buttons).
 
