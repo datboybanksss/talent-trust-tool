@@ -326,28 +326,120 @@ Deno.serve(async (req) => {
   // 8e. portal_staff_access for the demo agent — fake @themvpbuilder.co.za recipients only.
   // The is_demo guard in send-invitation-email blocks real sends, but the addresses are also
   // obviously-fake as defense in depth.
-  await admin.from("portal_staff_access").insert([
+  // Create real auth users for the two staff members so they can sign in and
+  // demonstrate workspace attribution (deals/meetings created by them carry
+  // their uid as created_by).
+  const STAFF_DEFS = [
     {
-      agent_id: agentId,
-      staff_email: "assistant.demo@themvpbuilder.co.za",
-      staff_name: "Lerato Mahlangu (DEMO)",
+      key: "assistant",
+      email: "assistant.demo@themvpbuilder.co.za",
+      display_name: "Lerato Mahlangu (DEMO)",
       role: "pa",
       role_label: "Personal Assistant (PA)",
       sections: ["clients", "pipeline", "calendar", "compare", "templates"],
+    },
+    {
+      key: "accountant",
+      email: "accountant.demo@themvpbuilder.co.za",
+      display_name: "Sibusiso Khumalo (DEMO)",
+      role: "accountant",
+      role_label: "Accountant",
+      sections: ["pipeline", "compare", "executive"],
+    },
+  ];
+  const staffIds: Record<string, string> = {};
+  for (const def of STAFF_DEFS) {
+    const { data, error } = await admin.auth.admin.createUser({
+      email: def.email, password: DEMO_PASSWORD, email_confirm: true,
+      user_metadata: { display_name: def.display_name, client_type: "agent_staff" },
+    });
+    if (error || !data.user) {
+      warnings.push(`failed to create staff auth user ${def.email}: ${error?.message}`);
+      continue;
+    }
+    staffIds[def.key] = data.user.id;
+    await admin.from("profiles").update({
+      is_demo: true, display_name: def.display_name,
+    }).eq("user_id", data.user.id);
+    await admin.from("user_roles").insert({ user_id: data.user.id, role: "user" });
+    await admin.from("portal_staff_access").insert({
+      agent_id: agentId,
+      staff_user_id: data.user.id,
+      staff_email: def.email,
+      staff_name: def.display_name,
+      role: def.role,
+      role_label: def.role_label,
+      sections: def.sections,
       status: "active",
       confidentiality_accepted_at: new Date(now - 30 * 86400000).toISOString(),
       activated_at: new Date(now - 30 * 86400000).toISOString(),
-    },
-    {
-      agent_id: agentId,
-      staff_email: "accountant.demo@themvpbuilder.co.za",
-      staff_name: "Sibusiso Khumalo (DEMO)",
-      role: "accountant",
-      role_label: "Accountant",
-      sections: ["clients", "pipeline", "compare"],
-      status: "pending",
-    },
-  ]);
+    });
+  }
+
+  // 8f. Seed mixed-author workspace activity so the activity log has 20+ rows.
+  const assistantId = staffIds.assistant;
+  const accountantId = staffIds.accountant;
+  const dealRows = [
+    { author: agentId, brand: "Velocity Sportswear", client: audit.names.athlete.display_name, value: "R 750 000 / yr" },
+    { author: agentId, brand: "Highveld Bank", client: audit.names.athlete.display_name, value: "R 600 000 / yr" },
+    { author: assistantId ?? agentId, brand: "Nguni Energy", client: audit.names.rugby.display_name, value: "R 420 000 / yr" },
+    { author: assistantId ?? agentId, brand: "Cape Coastal Apparel", client: audit.names.sprinter.display_name, value: "R 180 000 / yr" },
+    { author: accountantId ?? agentId, brand: "Drakensberg Outdoor", client: audit.names.rugby.display_name, value: "R 240 000 / yr" },
+  ];
+  for (const d of dealRows) {
+    const { data: deal } = await admin.from("agent_deals").insert({
+      agent_id: agentId, created_by: d.author, updated_by: d.author,
+      client_name: d.client, brand: d.brand, value_text: d.value,
+      deal_type: "Endorsement", status: "negotiating", currency: "ZAR",
+      notes: "DEMO",
+    }).select("id").single();
+    if (deal) {
+      await admin.from("audit_log").insert({
+        action: "deal_created", entity_type: "deal", entity_id: deal.id,
+        user_id: d.author, metadata: { agency_id: agentId, brand: d.brand, client_name: d.client },
+      });
+    }
+  }
+  // Sample meetings (workspace-scoped)
+  const meetingRows = [
+    { author: agentId, title: "Quarterly review — Velocity" },
+    { author: assistantId ?? agentId, title: "Schedule call: Highveld Bank renewal" },
+    { author: assistantId ?? agentId, title: "Athlete check-in (DEMO)" },
+    { author: accountantId ?? agentId, title: "Tax planning session" },
+  ];
+  for (let i = 0; i < meetingRows.length; i++) {
+    const m = meetingRows[i];
+    const starts = new Date(now + (i + 2) * 86400000);
+    const ends = new Date(starts.getTime() + 60 * 60 * 1000);
+    const { data: meeting } = await admin.from("shared_meetings").insert({
+      created_by: m.author, agency_owner_id: agentId, updated_by: m.author,
+      title: m.title, starts_at: starts.toISOString(), ends_at: ends.toISOString(),
+      meeting_type: "general", notes: "DEMO",
+    }).select("id").single();
+    if (meeting) {
+      await admin.from("audit_log").insert({
+        action: "meeting_created", entity_type: "meeting", entity_id: meeting.id,
+        user_id: m.author, metadata: { agency_id: agentId, title: m.title, starts_at: starts.toISOString() },
+      });
+    }
+  }
+  // Mixed audit-only entries to hit 20+ rows in the activity log
+  const extraActions = [
+    { user: agentId, action: "invitation_created", meta: { agency_id: agentId, client_name: "Future Star Athlete" } },
+    { user: assistantId ?? agentId, action: "invitation_resent", meta: { agency_id: agentId, client_name: audit.names.sprinter.display_name } },
+    { user: assistantId ?? agentId, action: "deal_updated", meta: { agency_id: agentId, brand: "Velocity Sportswear" } },
+    { user: accountantId ?? agentId, action: "deal_updated", meta: { agency_id: agentId, brand: "Drakensberg Outdoor" } },
+    { user: agentId, action: "deal_updated", meta: { agency_id: agentId, brand: "Highveld Bank" } },
+    { user: assistantId ?? agentId, action: "meeting_created", meta: { agency_id: agentId, title: "Brand pitch prep" } },
+    { user: agentId, action: "invitation_created", meta: { agency_id: agentId, client_name: "Rising Talent (DEMO)" } },
+    { user: accountantId ?? agentId, action: "deal_created", meta: { agency_id: agentId, brand: "Karoo Foods", client_name: audit.names.athlete.display_name } },
+  ];
+  for (const e of extraActions) {
+    await admin.from("audit_log").insert({
+      action: e.action, entity_type: e.action.split("_")[0],
+      user_id: e.user, metadata: e.meta,
+    });
+  }
 
   // 9. Generate PDFs + insert life_file_documents
   const docPlans: Array<{ owner: string; ownerName: string; docs: typeof ATHLETE_DOCS }> = [
