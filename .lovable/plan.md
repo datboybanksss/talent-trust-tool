@@ -1,126 +1,83 @@
 
 
-## Client activation UX — final approved plan (incorporating 3 adjustments + welcome card)
+## Replace the mock-driven Client Detail page with live invitation + activated-user data
 
-### Adjustments locked in
-1. **Drop `requested_share_response`** — keep only `requested_share_sections` on `client_invitations`. Agent badge reads from `life_file_shares.status` directly.
-2. **Shadow-column approach kept.** No change to `life_file_shares.owner_id` nullability. Coupling documented inline.
-3. **Badge copy** uses explicit subject: *"Waiting for client response"* / *"Client granted access"* / *"Client declined access: {reason}"*.
+### What's actually broken
 
-### Welcome card decision: **INCLUDED** in this sprint
-One new component (`<FirstLoginWelcomeCard />`), one column (`profiles.first_login_seen_at`), one mount point in `Dashboard.tsx`. ~60 lines, ~20 minutes. Counts the agent-loaded docs from `life_file_documents` where `notes ILIKE 'Pre-loaded by your agent%'`. Three checklist items are static (not wired to live state — purely guidance). Dismissed via UPDATE on `profiles.first_login_seen_at = now()`.
+`/agent-dashboard/client/:clientId` receives the invitation UUID and looks it up in a hard-coded `MOCK_CLIENTS` map keyed by `"1"`/`"2"`/`"4"`. Every real invitation misses → falls to `PENDING_FALLBACK` which hard-codes **Eben Etzebeth, Pending, no data**. That's why every activated client opens to the same Springbok shell. Live Life File queries already exist in the file but are wrapped around dead mock context.
+
+### The fix — one file, surgical replacement
+
+**`src/pages/AgentClientDetail.tsx`**
+
+1. **Delete `MOCK_CLIENTS` and `PENDING_FALLBACK` entirely.**
+
+2. **Load the real invitation row** by `clientId`:
+   ```ts
+   supabase.from("client_invitations")
+     .select("id, client_name, client_email, client_phone, client_type,
+              status, activated_user_id, pre_populated_data, created_at, activated_at")
+     .eq("id", clientId).single()
+   ```
+
+3. **Drive the header from invitation fields**: name, email, phone, type. Status badge uses real `invitation.status` (`pending` / `activated` / `expired`). The "Pending" pill only appears when `activated_user_id IS NULL`.
+
+4. **Pull activated-client context** (only when `activated_user_id` is set) in parallel with the existing Life File fetches:
+   - `profiles` row (avatar, location, DOB → age)
+   - `agent_deals` rows where `agent_id = me AND client_name = invitation.client_name` → drives Deals tab + Total Deal Value KPI
+   - `athlete_endorsements` + `athlete_contracts` if `client_type = 'athlete'` → Active Contracts / Market Value KPIs
+   - Existing `fetchBeneficiaries / EmergencyContacts / LifeFileDocuments / LifeFileAssets` already wired — keep.
+   - `life_file_shares` row where `owner_id = activated_user_id AND shared_with_user_id = me` → if not `accepted`, gate Life File / Documents tabs behind a "Client has not granted access to this section" empty state instead of a misleading data view.
+
+5. **KPI cards compute from live data, not strings**:
+   - Active Deals = count of `agent_deals` with `status IN ('active','negotiating')`
+   - Total Deal Value = sum of `value_amount`
+   - Compliance = % of life-file documents not expired (computed from `expiry_date`)
+   - Social Reach = `profiles.social_followers_total` if present, else "—"
+   - Market Value = `profiles.market_value` if present, else "—"
+
+6. **Pending state is honest**: when `status='pending'`, render the existing yellow banner *unchanged*, KPIs show "—", tabs stay empty with a single "Awaiting client activation" message. No more fake bio/team data.
+
+7. **Realtime freshness**: subscribe to `postgres_changes` on `life_file_documents`, `life_file_assets`, `agent_deals` filtered to the activated user → invalidate the local fetch so the page reflects new data within ~1s without a manual refresh. (Pattern from the existing realtime guidance.)
+
+8. **PDF generator** (`generateProfileReport`) — rewire to read from the live state objects instead of `client.deals` / `client.documents`. Same layout, real numbers.
 
 ### Migration
 
+None required. All tables and columns exist. Realtime publication needs three additions (additive only, no data change):
 ```sql
--- 1. Stage agent's requested share sections on the invitation.
--- COUPLING NOTE: This column exists because life_file_shares.owner_id is NOT NULL
--- and the client's user_id doesn't exist until activation. At activation the value
--- is consumed to create the life_file_shares row, then remains as a historical
--- record of the original request. Do NOT also store a "response" column here —
--- life_file_shares.status is the single source of truth post-activation.
-ALTER TABLE public.client_invitations
-  ADD COLUMN IF NOT EXISTS requested_share_sections text[] NULL;
-
-COMMENT ON COLUMN public.client_invitations.requested_share_sections IS
-  'Agent-requested sections staged pre-activation. Consumed at activation to create life_file_shares row. Historical record only after activation; do not mutate.';
-
--- 2. Optional decline reason captured by the client.
-ALTER TABLE public.life_file_shares
-  ADD COLUMN IF NOT EXISTS decline_reason text NULL;
-
--- 3. First-login banner dismissal flag.
-ALTER TABLE public.profiles
-  ADD COLUMN IF NOT EXISTS first_login_seen_at timestamptz NULL;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.life_file_documents;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.life_file_assets;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.agent_deals;
 ```
+(If any are already in the publication, the `ADD` is a no-op-with-error — handle by checking `pg_publication_tables` first in the migration.)
 
-No enum changes. No new tables. Additive only.
+### What this fixes for you
 
-### Edge function: `activate-client-profile`
-
-**`lookup` action**
-- Add `expires_at < now()` check → return `{ error: 'expired', agent_email, agent_name }` (resolved by joining `agent_manager_profiles` on `agent_id`).
-
-**`activate` action**
-1. Re-validate token + not expired + status pending.
-2. `auth.admin.createUser` with `email_confirm: true`.
-3. Patch `profiles.phone`.
-4. Transfer documents — track `documentsRequested`, `documentsTransferred`, `documentsFailed: [{ filename, error }]`.
-5. **If `requested_share_sections` non-null and non-empty:** insert into `life_file_shares` with `owner_id = newUserId`, `shared_with_user_id = agent_id`, `shared_with_email = agent_email`, `sections = requested_share_sections`, `status = 'pending_client_approval'`, `relationship = 'agent'`. Add same coupling comment in code.
-6. Mark invitation activated.
-7. **Generate magic-link** via `auth.admin.generateLink({ type: 'magiclink', email })` → return `{ success, magic_link_token_hash, documentsRequested, documentsTransferred, documentsFailed }`.
-8. If doc failures → write one `audit_log` entry: `action='client_activation_document_transfer_failed'`, `user_id = invitation.agent_id`, `entity_type='client_invitation'`, `entity_id=invitation.id`, `metadata={ failed, transferred }`.
-
-### Frontend changes
-
-**`src/pages/ActivateProfile.tsx`**
-- Expired-link branch with `mailto:` to agent.
-- Success branch:
-  - Try `supabase.auth.verifyOtp({ token_hash, type: 'magiclink' })`.
-  - On success → 1.5s success card → `navigate('/dashboard')`.
-  - On failure → fallback to current "Sign In Now" card → `/auth`.
-  - If `documentsFailed.length > 0`, prepend warning card listing failed filenames (non-blocking).
-
-**`src/pages/AgentDashboard.tsx`**
-- Add-client form: new checkbox **"Request access to this client's profile after activation"** (default ON). When ON, show sections selector with **Contracts, Endorsements, Tax** pre-checked; **Estate, Identity, Medical** rendered locked with label *"Protected — client can grant later"*.
-- On invitation insert, set `requested_share_sections` (only when checkbox ON; demo agents already blocked by existing `is_demo` guards).
-- For each pending client row, fetch the corresponding `life_file_shares` row (if any) where `shared_with_user_id = me AND owner_id = activated_user_id` and render badge:
-  - `pending_client_approval` → **"Waiting for client response"** (amber)
-  - `accepted` → **"Client granted access"** (green)
-  - `declined` → **"Client declined access: {decline_reason ?? 'no reason given'}"** (muted)
-- Verify "Resend invitation" button exists on each pending client row with the existing 60-second rate limit.
-
-**`src/components/dashboard/PendingAccessRequestCard.tsx`** (NEW)
-- Reads `life_file_shares` where `owner_id = me AND status = 'pending_client_approval'`.
-- Renders agent name (from `agent_manager_profiles` joined via `shared_with_user_id`) + agency + requested sections chips.
-- Buttons: **Accept** / **Customise** / **Decline**.
-  - Accept → `update life_file_shares set status='accepted', accepted_at=now()`.
-  - Customise → opens `ShareLifeFileDialog` pre-filled; on save, status → `accepted`.
-  - Decline → prompt for optional reason (textarea, max 200 chars) → `status='declined', decline_reason=<text>`.
-
-**`src/components/dashboard/FirstLoginWelcomeCard.tsx`** (NEW, ~60 lines)
-- Mount in `Dashboard.tsx` above all widgets.
-- Render only when `profiles.first_login_seen_at IS NULL`.
-- Copy:
-  > **Welcome to Legacy Builder, {name}!** Your agent has uploaded {N} documents to get you started. Here are your next three steps:
-  > ☐ Upload any additional personal documents
-  > ☐ Add at least one beneficiary
-  > ☐ Add an emergency contact
-- Buttons: **[Get Started]** (scroll to My Life File / dismiss) and **[Dismiss for now]** (UPDATE `first_login_seen_at = now()`).
-- {N} = `count(*) from life_file_documents where user_id = me and notes ilike 'Pre-loaded by your agent%'`.
-
-**`src/components/life-file/ShareLifeFileDialog.tsx`**
-- Accept optional `prefilledShareId` + `prefilledSections` props for the Customise path; on save against an existing pending row, UPDATE instead of INSERT and set status to `accepted`.
+- Open Kgosi Banks (activated artist) → header reads "Kgosi Banks", status "Activated", Life File data populates the tabs, deals you've added show in Deals tab, KPIs reflect the real share state.
+- Open a still-pending client → still shows "Pending" banner but with their real name/email/type — no more "Eben Etzebeth" ghost.
+- Client adds a beneficiary or uploads a doc → your client detail page updates within seconds without refresh.
+- Client revokes access → tabs flip to "access not granted" state on next render.
 
 ### Files
 
-**New**
-- `supabase/migrations/<ts>_client_activation_ux.sql`
-- `src/components/dashboard/PendingAccessRequestCard.tsx`
-- `src/components/dashboard/FirstLoginWelcomeCard.tsx`
-
 **Modified**
-- `supabase/functions/activate-client-profile/index.ts`
-- `src/pages/ActivateProfile.tsx`
-- `src/pages/AgentDashboard.tsx`
-- `src/pages/Dashboard.tsx`
-- `src/components/life-file/ShareLifeFileDialog.tsx`
+- `src/pages/AgentClientDetail.tsx` (gut + rebuild around live queries)
 
-### Post-deploy verification (the 7 checks)
+**New**
+- `supabase/migrations/<ts>_realtime_publish_client_tables.sql` (3 additive `ADD TABLE` statements with existence guard)
 
-1. Real client clicks valid invitation → enters password → lands on `/dashboard` with no manual sign-in. Refresh persists session.
-2. Agent unchecked "Request access" → no `PendingAccessRequestCard` renders.
-3. Agent ticks Contracts+Endorsements → client sees card → **Accept** → `life_file_shares.status='accepted'`; agent badge flips to **"Client granted access"** within seconds.
-4. Same flow → client clicks **Decline** with reason "Trial period only" → agent badge shows **"Client declined access: Trial period only"**.
-5. Force-expire token in DB → activation page shows expired card with `mailto:` to agent.
-6. Pre-upload 5 docs, force-fail 2 in storage → success card lists 2 failed filenames; one `audit_log` entry visible to agent.
-7. Resend button on pending client row works and respects 60-second cooldown.
+### Out of scope (defer)
+- Editing client deals/contracts directly from this page (already done in `DealDialog` elsewhere)
+- Commission column on this page (waiting on the revenue-capture sprint)
+- Demo-data overlay for the 5 demo accounts — they already render through the same live path because their invitations are real rows; no special casing needed
 
-Plus welcome-card spot check: first dashboard load after activation shows the card with correct N; click Dismiss → never reappears across sessions.
-
-### Out of scope
-- Onboarding wizard (deferred — welcome card replaces nothing, just bridges the gap).
-- Auth provider changes.
-- Making `life_file_shares.owner_id` nullable.
-- Per-section response tracking on the invitation row.
+### Verification after deploy
+1. Open Kgosi Banks → header "Kgosi Banks · Artist · Activated", deals/docs/beneficiaries reflect what's in the DB.
+2. Open a pending invitation → real name in header, "Pending" banner, KPIs show "—".
+3. Add a deal for Kgosi from the Pipeline → Deals tab on detail page updates within ~2 seconds (realtime).
+4. Sign in as Kgosi in another tab, upload a doc → Documents tab on agent detail page updates without refresh.
+5. Generate Report → PDF contains real values, not Springbok placeholders.
+6. Demo agent (`agent.demo`) opens any of the 5 demo clients → real seeded data renders, no fallback.
+7. Revoke share as the client → agent detail page Life File tab flips to "access not granted" state.
 
