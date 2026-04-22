@@ -47,6 +47,7 @@ import EstateCalculator from "./pages/EstateCalculator";
 import GuardianManagement from "./pages/GuardianManagement";
 import FinancialIntegrations from "./pages/FinancialIntegrations";
 import MyAgency from "./pages/MyAgency";
+import AgentAccount from "./pages/AgentAccount";
 
 const queryClient = new QueryClient();
 
