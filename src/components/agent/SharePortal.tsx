@@ -407,6 +407,7 @@ const SharePortal = () => {
             </div>
           </DialogContent>
         </Dialog>
+        )}
       </div>
 
       {/* Compliance note */}
