@@ -33,6 +33,7 @@ import SharePortal from "@/components/agent/SharePortal";
 import AgentChatBot from "@/components/agent/AgentChatBot";
 import ConfidentialityGate from "@/components/agent/ConfidentialityGate";
 import ExecutiveOverviewInline from "@/components/executive/ExecutiveOverviewInline";
+import RemoveClientDialog from "@/components/agent/RemoveClientDialog";
 import * as XLSX from "xlsx";
 
 interface Invitation {
@@ -44,6 +45,7 @@ interface Invitation {
   status: string;
   invitation_token: string;
   created_at: string;
+  activated_user_id?: string | null;
 }
 
 // Helper: humanize a timestamp into "2h ago", "3d ago", etc.
@@ -76,6 +78,9 @@ const AgentDashboard = () => {
   const [bulkImporting, setBulkImporting] = useState(false);
   const [bulkProgress, setBulkProgress] = useState(0);
   const bulkInputRef = useRef<HTMLInputElement>(null);
+
+  // Remove-from-roster dialog state
+  const [removeTarget, setRemoveTarget] = useState<Invitation | null>(null);
 
   // Staff confidentiality gate state
   const [staffAccess, setStaffAccess] = useState<{
@@ -180,11 +185,14 @@ const AgentDashboard = () => {
   };
 
   const fetchInvitations = async () => {
+    if (!user) return;
     const { data } = await supabase
       .from("client_invitations")
       .select("*")
+      .eq("agent_id", user.id)
+      .is("archived_at", null)
       .order("created_at", { ascending: false });
-    if (data && data.length > 0) setInvitations(data);
+    setInvitations(data ?? []);
   };
 
   const handleSpreadsheetImport = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -317,7 +325,7 @@ const AgentDashboard = () => {
     }
 
     if (user) {
-      const { error } = await supabase.from("client_invitations").insert({
+      const { data: inserted, error } = await supabase.from("client_invitations").insert({
         agent_id: user.id,
         client_name: clientName,
         client_email: clientEmail,
@@ -338,33 +346,26 @@ const AgentDashboard = () => {
           },
           deals: preDeals,
         })),
-      });
+      }).select("invitation_token, client_name").single();
 
       if (error) {
         toast({ title: "Error", description: "Failed to create invitation.", variant: "destructive" });
         setIsCreating(false);
         return;
       }
+
+      // Auto-copy the real activation link so the agent can paste it to the client.
+      if (inserted?.invitation_token) {
+        const url = `${window.location.origin}/activate/${inserted.invitation_token}`;
+        try { await navigator.clipboard.writeText(url); } catch { /* clipboard may be unavailable */ }
+        toast({
+          title: "Invitation created — link copied",
+          description: `Activation link for ${inserted.client_name} is on your clipboard. Paste it into an email or message.`,
+        });
+      }
     }
 
-    // Add to local state for demo
-    const newInvitation: Invitation = {
-      id: Date.now().toString(),
-      client_name: clientName,
-      client_email: clientEmail,
-      client_phone: clientPhone || null,
-      client_type: clientType,
-      status: "pending",
-      invitation_token: `tok_${Date.now()}`,
-      created_at: new Date().toISOString(),
-    };
-    setInvitations((prev) => [newInvitation, ...prev]);
     setIsCreating(false);
-    const docCount = uploadedFiles.length;
-    toast({
-      title: "Invitation Created",
-      description: `Activation link ready for ${clientName}${docCount > 0 ? ` with ${docCount} document${docCount > 1 ? "s" : ""}` : ""}.`,
-    });
     resetForm();
     setDialogOpen(false);
     fetchInvitations();
@@ -903,7 +904,21 @@ const AgentDashboard = () => {
             </div>
 
             <div className="space-y-3">
-              {invitations.map((inv) => {
+              {invitations.length === 0 ? (
+                <Card className="border-dashed">
+                  <CardContent className="p-8 text-center space-y-3">
+                    <div className="w-12 h-12 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
+                      <UserPlus className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">No clients yet</p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        You haven't invited any clients yet. Click <strong>New Client</strong> to send your first invitation.
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : invitations.map((inv) => {
                 const initials = inv.client_name.split(" ").map((n) => n[0]).join("").slice(0, 2);
                 const isActivated = inv.status === "activated";
                 const date = new Date(inv.created_at).toLocaleDateString("en-ZA", { day: "numeric", month: "short", year: "numeric" });
@@ -967,6 +982,15 @@ const AgentDashboard = () => {
                             <User className="w-3 h-3 mr-1" /> Full Profile
                           </Button>
                         )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                          onClick={(e) => { e.stopPropagation(); setRemoveTarget(inv); }}
+                          aria-label={`Remove ${inv.client_name} from roster`}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>
@@ -1125,6 +1149,14 @@ const AgentDashboard = () => {
       </div>
     </SidebarProvider>
     <AgentChatBot />
+    <RemoveClientDialog
+      open={!!removeTarget}
+      onOpenChange={(o) => { if (!o) setRemoveTarget(null); }}
+      invitationId={removeTarget?.id ?? null}
+      clientName={removeTarget?.client_name ?? ""}
+      clientUserId={removeTarget?.activated_user_id ?? null}
+      onDone={fetchInvitations}
+    />
     </>
   );
 };

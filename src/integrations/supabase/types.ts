@@ -340,6 +340,7 @@ export type Database = {
           activated_at: string | null
           activated_user_id: string | null
           agent_id: string
+          archived_at: string | null
           client_email: string
           client_name: string
           client_phone: string | null
@@ -354,6 +355,7 @@ export type Database = {
           activated_at?: string | null
           activated_user_id?: string | null
           agent_id: string
+          archived_at?: string | null
           client_email: string
           client_name: string
           client_phone?: string | null
@@ -368,6 +370,7 @@ export type Database = {
           activated_at?: string | null
           activated_user_id?: string | null
           agent_id?: string
+          archived_at?: string | null
           client_email?: string
           client_name?: string
           client_phone?: string | null

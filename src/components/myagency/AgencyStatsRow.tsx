@@ -39,6 +39,7 @@ const AgencyStatsRow = ({ agentUserId, memberSince }: Props) => {
           .select("activated_user_id")
           .eq("agent_id", agentUserId)
           .eq("status", "activated")
+          .is("archived_at", null)
           .not("activated_user_id", "is", null),
         supabase
           .from("life_file_shares")
