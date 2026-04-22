@@ -63,7 +63,9 @@ const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, set
     return item.section ? staff.sections.includes(item.section) : false;
   });
 
-  const showQuickActions = !staff.isStaff || staff.sections.includes("clients");
+  // Quick Actions are write-actions (Add New Client, Bulk Import). Hide entirely
+  // for staff this sprint — see KNOWN_LIMITATIONS.md → "Staff write access".
+  const showQuickActions = !staff.isStaff;
   const showOwnerOnly = !staff.isStaff;
 
   const handleNavClick = (view: typeof activeView) => {
