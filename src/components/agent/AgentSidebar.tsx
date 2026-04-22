@@ -22,15 +22,14 @@ import {
   UserPlus,
   FileSpreadsheet,
   Mail,
-  LogOut,
   Shield,
   Settings,
   FileText,
   Share2,
   Crown,
   Building2,
+  UserCircle2,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 interface AgentSidebarProps {
   onNewClient: () => void;
@@ -53,7 +52,7 @@ const mainNavItems = [
 const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, setActiveView }: AgentSidebarProps) => {
   const { state, isMobile, toggleSidebar } = useSidebar();
   const collapsed = state === "collapsed";
-  const { signOut, user } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const staff = useStaffAccess();
 
@@ -81,11 +80,6 @@ const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, set
 
   const roleLabel = agentProfile?.role === "athlete_agent" ? "Athletes' Agent" : "Artists' Manager";
   const footerRoleLabel = staff.isStaff ? (staff.roleLabel ?? "Staff") : roleLabel;
-
-  const handleSignOut = async () => {
-    await signOut();
-    navigate("/");
-  };
 
   return (
     <Sidebar collapsible="offcanvas">
@@ -194,31 +188,29 @@ const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, set
       </SidebarContent>
 
       <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton onClick={handleSignOut} className="hover:bg-destructive/10 hover:text-destructive">
-              <LogOut className="mr-2 h-4 w-4" />
-              {!collapsed && <span>Sign Out</span>}
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-        {!collapsed && (
-          <div className="px-2 pb-2">
-            <div className="bg-secondary rounded-xl p-3">
-              {staff.isStaff ? (
-                <>
-                  <p className="text-xs font-medium text-foreground truncate">Staff of {staff.agencyName}</p>
-                  <p className="text-[10px] text-muted-foreground truncate">{user?.email} · {footerRoleLabel}</p>
-                </>
-              ) : agentProfile ? (
-                <>
-                  <p className="text-xs font-medium text-foreground truncate">{agentProfile.company_name}</p>
-                  <p className="text-[10px] text-muted-foreground truncate">{footerRoleLabel}</p>
-                </>
-              ) : null}
+        <div className="px-2 pb-2 pt-1">
+          <button
+            type="button"
+            onClick={() => { navigate("/agent-account"); if (isMobile) toggleSidebar(); }}
+            className="w-full text-left bg-secondary hover:bg-secondary/80 transition-colors rounded-xl p-3 flex items-center gap-3 group focus:outline-none focus:ring-2 focus:ring-primary/40"
+            aria-label="Open account settings"
+          >
+            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+              <UserCircle2 className="w-4 h-4 text-primary" />
             </div>
-          </div>
-        )}
+            {!collapsed && (
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-medium text-foreground truncate">
+                  {user?.email ?? "My account"}
+                </p>
+                <p className="text-[10px] text-muted-foreground truncate">
+                  {footerRoleLabel} · Account settings
+                </p>
+              </div>
+            )}
+            {!collapsed && <Settings className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground shrink-0" />}
+          </button>
+        </div>
       </SidebarFooter>
     </Sidebar>
   );
