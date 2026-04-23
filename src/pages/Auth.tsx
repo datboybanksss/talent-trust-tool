@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useAuth } from "@/hooks/useAuth";
-import { useUserRole } from "@/hooks/useUserRole";
+import { useAccountState, dashboardForState } from "@/lib/accountState";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,7 +37,7 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("signin");
   const { user, signIn, signUp } = useAuth();
-  const { dashboardPath, loading: roleLoading } = useUserRole();
+  const account = useAccountState();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -52,10 +52,23 @@ const Auth = () => {
   });
 
   useEffect(() => {
-    if (user && !roleLoading && dashboardPath) {
-      navigate(dashboardPath, { replace: true });
+    if (!user || account.loading || !account.state) return;
+
+    if (account.state === "unverified") return; // user must verify first
+    if (account.state === "pending_staff" && account.pendingStaffToken) {
+      navigate(`/staff-activate/${account.pendingStaffToken}`, { replace: true });
+      return;
     }
-  }, [user, roleLoading, dashboardPath, navigate]);
+    if (
+      account.state === "incomplete_new" ||
+      account.state === "incomplete_existing"
+    ) {
+      navigate("/welcome", { replace: true });
+      return;
+    }
+    const dash = dashboardForState(account.state);
+    if (dash) navigate(dash, { replace: true });
+  }, [user, account.loading, account.state, account.pendingStaffToken, navigate]);
 
   const handleSignIn = async (data: SignInFormData) => {
     setIsLoading(true);
