@@ -48,6 +48,7 @@ import FinancialIntegrations from "./pages/FinancialIntegrations";
 import MyAgency from "./pages/MyAgency";
 import AgentAccount from "./pages/AgentAccount";
 import Welcome from "./pages/Welcome";
+import AgentsManagers from "./pages/AgentsManagers";
 
 const queryClient = new QueryClient();
 
@@ -64,7 +65,8 @@ const App = () => (
             <Route path="/contact" element={<Contact />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/agent-register" element={<Navigate to="/auth" replace />} />
+            <Route path="/agent-register" element={<AgentsManagers />} />
+            <Route path="/for-agents" element={<AgentsManagers />} />
             <Route path="/welcome" element={<Welcome />} />
             <Route path="/agent-dashboard" element={<AgentRoute><AgentDashboard /></AgentRoute>} />
             <Route path="/agent-dashboard/client/:clientId" element={<AgentRoute><AgentClientDetail /></AgentRoute>} />

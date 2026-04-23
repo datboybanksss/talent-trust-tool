@@ -132,6 +132,9 @@ const Header = () => {
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center gap-3">
             <Button variant="ghost" className="text-foreground hover:bg-secondary" asChild>
+              <Link to="/for-agents">Agents &amp; Managers</Link>
+            </Button>
+            <Button variant="ghost" className="text-foreground hover:bg-secondary" asChild>
               <Link to="/pricing">Pricing</Link>
             </Button>
             <Button variant="ghost" className="text-foreground hover:bg-secondary" asChild>
@@ -199,6 +202,9 @@ const Header = () => {
               </div>
 
               <div className="flex flex-col gap-2 pt-4 border-t border-border">
+                <Button variant="ghost" className="text-foreground justify-start" asChild>
+                  <Link to="/for-agents" onClick={() => setMobileMenuOpen(false)}>Agents &amp; Managers</Link>
+                </Button>
                 <Button variant="ghost" className="text-foreground justify-start" asChild>
                   <Link to="/pricing" onClick={() => setMobileMenuOpen(false)}>Pricing</Link>
                 </Button>
