@@ -79,12 +79,17 @@ const Welcome = () => {
       });
       return;
     }
-    const { error } = await supabase.from("agent_manager_profiles").insert({
-      user_id: user.id,
-      role: agentRole,
-      company_name: companyName.trim(),
-      phone: phone.trim() || null,
-    });
+    const { error } = await supabase
+      .from("agent_manager_profiles")
+      .upsert(
+        {
+          user_id: user.id,
+          role: agentRole,
+          company_name: companyName.trim(),
+          phone: phone.trim() || null,
+        },
+        { onConflict: "user_id" },
+      );
     setSubmitting(false);
     if (error) {
       toast({ title: "Could not save", description: error.message, variant: "destructive" });
