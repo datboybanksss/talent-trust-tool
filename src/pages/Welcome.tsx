@@ -91,7 +91,7 @@ const Welcome = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <ChoiceCard
             active={choice === "athlete"}
             onClick={() => setChoice("athlete")}
@@ -106,68 +106,7 @@ const Welcome = () => {
             title="Artist"
             description="Manage projects, royalties, and creative income."
           />
-          <ChoiceCard
-            active={choice === "agent_manager"}
-            onClick={() => setChoice("agent_manager")}
-            icon={<Briefcase className="w-7 h-7" />}
-            title="Agent / Manager"
-            description="Manage clients across athletes or artists."
-          />
         </div>
-
-        {choice === "agent_manager" && (
-          <Card className="bg-card/95 backdrop-blur-sm border-gold/20 mb-6">
-            <CardContent className="pt-6 space-y-4">
-              <div>
-                <Label className="text-foreground">I primarily represent</Label>
-                <div className="grid grid-cols-2 gap-3 mt-2">
-                  <button
-                    type="button"
-                    onClick={() => setAgentRole("athlete_agent")}
-                    className={`rounded-lg border-2 p-3 text-sm font-medium transition-all ${
-                      agentRole === "athlete_agent"
-                        ? "border-gold bg-gold/10 text-foreground"
-                        : "border-border text-muted-foreground hover:border-gold/50"
-                    }`}
-                  >
-                    Athletes
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setAgentRole("artist_manager")}
-                    className={`rounded-lg border-2 p-3 text-sm font-medium transition-all ${
-                      agentRole === "artist_manager"
-                        ? "border-gold bg-gold/10 text-foreground"
-                        : "border-border text-muted-foreground hover:border-gold/50"
-                    }`}
-                  >
-                    Artists
-                  </button>
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="company" className="text-foreground">Company / Agency name</Label>
-                <Input
-                  id="company"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                  placeholder="e.g. Roc Nation Sports SA"
-                  className="mt-1.5"
-                />
-              </div>
-              <div>
-                <Label htmlFor="phone" className="text-foreground">Phone (optional)</Label>
-                <Input
-                  id="phone"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+27..."
-                  className="mt-1.5"
-                />
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         <div className="flex justify-center">
           <Button
