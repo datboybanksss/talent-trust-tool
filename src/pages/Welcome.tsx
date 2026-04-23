@@ -1,80 +1,40 @@
 import { useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Trophy, Music2, Briefcase, Loader2, AlertTriangle } from "lucide-react";
+import { Trophy, Music2, Loader2, AlertTriangle } from "lucide-react";
 import EmailVerificationGate from "@/components/auth/EmailVerificationGate";
 import {
   useAccountState,
   dashboardForState,
 } from "@/lib/accountState";
 
-type Choice = "athlete" | "artist" | "agent_manager" | null;
+type Choice = "athlete" | "artist" | null;
 
 const Welcome = () => {
   const { user, loading: authLoading } = useAuth();
-  const navigate = useNavigate();
   const { toast } = useToast();
   const account = useAccountState();
   const [choice, setChoice] = useState<Choice>(null);
-  const [companyName, setCompanyName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [agentRole, setAgentRole] = useState<"athlete_agent" | "artist_manager">(
-    "athlete_agent",
-  );
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
     if (!user || !choice) return;
     setSubmitting(true);
 
-    if (choice === "athlete" || choice === "artist") {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ client_type: choice })
-        .eq("user_id", user.id);
-      setSubmitting(false);
-      if (error) {
-        toast({ title: "Could not save", description: error.message, variant: "destructive" });
-        return;
-      }
-      // Hard reload so route guards re-evaluate with the fresh profile.
-      window.location.replace("/dashboard");
-      return;
-    }
-
-    // Agent / Manager
-    if (!companyName.trim()) {
-      setSubmitting(false);
-      toast({
-        title: "Company name required",
-        description: "Please enter your agency or company name.",
-        variant: "destructive",
-      });
-      return;
-    }
     const { error } = await supabase
-      .from("agent_manager_profiles")
-      .upsert(
-        {
-          user_id: user.id,
-          role: agentRole,
-          company_name: companyName.trim(),
-          phone: phone.trim() || null,
-        },
-        { onConflict: "user_id" },
-      );
+      .from("profiles")
+      .update({ client_type: choice })
+      .eq("user_id", user.id);
     setSubmitting(false);
     if (error) {
       toast({ title: "Could not save", description: error.message, variant: "destructive" });
       return;
     }
-    window.location.replace("/agent-dashboard");
+    // Hard reload so route guards re-evaluate with the fresh profile.
+    window.location.replace("/dashboard");
   };
 
   // Loading guard while we resolve auth + canonical state.
