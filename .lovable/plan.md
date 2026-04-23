@@ -1,96 +1,93 @@
 
 
-## Final hardened plan: identity-tied role resolution + first-load-only timeout
+## Collapse `/agent-register` into `/auth` + safety net for existing role-less accounts
 
-### 1. Hook changes — `src/hooks/useUserRole.tsx`
+One door for everyone. New users pick a role on `/welcome`. Existing users go straight to their dashboard. **Existing accounts that are stuck without a role get caught and routed to a friendly recovery screen instead of a broken page.**
 
-New shape:
-```ts
-{ role, loading, dashboardPath, timedOut }
+### User flows
+
+**Existing user with a role** (admin, agent, staff, athlete, artist) — signs in at `/auth` → straight to their dashboard. Never sees `/welcome`.
+
+**Brand-new user** (email or Google) — signs up at `/auth` → email verify if needed → `/welcome` shows the role picker (Athlete / Artist / Agent-Manager) → routed to their dashboard.
+
+**Existing user with NO role** (the safety-net case — signed up before, never finished, or hit an error) — signs in at `/auth` → `useAccountSetupGate` detects no role anywhere → routed to `/welcome` which now opens in a **"Recovery" mode** showing:
+
+> **"Looks like your account isn't fully set up yet"**
+> *We couldn't find a role on your profile. This usually means setup was interrupted last time. Pick what describes you to finish setting up — your existing account, email, and any data are safe.*
+> [Athlete] [Artist] [Agent / Manager]
+
+Same three cards as the new-user flow, but with recovery copy at the top so they understand why they're seeing this and that nothing is broken. Picking a card writes the role to their existing account (no new signup) and routes them in.
+
+### What changes
+
+**1. `src/pages/Auth.tsx` — single entry point**
+- Header copy: "Welcome to Life File" / "Sign in or create your account".
+- Sign In tab: unchanged (email + password + Google + forgot password).
+- Sign Up tab: simplified to Display Name, Email, Password, Confirm Password, Google. **Role picker removed** — that decision moves to `/welcome` for both email and Google signups so the experience is consistent.
+- Agent/Manager-specific fields (Company, Registration Number, Phone, POPIA disclaimer) move out of `/auth` entirely and into `/welcome`'s Agent/Manager flow.
+
+**2. `src/pages/Welcome.tsx` — extended for three cards + recovery mode + agency form**
+- Add a third card: **Agent / Manager** (briefcase icon, "Manage clients across athletes or artists").
+- **Recovery banner**: on mount, check if the user is an existing account that lacks a role. If `profiles.created_at` is older than ~10 minutes AND there's no `client_type`, no `agent_manager_profiles` row, no admin role, and no active staff row, show the recovery copy at the top of the page. Otherwise, show the standard "Welcome — let's set up your account" copy from your screenshot. Same three cards either way.
+- Athlete / Artist cards: one click → write `client_type` to `profiles` (insert if missing, update if present) → route to `/dashboard`.
+- Agent / Manager card: clicking it (then Continue) reveals an inline mini-form on the same page: Company / Agency Name (required), Athletes' Agent vs Artists' Manager sub-toggle, Registration Number (optional), Phone (optional), POPIA disclaimer. Submit writes `auth.user_metadata` (`client_type`, `company_name`, `registration_number`, `phone`) and the existing `useAccountSetupGate` self-heal creates the `agent_manager_profiles` row → routes to `/agent-dashboard`. This is the same backend path `AgentRegister` uses today, so no DB schema changes.
+
+**3. `src/hooks/useAccountSetupGate.tsx` — already handles the recovery case correctly**
+- Existing logic: if no admin role, no `agent_manager_profiles` row, no active staff row, and no `profiles.client_type` → redirect to `/welcome`. This already catches stuck existing accounts. We're just making the `/welcome` page friendlier when they land there. Update the bypass-route doc comment to drop `/agent-register`. No logic change.
+
+**4. `src/components/AgentRoute.tsx`**
+- Line 39: change unauthenticated redirect from `/agent-register` to `/auth`.
+
+**5. `src/App.tsx`**
+- Remove `AgentRegister` import.
+- Replace the `/agent-register` route with `<Navigate to="/auth" replace />` so old links and bookmarks still work.
+
+**6. Public CTA links → `/auth`**
+- `src/pages/Landing.tsx` lines 136, 564, 570, 1118.
+- `src/pages/Pricing.tsx` line 500.
+
+**7. Delete `src/pages/AgentRegister.tsx`**
+
+### Why no existing accounts will have a broken journey
+
+```text
+Sign in → AgentRoute / ProtectedRoute → useAccountSetupGate runs
+                                                │
+                  ┌─────────────────────────────┼─────────────────────────────┐
+                  ▼                             ▼                             ▼
+         Has role / client_type        No role anywhere                 Pending staff
+                  │                             │                             │
+                  ▼                             ▼                             ▼
+            Their dashboard           /welcome (RECOVERY MODE)         /staff-activate
+                                       "Account isn't set up yet"
+                                       Pick role → routed in
 ```
 
-Internal state:
-- `resolvedForUserId: string | null`
-- `timedOut: boolean`
-- `hasEverResolvedRef = useRef(false)` — reset to `false` whenever `user?.id` changes
+`useAccountSetupGate` already reads from all four sources (`user_roles` admin, `agent_manager_profiles`, `portal_staff_access`, `profiles.client_type`). Any pre-existing role-less account is automatically caught on next sign-in and shown the recovery picker — no manual data fix needed for those users.
 
-Loading derivation:
-```ts
-const loading = !!user && resolvedForUserId !== user.id && !timedOut;
-```
+### Files modified
 
-`dashboardPath` is `null` whenever `loading` is true; otherwise `/admin | /agent-dashboard | /dashboard` based on resolved role.
+1. `src/pages/Auth.tsx` (simplify sign-up, drop role picker, update header)
+2. `src/pages/Welcome.tsx` (three cards, recovery-mode copy, inline agency form)
+3. `src/App.tsx` (redirect old `/agent-register` route)
+4. `src/components/AgentRoute.tsx` (redirect target → `/auth`)
+5. `src/components/ProtectedRoute.tsx` (verify unauthenticated redirect target → `/auth`)
+6. `src/pages/Landing.tsx` (4 CTA links → `/auth`)
+7. `src/pages/Pricing.tsx` (1 CTA link → `/auth`)
+8. `src/hooks/useAccountSetupGate.tsx` (comment only)
+9. `src/pages/AgentRegister.tsx` — **deleted**
 
-Effect logic on every `user` change:
-1. If `!user` → clear `role`, `resolvedForUserId`, `timedOut`, set `hasEverResolvedRef.current = false`, return.
-2. If `user.id` differs from the previous run → reset `resolvedForUserId = null`, `timedOut = false`, `hasEverResolvedRef.current = false`.
-3. Use a `cancelled` flag + a captured `currentUserId` so a stale async response from a previous user is dropped.
-4. Run the existing role lookup chain (admin → agent → active staff → client_type → metadata fallback). On success, only commit if `!cancelled && currentUserId === user.id`, then `setResolvedForUserId(currentUserId)` and `hasEverResolvedRef.current = true`.
-5. Start a 5s `setTimeout`. On fire, if still unresolved AND `!cancelled`:
-   - **First-load failure** (`!hasEverResolvedRef.current`):
-     - `console.error("[useUserRole] Role resolution timeout for user", user.id)`
-     - `setTimedOut(true)`
-     - Trigger sign-out + redirect (see effect 2 below)
-   - **Mid-session re-resolution timeout** (`hasEverResolvedRef.current === true`):
-     - `console.warn("[useUserRole] Role re-resolution timeout — falling back to cached role", user.id)`
-     - Do NOT setTimedOut, do NOT sign out, keep last-known `role` and `resolvedForUserId` so consumers continue to see the cached role and `loading` stays false.
-6. Cleanup: clear timeout, set `cancelled = true`.
+### Out of scope
 
-Sign-out side-effect (separate effect inside hook, runs only when `timedOut === true`):
-```ts
-useEffect(() => {
-  if (!timedOut) return;
-  toast.error(
-    "We couldn't determine your account type. Please sign in again.",
-    { description: "Reference: role-resolution-timeout", duration: 8000 }
-  );
-  supabase.auth.signOut().finally(() => {
-    window.location.replace("/auth");
-  });
-}, [timedOut]);
-```
-(`window.location.replace` instead of `useNavigate` so the hook doesn't require Router context for every consumer.)
+No database changes, no edge function changes, no auth changes, no changes to `useUserRole` or `useAuth`. Reset password flow, email verification gate, Google OAuth wiring all unchanged.
 
-### 2. Consumer changes
+### Report-back checklist after implementation
 
-**`src/pages/AgentRegister.tsx`** — redirect effect becomes:
-```ts
-useEffect(() => {
-  if (user && !roleLoading && dashboardPath) {
-    navigate(dashboardPath, { replace: true });
-  }
-}, [user, roleLoading, dashboardPath, navigate]);
-```
-
-**`src/pages/Auth.tsx`** — identical guard with `&& dashboardPath` and `replace: true`.
-
-**`src/components/AdminRoute.tsx`** and **`src/components/AgentRoute.tsx`** — no logic changes needed; they already gate render on `roleLoading`. Identity-tied `loading` from the hook makes their existing pattern race-free automatically. (Confirmed via re-read of both files in the codebase context above.)
-
-No other call sites of `useUserRole` exist (`grep` of `src/**/*.{ts,tsx}` for `useUserRole(` returns exactly these four files). `ProtectedRoute.tsx`, `Dashboard.tsx`, `useAdminRole.tsx`, `useAgencyScope.tsx`, `useStaffAccess.tsx` do not consume it and are unaffected.
-
-### 3. Files to edit
-
-- `src/hooks/useUserRole.tsx`
-- `src/pages/AgentRegister.tsx`
-- `src/pages/Auth.tsx`
-
-### 4. Verification — to run after implementation, results pasted into report-back
-
-a–i. Role-switch transitions on one tab (Naledi → out → client → out → Naledi → out → owner → out → admin), watching for any flash of the wrong dashboard.
-j. Hard-refresh while signed in as Naledi on `/agent-dashboard`.
-k. Throttled network (Slow 3G) sign-in — confirm Loading screen, no premature redirect, eventual correct landing.
-l. **Forced >5s hang via DevTools Request Blocking** of the `has_role` / `agent_manager_profiles` / `portal_staff_access` requests. Pasted observations in the report:
-   - UI state during 0–5s
-   - Exact toast copy + reference code
-   - Console line: `[useUserRole] Role resolution timeout for user <uuid>`
-   - Final route after sign-out
-
-m. Mid-session re-resolution timeout (simulate by signing in successfully, then blocking requests and forcing a re-run) — confirm warning log fires, user is NOT signed out, cached role remains active.
-
-### Report-back deliverables
-
-- Adjusted timeout scope (first-load sign-out vs mid-session warning) — implemented as specified above
-- Pasted scenario (l) observed output
-- Results table for all 12 scenarios (a–l) plus mid-session test (m)
-- Screenshot/transcript of the timeout toast with exact copy and reference code
+1. Files modified (list above).
+2. `/agent-register` → redirects to `/auth` (no 404 on bookmarks).
+3. Sign In on `/auth` for an existing agent / athlete / artist / staff / admin → straight to correct dashboard, never sees `/welcome`.
+4. Brand-new email signup → verify → sign in → `/welcome` standard copy + 3 cards.
+5. Brand-new Google signup → consent → `/welcome` standard copy + 3 cards.
+6. Existing role-less account → sign in → `/welcome` **recovery copy** + 3 cards → picking one completes setup and routes them in.
+7. Picking Agent/Manager on `/welcome` → reveals agency form → submit creates `agent_manager_profiles` row → lands on `/agent-dashboard`.
 
