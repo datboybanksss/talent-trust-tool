@@ -12,7 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
  *   4. Otherwise                          → ready (no redirect)
  *
  * Bypassed routes (already handled or part of the setup flow itself):
- *   /welcome, /auth, /agent-register, /reset-password, /staff-activate/:token,
+ *   /welcome, /auth, /reset-password, /staff-activate/:token,
  *   /activate/:token, /client-activate/:token
  *
  * The hook is safe to call inside a route guard; it short-circuits when there

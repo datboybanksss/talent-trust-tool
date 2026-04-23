@@ -8,7 +8,6 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import AgentRoute from "@/components/AgentRoute";
 import AdminRoute from "@/components/AdminRoute";
 import Landing from "./pages/Landing";
-import AgentRegister from "./pages/AgentRegister";
 import AgentDashboard from "./pages/AgentDashboard";
 import AgentClientDetail from "./pages/AgentClientDetail";
 import AgentAthleteProfile from "./pages/AgentAthleteProfile";
@@ -65,7 +64,7 @@ const App = () => (
             <Route path="/contact" element={<Contact />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/agent-register" element={<AgentRegister />} />
+            <Route path="/agent-register" element={<Navigate to="/auth" replace />} />
             <Route path="/welcome" element={<Welcome />} />
             <Route path="/agent-dashboard" element={<AgentRoute><AgentDashboard /></AgentRoute>} />
             <Route path="/agent-dashboard/client/:clientId" element={<AgentRoute><AgentClientDetail /></AgentRoute>} />
