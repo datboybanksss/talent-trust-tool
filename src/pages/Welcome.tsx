@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Trophy, Music2, Briefcase, Loader2 } from "lucide-react";
+import { Trophy, Music2, Briefcase, Loader2, AlertTriangle } from "lucide-react";
 
 type Choice = "athlete" | "artist" | "agent_manager" | null;
 
@@ -22,10 +22,33 @@ const Welcome = () => {
     "athlete_agent",
   );
   const [submitting, setSubmitting] = useState(false);
+  const [isRecovery, setIsRecovery] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/auth", { replace: true });
   }, [authLoading, user, navigate]);
+
+  // Detect if this is an existing account that landed here because their
+  // role was lost / never set (recovery mode). Heuristic: profile row exists
+  // and was created more than 10 minutes ago. Brand-new signups will have a
+  // very recent profile row (created by handle_new_user trigger).
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("created_at")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (cancelled || !data?.created_at) return;
+      const ageMs = Date.now() - new Date(data.created_at).getTime();
+      if (ageMs > 10 * 60 * 1000) setIsRecovery(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   const handleSubmit = async () => {
     if (!user || !choice) return;
