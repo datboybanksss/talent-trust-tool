@@ -1,93 +1,141 @@
 
 
-## Collapse `/agent-register` into `/auth` + safety net for existing role-less accounts
+## Stop existing users being stranded on `/welcome`
 
-One door for everyone. New users pick a role on `/welcome`. Existing users go straight to their dashboard. **Existing accounts that are stuck without a role get caught and routed to a friendly recovery screen instead of a broken page.**
+### Problem
+`/welcome` currently renders for any signed-in user. The recovery heuristic (`profile.created_at > 10 minutes`) only swaps copy — it does not gate access. Combined with role/setup logic split across `useAccountSetupGate` and `useUserRole`, fully set-up users can land on `/welcome` and stay there.
 
-### User flows
+### Goal
+Make `/welcome` a true setup-and-repair route. Users with valid roles must never remain on it. All routing decisions must come from one canonical source of truth.
 
-**Existing user with a role** (admin, agent, staff, athlete, artist) — signs in at `/auth` → straight to their dashboard. Never sees `/welcome`.
+---
 
-**Brand-new user** (email or Google) — signs up at `/auth` → email verify if needed → `/welcome` shows the role picker (Athlete / Artist / Agent-Manager) → routed to their dashboard.
-
-**Existing user with NO role** (the safety-net case — signed up before, never finished, or hit an error) — signs in at `/auth` → `useAccountSetupGate` detects no role anywhere → routed to `/welcome` which now opens in a **"Recovery" mode** showing:
-
-> **"Looks like your account isn't fully set up yet"**
-> *We couldn't find a role on your profile. This usually means setup was interrupted last time. Pick what describes you to finish setting up — your existing account, email, and any data are safe.*
-> [Athlete] [Artist] [Agent / Manager]
-
-Same three cards as the new-user flow, but with recovery copy at the top so they understand why they're seeing this and that nothing is broken. Picking a card writes the role to their existing account (no new signup) and routes them in.
-
-### What changes
-
-**1. `src/pages/Auth.tsx` — single entry point**
-- Header copy: "Welcome to Life File" / "Sign in or create your account".
-- Sign In tab: unchanged (email + password + Google + forgot password).
-- Sign Up tab: simplified to Display Name, Email, Password, Confirm Password, Google. **Role picker removed** — that decision moves to `/welcome` for both email and Google signups so the experience is consistent.
-- Agent/Manager-specific fields (Company, Registration Number, Phone, POPIA disclaimer) move out of `/auth` entirely and into `/welcome`'s Agent/Manager flow.
-
-**2. `src/pages/Welcome.tsx` — extended for three cards + recovery mode + agency form**
-- Add a third card: **Agent / Manager** (briefcase icon, "Manage clients across athletes or artists").
-- **Recovery banner**: on mount, check if the user is an existing account that lacks a role. If `profiles.created_at` is older than ~10 minutes AND there's no `client_type`, no `agent_manager_profiles` row, no admin role, and no active staff row, show the recovery copy at the top of the page. Otherwise, show the standard "Welcome — let's set up your account" copy from your screenshot. Same three cards either way.
-- Athlete / Artist cards: one click → write `client_type` to `profiles` (insert if missing, update if present) → route to `/dashboard`.
-- Agent / Manager card: clicking it (then Continue) reveals an inline mini-form on the same page: Company / Agency Name (required), Athletes' Agent vs Artists' Manager sub-toggle, Registration Number (optional), Phone (optional), POPIA disclaimer. Submit writes `auth.user_metadata` (`client_type`, `company_name`, `registration_number`, `phone`) and the existing `useAccountSetupGate` self-heal creates the `agent_manager_profiles` row → routes to `/agent-dashboard`. This is the same backend path `AgentRegister` uses today, so no DB schema changes.
-
-**3. `src/hooks/useAccountSetupGate.tsx` — already handles the recovery case correctly**
-- Existing logic: if no admin role, no `agent_manager_profiles` row, no active staff row, and no `profiles.client_type` → redirect to `/welcome`. This already catches stuck existing accounts. We're just making the `/welcome` page friendlier when they land there. Update the bypass-route doc comment to drop `/agent-register`. No logic change.
-
-**4. `src/components/AgentRoute.tsx`**
-- Line 39: change unauthenticated redirect from `/agent-register` to `/auth`.
-
-**5. `src/App.tsx`**
-- Remove `AgentRegister` import.
-- Replace the `/agent-register` route with `<Navigate to="/auth" replace />` so old links and bookmarks still work.
-
-**6. Public CTA links → `/auth`**
-- `src/pages/Landing.tsx` lines 136, 564, 570, 1118.
-- `src/pages/Pricing.tsx` line 500.
-
-**7. Delete `src/pages/AgentRegister.tsx`**
-
-### Why no existing accounts will have a broken journey
+### 1. Canonical account-state resolver (new)
+Create `src/lib/accountState.ts` exporting one function that returns a deterministic state for the current user:
 
 ```text
-Sign in → AgentRoute / ProtectedRoute → useAccountSetupGate runs
-                                                │
-                  ┌─────────────────────────────┼─────────────────────────────┐
-                  ▼                             ▼                             ▼
-         Has role / client_type        No role anywhere                 Pending staff
-                  │                             │                             │
-                  ▼                             ▼                             ▼
-            Their dashboard           /welcome (RECOVERY MODE)         /staff-activate
-                                       "Account isn't set up yet"
-                                       Pick role → routed in
+unauthenticated
+unverified
+pending_staff
+admin
+agent
+staff
+athlete
+artist
+incomplete_new        // no role + no profile row yet OR very fresh signup
+incomplete_existing   // no role but profile already exists (legacy account)
 ```
 
-`useAccountSetupGate` already reads from all four sources (`user_roles` admin, `agent_manager_profiles`, `portal_staff_access`, `profiles.client_type`). Any pre-existing role-less account is automatically caught on next sign-in and shown the recovery picker — no manual data fix needed for those users.
+Resolution order (first match wins):
+1. no `user` → `unauthenticated`
+2. no `email_confirmed_at` → `unverified`
+3. unaccepted `portal_staff_access` row → `pending_staff`
+4. `has_role(user, 'admin')` → `admin`
+5. `agent_manager_profiles` row exists → `agent`
+6. active accepted `portal_staff_access` row → `staff`
+7. `profiles.client_type = 'athlete'` → `athlete`
+8. `profiles.client_type = 'artist'` → `artist`
+9. profile row exists, no role → `incomplete_existing`
+10. otherwise → `incomplete_new`
 
-### Files modified
+Sources used: `has_role` RPC, `agent_manager_profiles`, `portal_staff_access`, `profiles.client_type`. `auth.user_metadata.client_type` is consulted only for self-heal (see step 5), not for the canonical state.
 
-1. `src/pages/Auth.tsx` (simplify sign-up, drop role picker, update header)
-2. `src/pages/Welcome.tsx` (three cards, recovery-mode copy, inline agency form)
-3. `src/App.tsx` (redirect old `/agent-register` route)
-4. `src/components/AgentRoute.tsx` (redirect target → `/auth`)
-5. `src/components/ProtectedRoute.tsx` (verify unauthenticated redirect target → `/auth`)
-6. `src/pages/Landing.tsx` (4 CTA links → `/auth`)
-7. `src/pages/Pricing.tsx` (1 CTA link → `/auth`)
-8. `src/hooks/useAccountSetupGate.tsx` (comment only)
-9. `src/pages/AgentRegister.tsx` — **deleted**
+A small `useAccountState()` hook wraps it with `{ state, loading }` and identity-tied caching (same pattern `useUserRole` uses today).
 
-### Out of scope
+### 2. Make `/welcome` self-protecting
+Update `src/pages/Welcome.tsx`:
+- On mount, read canonical state.
+- If state is `admin` → `Navigate` to `/admin`.
+- `agent` or `staff` → `/agent-dashboard`.
+- `athlete` or `artist` → `/dashboard`.
+- `pending_staff` → `/staff-activate/:token`.
+- `unauthenticated` → `/auth`.
+- `unverified` → render `EmailVerificationGate`.
+- `incomplete_new` → render standard onboarding copy + 3 role cards.
+- `incomplete_existing` → render recovery banner + 3 role cards.
 
-No database changes, no edge function changes, no auth changes, no changes to `useUserRole` or `useAuth`. Reset password flow, email verification gate, Google OAuth wiring all unchanged.
+Drop the `created_at > 10 min` heuristic entirely.
 
-### Report-back checklist after implementation
+### 3. Refactor `useAccountSetupGate`
+- Replace its internal queries with the canonical resolver.
+- Keep the existing **agent self-heal** step (auto-insert `agent_manager_profiles` from metadata when `client_type ∈ {athlete_agent, artist_manager}`) — run it before computing final state so self-healed users never appear `incomplete_*`.
+- Return `redirectTo`:
+  - `pending_staff` → `/staff-activate/:token`
+  - `incomplete_new` or `incomplete_existing` → `/welcome`
+  - otherwise → `null`
 
-1. Files modified (list above).
-2. `/agent-register` → redirects to `/auth` (no 404 on bookmarks).
-3. Sign In on `/auth` for an existing agent / athlete / artist / staff / admin → straight to correct dashboard, never sees `/welcome`.
-4. Brand-new email signup → verify → sign in → `/welcome` standard copy + 3 cards.
-5. Brand-new Google signup → consent → `/welcome` standard copy + 3 cards.
-6. Existing role-less account → sign in → `/welcome` **recovery copy** + 3 cards → picking one completes setup and routes them in.
-7. Picking Agent/Manager on `/welcome` → reveals agency form → submit creates `agent_manager_profiles` row → lands on `/agent-dashboard`.
+### 4. Refactor `useUserRole`
+- Make it a thin adapter over the canonical resolver.
+- Map canonical state → `UserRole` (`admin`, `agent`, `staff`, `athlete`, `artist`, `user`/`null` for incomplete).
+- Keep the existing first-load timeout sign-out behavior.
+- `dashboardPath` keeps current mapping (`admin → /admin`, `agent`/`staff → /agent-dashboard`, else `/dashboard`).
+
+### 5. Align `ProtectedRoute` and `AgentRoute`
+No structural change — both already delegate to `useAccountSetupGate`. They automatically benefit from the unified resolver. Verify:
+- `ProtectedRoute`: redirects only when `gate.redirectTo` is set.
+- `AgentRoute`: precedence stays `admin > agent > staff`, then setup gate, then allow check.
+
+### 6. Tighten `/auth` post-login redirect
+In `src/pages/Auth.tsx`:
+- After successful sign-in, await canonical state (do not redirect on stale `null`).
+- Route by final state:
+  - `admin` → `/admin`
+  - `agent` / `staff` → `/agent-dashboard`
+  - `athlete` / `artist` → `/dashboard`
+  - `pending_staff` → `/staff-activate/:token`
+  - `incomplete_new` / `incomplete_existing` → `/welcome`
+
+This eliminates the "flash to /welcome" race for fully set-up users.
+
+### 7. Preserve recovery flow
+On `/welcome` for `incomplete_existing`:
+- Keep the recovery banner copy ("Your account isn't fully set up").
+- Keep the 3-card picker.
+- Repair actions stay as-is:
+  - Athlete/Artist → update `profiles.client_type`.
+  - Agent/Manager → upsert `agent_manager_profiles` (with `onConflict: 'user_id'`).
+- After repair, route by the freshly-resolved state.
+
+---
+
+### Files touched
+- `src/lib/accountState.ts` — new canonical resolver + `useAccountState` hook
+- `src/pages/Welcome.tsx` — self-guarding redirects, drop time heuristic, two-mode rendering
+- `src/hooks/useAccountSetupGate.tsx` — consume resolver, keep self-heal
+- `src/hooks/useUserRole.tsx` — adapter over resolver
+- `src/pages/Auth.tsx` — wait for canonical state before navigating
+- `src/components/ProtectedRoute.tsx` — verify behavior, no logic change expected
+- `src/components/AgentRoute.tsx` — verify behavior, no logic change expected
+
+### Behavior contract
+
+| User type | Sign in lands on | Visiting `/welcome` directly |
+|---|---|---|
+| Admin | `/admin` | redirected to `/admin` |
+| Agent / manager | `/agent-dashboard` | redirected to `/agent-dashboard` |
+| Active staff | `/agent-dashboard` | redirected to `/agent-dashboard` |
+| Athlete | `/dashboard` | redirected to `/dashboard` |
+| Artist | `/dashboard` | redirected to `/dashboard` |
+| Pending staff | `/staff-activate/:token` | redirected to activation |
+| Incomplete legacy (no role, profile exists) | `/welcome` recovery copy | stays on `/welcome` |
+| Brand-new signup | `/welcome` standard copy | stays on `/welcome` |
+
+### Validation
+1. Sign in as the account that prompted this complaint → lands on its real dashboard, not `/welcome`.
+2. While signed in with a role, type `/welcome` in the URL → instant redirect away.
+3. Athlete (`client_type='athlete'`) → `/dashboard`; visiting `/welcome` redirects.
+4. Artist (`client_type='artist'`) → `/dashboard`; visiting `/welcome` redirects.
+5. Agent with `agent_manager_profiles` row → `/agent-dashboard`; visiting `/welcome` redirects.
+6. Active staff → `/agent-dashboard`; visiting `/welcome` redirects.
+7. Pending staff → `/staff-activate/:token` first.
+8. Legacy account with no role → `/welcome` with recovery copy; picking a role repairs and routes.
+9. Brand-new signup → `/welcome` with standard copy; picking a role completes setup.
+10. Old `/agent-register` bookmarks still redirect to `/auth` (already in place).
+
+### Implementation guardrails
+- Page copy logic must never double as access control.
+- `created_at` must not influence whether `/welcome` renders.
+- Role logic lives in exactly one place after this change (`accountState.ts`).
+- Agent self-heal still runs before any "incomplete" verdict.
+- `pending_staff` precedence is preserved above all dashboard routing.
 
