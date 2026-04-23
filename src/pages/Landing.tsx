@@ -133,9 +133,6 @@ const Landing = () => {
               <Link to="/pricing">Pricing</Link>
             </Button>
             <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-foreground">
-              <Link to="/auth">Agents & Managers</Link>
-            </Button>
-            <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-foreground">
               <Link to="/auth">Sign In</Link>
             </Button>
             <Button variant="hero" size="sm" asChild>
