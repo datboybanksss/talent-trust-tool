@@ -36,7 +36,7 @@ const AgentRoute = ({ children }: AgentRouteProps) => {
   }
 
   if (!user) {
-    return <Navigate to="/agent-register" replace state={{ from: location }} />;
+    return <Navigate to="/auth" replace state={{ from: location }} />;
   }
 
   if (!user.email_confirmed_at) {

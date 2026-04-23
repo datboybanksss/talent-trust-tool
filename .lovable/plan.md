@@ -1,96 +1,141 @@
 
 
-## Final hardened plan: identity-tied role resolution + first-load-only timeout
+## Stop existing users being stranded on `/welcome`
 
-### 1. Hook changes — `src/hooks/useUserRole.tsx`
+### Problem
+`/welcome` currently renders for any signed-in user. The recovery heuristic (`profile.created_at > 10 minutes`) only swaps copy — it does not gate access. Combined with role/setup logic split across `useAccountSetupGate` and `useUserRole`, fully set-up users can land on `/welcome` and stay there.
 
-New shape:
-```ts
-{ role, loading, dashboardPath, timedOut }
+### Goal
+Make `/welcome` a true setup-and-repair route. Users with valid roles must never remain on it. All routing decisions must come from one canonical source of truth.
+
+---
+
+### 1. Canonical account-state resolver (new)
+Create `src/lib/accountState.ts` exporting one function that returns a deterministic state for the current user:
+
+```text
+unauthenticated
+unverified
+pending_staff
+admin
+agent
+staff
+athlete
+artist
+incomplete_new        // no role + no profile row yet OR very fresh signup
+incomplete_existing   // no role but profile already exists (legacy account)
 ```
 
-Internal state:
-- `resolvedForUserId: string | null`
-- `timedOut: boolean`
-- `hasEverResolvedRef = useRef(false)` — reset to `false` whenever `user?.id` changes
+Resolution order (first match wins):
+1. no `user` → `unauthenticated`
+2. no `email_confirmed_at` → `unverified`
+3. unaccepted `portal_staff_access` row → `pending_staff`
+4. `has_role(user, 'admin')` → `admin`
+5. `agent_manager_profiles` row exists → `agent`
+6. active accepted `portal_staff_access` row → `staff`
+7. `profiles.client_type = 'athlete'` → `athlete`
+8. `profiles.client_type = 'artist'` → `artist`
+9. profile row exists, no role → `incomplete_existing`
+10. otherwise → `incomplete_new`
 
-Loading derivation:
-```ts
-const loading = !!user && resolvedForUserId !== user.id && !timedOut;
-```
+Sources used: `has_role` RPC, `agent_manager_profiles`, `portal_staff_access`, `profiles.client_type`. `auth.user_metadata.client_type` is consulted only for self-heal (see step 5), not for the canonical state.
 
-`dashboardPath` is `null` whenever `loading` is true; otherwise `/admin | /agent-dashboard | /dashboard` based on resolved role.
+A small `useAccountState()` hook wraps it with `{ state, loading }` and identity-tied caching (same pattern `useUserRole` uses today).
 
-Effect logic on every `user` change:
-1. If `!user` → clear `role`, `resolvedForUserId`, `timedOut`, set `hasEverResolvedRef.current = false`, return.
-2. If `user.id` differs from the previous run → reset `resolvedForUserId = null`, `timedOut = false`, `hasEverResolvedRef.current = false`.
-3. Use a `cancelled` flag + a captured `currentUserId` so a stale async response from a previous user is dropped.
-4. Run the existing role lookup chain (admin → agent → active staff → client_type → metadata fallback). On success, only commit if `!cancelled && currentUserId === user.id`, then `setResolvedForUserId(currentUserId)` and `hasEverResolvedRef.current = true`.
-5. Start a 5s `setTimeout`. On fire, if still unresolved AND `!cancelled`:
-   - **First-load failure** (`!hasEverResolvedRef.current`):
-     - `console.error("[useUserRole] Role resolution timeout for user", user.id)`
-     - `setTimedOut(true)`
-     - Trigger sign-out + redirect (see effect 2 below)
-   - **Mid-session re-resolution timeout** (`hasEverResolvedRef.current === true`):
-     - `console.warn("[useUserRole] Role re-resolution timeout — falling back to cached role", user.id)`
-     - Do NOT setTimedOut, do NOT sign out, keep last-known `role` and `resolvedForUserId` so consumers continue to see the cached role and `loading` stays false.
-6. Cleanup: clear timeout, set `cancelled = true`.
+### 2. Make `/welcome` self-protecting
+Update `src/pages/Welcome.tsx`:
+- On mount, read canonical state.
+- If state is `admin` → `Navigate` to `/admin`.
+- `agent` or `staff` → `/agent-dashboard`.
+- `athlete` or `artist` → `/dashboard`.
+- `pending_staff` → `/staff-activate/:token`.
+- `unauthenticated` → `/auth`.
+- `unverified` → render `EmailVerificationGate`.
+- `incomplete_new` → render standard onboarding copy + 3 role cards.
+- `incomplete_existing` → render recovery banner + 3 role cards.
 
-Sign-out side-effect (separate effect inside hook, runs only when `timedOut === true`):
-```ts
-useEffect(() => {
-  if (!timedOut) return;
-  toast.error(
-    "We couldn't determine your account type. Please sign in again.",
-    { description: "Reference: role-resolution-timeout", duration: 8000 }
-  );
-  supabase.auth.signOut().finally(() => {
-    window.location.replace("/auth");
-  });
-}, [timedOut]);
-```
-(`window.location.replace` instead of `useNavigate` so the hook doesn't require Router context for every consumer.)
+Drop the `created_at > 10 min` heuristic entirely.
 
-### 2. Consumer changes
+### 3. Refactor `useAccountSetupGate`
+- Replace its internal queries with the canonical resolver.
+- Keep the existing **agent self-heal** step (auto-insert `agent_manager_profiles` from metadata when `client_type ∈ {athlete_agent, artist_manager}`) — run it before computing final state so self-healed users never appear `incomplete_*`.
+- Return `redirectTo`:
+  - `pending_staff` → `/staff-activate/:token`
+  - `incomplete_new` or `incomplete_existing` → `/welcome`
+  - otherwise → `null`
 
-**`src/pages/AgentRegister.tsx`** — redirect effect becomes:
-```ts
-useEffect(() => {
-  if (user && !roleLoading && dashboardPath) {
-    navigate(dashboardPath, { replace: true });
-  }
-}, [user, roleLoading, dashboardPath, navigate]);
-```
+### 4. Refactor `useUserRole`
+- Make it a thin adapter over the canonical resolver.
+- Map canonical state → `UserRole` (`admin`, `agent`, `staff`, `athlete`, `artist`, `user`/`null` for incomplete).
+- Keep the existing first-load timeout sign-out behavior.
+- `dashboardPath` keeps current mapping (`admin → /admin`, `agent`/`staff → /agent-dashboard`, else `/dashboard`).
 
-**`src/pages/Auth.tsx`** — identical guard with `&& dashboardPath` and `replace: true`.
+### 5. Align `ProtectedRoute` and `AgentRoute`
+No structural change — both already delegate to `useAccountSetupGate`. They automatically benefit from the unified resolver. Verify:
+- `ProtectedRoute`: redirects only when `gate.redirectTo` is set.
+- `AgentRoute`: precedence stays `admin > agent > staff`, then setup gate, then allow check.
 
-**`src/components/AdminRoute.tsx`** and **`src/components/AgentRoute.tsx`** — no logic changes needed; they already gate render on `roleLoading`. Identity-tied `loading` from the hook makes their existing pattern race-free automatically. (Confirmed via re-read of both files in the codebase context above.)
+### 6. Tighten `/auth` post-login redirect
+In `src/pages/Auth.tsx`:
+- After successful sign-in, await canonical state (do not redirect on stale `null`).
+- Route by final state:
+  - `admin` → `/admin`
+  - `agent` / `staff` → `/agent-dashboard`
+  - `athlete` / `artist` → `/dashboard`
+  - `pending_staff` → `/staff-activate/:token`
+  - `incomplete_new` / `incomplete_existing` → `/welcome`
 
-No other call sites of `useUserRole` exist (`grep` of `src/**/*.{ts,tsx}` for `useUserRole(` returns exactly these four files). `ProtectedRoute.tsx`, `Dashboard.tsx`, `useAdminRole.tsx`, `useAgencyScope.tsx`, `useStaffAccess.tsx` do not consume it and are unaffected.
+This eliminates the "flash to /welcome" race for fully set-up users.
 
-### 3. Files to edit
+### 7. Preserve recovery flow
+On `/welcome` for `incomplete_existing`:
+- Keep the recovery banner copy ("Your account isn't fully set up").
+- Keep the 3-card picker.
+- Repair actions stay as-is:
+  - Athlete/Artist → update `profiles.client_type`.
+  - Agent/Manager → upsert `agent_manager_profiles` (with `onConflict: 'user_id'`).
+- After repair, route by the freshly-resolved state.
 
-- `src/hooks/useUserRole.tsx`
-- `src/pages/AgentRegister.tsx`
-- `src/pages/Auth.tsx`
+---
 
-### 4. Verification — to run after implementation, results pasted into report-back
+### Files touched
+- `src/lib/accountState.ts` — new canonical resolver + `useAccountState` hook
+- `src/pages/Welcome.tsx` — self-guarding redirects, drop time heuristic, two-mode rendering
+- `src/hooks/useAccountSetupGate.tsx` — consume resolver, keep self-heal
+- `src/hooks/useUserRole.tsx` — adapter over resolver
+- `src/pages/Auth.tsx` — wait for canonical state before navigating
+- `src/components/ProtectedRoute.tsx` — verify behavior, no logic change expected
+- `src/components/AgentRoute.tsx` — verify behavior, no logic change expected
 
-a–i. Role-switch transitions on one tab (Naledi → out → client → out → Naledi → out → owner → out → admin), watching for any flash of the wrong dashboard.
-j. Hard-refresh while signed in as Naledi on `/agent-dashboard`.
-k. Throttled network (Slow 3G) sign-in — confirm Loading screen, no premature redirect, eventual correct landing.
-l. **Forced >5s hang via DevTools Request Blocking** of the `has_role` / `agent_manager_profiles` / `portal_staff_access` requests. Pasted observations in the report:
-   - UI state during 0–5s
-   - Exact toast copy + reference code
-   - Console line: `[useUserRole] Role resolution timeout for user <uuid>`
-   - Final route after sign-out
+### Behavior contract
 
-m. Mid-session re-resolution timeout (simulate by signing in successfully, then blocking requests and forcing a re-run) — confirm warning log fires, user is NOT signed out, cached role remains active.
+| User type | Sign in lands on | Visiting `/welcome` directly |
+|---|---|---|
+| Admin | `/admin` | redirected to `/admin` |
+| Agent / manager | `/agent-dashboard` | redirected to `/agent-dashboard` |
+| Active staff | `/agent-dashboard` | redirected to `/agent-dashboard` |
+| Athlete | `/dashboard` | redirected to `/dashboard` |
+| Artist | `/dashboard` | redirected to `/dashboard` |
+| Pending staff | `/staff-activate/:token` | redirected to activation |
+| Incomplete legacy (no role, profile exists) | `/welcome` recovery copy | stays on `/welcome` |
+| Brand-new signup | `/welcome` standard copy | stays on `/welcome` |
 
-### Report-back deliverables
+### Validation
+1. Sign in as the account that prompted this complaint → lands on its real dashboard, not `/welcome`.
+2. While signed in with a role, type `/welcome` in the URL → instant redirect away.
+3. Athlete (`client_type='athlete'`) → `/dashboard`; visiting `/welcome` redirects.
+4. Artist (`client_type='artist'`) → `/dashboard`; visiting `/welcome` redirects.
+5. Agent with `agent_manager_profiles` row → `/agent-dashboard`; visiting `/welcome` redirects.
+6. Active staff → `/agent-dashboard`; visiting `/welcome` redirects.
+7. Pending staff → `/staff-activate/:token` first.
+8. Legacy account with no role → `/welcome` with recovery copy; picking a role repairs and routes.
+9. Brand-new signup → `/welcome` with standard copy; picking a role completes setup.
+10. Old `/agent-register` bookmarks still redirect to `/auth` (already in place).
 
-- Adjusted timeout scope (first-load sign-out vs mid-session warning) — implemented as specified above
-- Pasted scenario (l) observed output
-- Results table for all 12 scenarios (a–l) plus mid-session test (m)
-- Screenshot/transcript of the timeout toast with exact copy and reference code
+### Implementation guardrails
+- Page copy logic must never double as access control.
+- `created_at` must not influence whether `/welcome` renders.
+- Role logic lives in exactly one place after this change (`accountState.ts`).
+- Agent self-heal still runs before any "incomplete" verdict.
+- `pending_staff` precedence is preserved above all dashboard routing.
 

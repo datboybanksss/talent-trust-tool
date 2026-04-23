@@ -133,9 +133,6 @@ const Landing = () => {
               <Link to="/pricing">Pricing</Link>
             </Button>
             <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-foreground">
-              <Link to="/agent-register">Agents & Managers</Link>
-            </Button>
-            <Button variant="ghost" size="sm" asChild className="text-muted-foreground hover:text-foreground">
               <Link to="/auth">Sign In</Link>
             </Button>
             <Button variant="hero" size="sm" asChild>
@@ -561,13 +558,13 @@ const Landing = () => {
           <Reveal delay={0.3}>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-10">
               <Button variant="gold" size="lg" asChild className="group">
-                <Link to="/agent-register">
+                <Link to="/auth">
                   Register as Agent / Manager
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </Button>
               <Button variant="outline" size="lg" asChild>
-                <Link to="/agent-register">Sign In to Agent Portal</Link>
+                <Link to="/auth">Sign In to Agent Portal</Link>
               </Button>
             </div>
           </Reveal>
@@ -1115,7 +1112,7 @@ const AgentPricingSection = () => {
                 asChild
                 className="w-full group"
               >
-                <Link to="/agent-register">
+                <Link to="/auth">
                   <Calendar className="w-4 h-4 mr-1" />
                   {tier.cta}
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />

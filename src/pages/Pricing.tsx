@@ -497,7 +497,7 @@ const AgentPricingSection = () => {
                 ))}
               </ul>
               <Button variant={tier.highlight ? "hero" : "outline"} size="lg" asChild className="w-full group">
-                <Link to="/agent-register">
+                <Link to="/auth">
                   <Calendar className="w-4 h-4 mr-1" />
                   {tier.cta}
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
