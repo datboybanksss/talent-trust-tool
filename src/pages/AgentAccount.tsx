@@ -12,6 +12,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useStaffAccess } from "@/hooks/useStaffAccess";
 import { supabase } from "@/integrations/supabase/client";
+import DeleteAgencyDialog from "@/components/myagency/DeleteAgencyDialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const AgentAccount = () => {
   const navigate = useNavigate();
@@ -32,6 +34,8 @@ const AgentAccount = () => {
   const [pwSubmitting, setPwSubmitting] = useState(false);
 
   const [leaving, setLeaving] = useState(false);
+  const [isDemo, setIsDemo] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   // Load profile + agency name (owner) once
   useEffect(() => {
@@ -39,10 +43,11 @@ const AgentAccount = () => {
     (async () => {
       const { data: prof } = await supabase
         .from("profiles")
-        .select("display_name")
+        .select("display_name, is_demo")
         .eq("user_id", user.id)
         .maybeSingle();
       if (prof?.display_name) setDisplayName(prof.display_name);
+      setIsDemo(prof?.is_demo === true);
 
       // Owner agency name (only meaningful if not staff)
       const { data: agency } = await supabase
@@ -307,9 +312,33 @@ const AgentAccount = () => {
                 Leave {staff.agencyName ?? "this agency"}
               </Button>
             ) : (
-              <Button variant="outline" onClick={() => navigate("/myagency")}>
-                Go to My Agency
-              </Button>
+              <>
+                {isDemo ? (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span>
+                          <Button variant="destructive" disabled className="opacity-60">
+                            Delete agency account
+                          </Button>
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        Demo accounts cannot be deleted from the UI
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : (
+                  <Button variant="destructive" onClick={() => setDeleteOpen(true)}>
+                    Delete agency account
+                  </Button>
+                )}
+                <DeleteAgencyDialog
+                  open={deleteOpen}
+                  onOpenChange={setDeleteOpen}
+                  companyName={agencyName ?? ""}
+                />
+              </>
             )}
           </CardContent>
         </Card>

@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { Menu, ArrowLeft } from "lucide-react";
+import { Menu, ArrowLeft, AlertCircle } from "lucide-react";
 import AgentSidebar from "@/components/agent/AgentSidebar";
 import AgencyIdentityHeader from "@/components/myagency/AgencyIdentityHeader";
 import AgencyStatsRow from "@/components/myagency/AgencyStatsRow";
@@ -24,32 +24,47 @@ export interface AgencyProfile {
   created_at: string;
 }
 
+type LoadState =
+  | { kind: "loading" }
+  | { kind: "error"; message: string; code?: string }
+  | { kind: "missing"; signedInEmail: string | null }
+  | { kind: "success"; agency: AgencyProfile; isDemo: boolean };
+
 const MyAgency = () => {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const staff = useStaffAccess();
-  const [profile, setProfile] = useState<AgencyProfile | null>(null);
-  const [isDemo, setIsDemo] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [state, setState] = useState<LoadState>({ kind: "loading" });
 
   const reload = async () => {
-    if (!user) return;
-    const [{ data: agent }, { data: prof }] = await Promise.all([
+    setState({ kind: "loading" });
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    if (!currentUser) return;
+    const [
+      { data: agency, error: agencyErr },
+      { data: prof },
+    ] = await Promise.all([
       supabase
         .from("agent_manager_profiles")
         .select("id, user_id, company_name, registration_number, role, phone, logo_url, created_at")
-        .eq("user_id", user.id)
+        .eq("user_id", currentUser.id)
         .maybeSingle(),
       supabase
         .from("profiles")
         .select("is_demo")
-        .eq("user_id", user.id)
+        .eq("user_id", currentUser.id)
         .maybeSingle(),
     ]);
-    if (agent) setProfile(agent as AgencyProfile);
-    setIsDemo(Boolean(prof?.is_demo));
-    setLoading(false);
+    if (agencyErr) {
+      setState({ kind: "error", message: agencyErr.message, code: agencyErr.code });
+      return;
+    }
+    if (!agency) {
+      setState({ kind: "missing", signedInEmail: currentUser.email ?? null });
+      return;
+    }
+    setState({ kind: "success", agency: agency as AgencyProfile, isDemo: prof?.is_demo === true });
   };
 
   useEffect(() => {
@@ -66,7 +81,7 @@ const MyAgency = () => {
     }
   }, [staff.loading, staff.isStaff, navigate, toast]);
 
-  if (loading || staff.loading) {
+  if (state.kind === "loading" || staff.loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <p className="text-muted-foreground">Loading agency…</p>
@@ -74,14 +89,35 @@ const MyAgency = () => {
     );
   }
 
-  if (!profile) {
+  if (state.kind === "error") {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 p-6">
-        <p className="text-muted-foreground">No agency profile found for this account.</p>
-        <Button onClick={() => navigate("/agent-dashboard")}>Back to dashboard</Button>
+        <AlertCircle className="h-8 w-8 text-destructive" />
+        <p className="text-destructive font-medium">{state.message}</p>
+        {state.code && <p className="text-xs text-muted-foreground">Code: {state.code}</p>}
+        <div className="flex gap-2">
+          <Button onClick={reload}>Retry</Button>
+          <Button variant="outline" onClick={async () => { await signOut(); navigate("/"); }}>Sign Out</Button>
+        </div>
       </div>
     );
   }
+
+  if (state.kind === "missing") {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 p-6">
+        <p className="text-muted-foreground">
+          No agency profile found for {state.signedInEmail}. This account is not registered as an agency.
+        </p>
+        <div className="flex gap-2">
+          <Button onClick={() => navigate("/agent-dashboard")}>Back to Dashboard</Button>
+          <Button variant="outline" onClick={async () => { await signOut(); navigate("/"); }}>Sign Out</Button>
+        </div>
+      </div>
+    );
+  }
+
+  const { agency: profile, isDemo } = state;
 
   return (
     <SidebarProvider>

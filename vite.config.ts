@@ -18,4 +18,10 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  define: {
+    __BUILD_ID__: JSON.stringify(
+      process.env.VITE_BUILD_ID ??
+      new Date().toISOString().replace(/[-:T.]/g, '').slice(0, 14)
+    ),
+  },
 }));
