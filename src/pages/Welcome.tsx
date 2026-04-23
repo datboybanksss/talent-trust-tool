@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,11 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Trophy, Music2, Briefcase, Loader2, AlertTriangle } from "lucide-react";
+import EmailVerificationGate from "@/components/auth/EmailVerificationGate";
+import {
+  useAccountState,
+  dashboardForState,
+} from "@/lib/accountState";
 
 type Choice = "athlete" | "artist" | "agent_manager" | null;
 
@@ -15,6 +20,7 @@ const Welcome = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const account = useAccountState();
   const [choice, setChoice] = useState<Choice>(null);
   const [companyName, setCompanyName] = useState("");
   const [phone, setPhone] = useState("");
@@ -22,33 +28,6 @@ const Welcome = () => {
     "athlete_agent",
   );
   const [submitting, setSubmitting] = useState(false);
-  const [isRecovery, setIsRecovery] = useState(false);
-
-  useEffect(() => {
-    if (!authLoading && !user) navigate("/auth", { replace: true });
-  }, [authLoading, user, navigate]);
-
-  // Detect if this is an existing account that landed here because their
-  // role was lost / never set (recovery mode). Heuristic: profile row exists
-  // and was created more than 10 minutes ago. Brand-new signups will have a
-  // very recent profile row (created by handle_new_user trigger).
-  useEffect(() => {
-    if (!user) return;
-    let cancelled = false;
-    (async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("created_at")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (cancelled || !data?.created_at) return;
-      const ageMs = Date.now() - new Date(data.created_at).getTime();
-      if (ageMs > 10 * 60 * 1000) setIsRecovery(true);
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [user]);
 
   const handleSubmit = async () => {
     if (!user || !choice) return;
@@ -98,13 +77,31 @@ const Welcome = () => {
     window.location.replace("/agent-dashboard");
   };
 
-  if (authLoading || !user) {
+  // Loading guard while we resolve auth + canonical state.
+  if (authLoading || account.loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
+
+  // Self-protection: route by canonical state. Only incomplete_* renders the page.
+  if (!user || account.state === "unauthenticated") {
+    return <Navigate to="/auth" replace />;
+  }
+  if (account.state === "unverified") {
+    return <EmailVerificationGate />;
+  }
+  if (account.state === "pending_staff" && account.pendingStaffToken) {
+    return <Navigate to={`/staff-activate/${account.pendingStaffToken}`} replace />;
+  }
+  const dashPath = account.state ? dashboardForState(account.state) : null;
+  if (dashPath) {
+    return <Navigate to={dashPath} replace />;
+  }
+
+  const isRecovery = account.state === "incomplete_existing";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-forest-dark via-forest to-forest-light flex items-center justify-center p-4">

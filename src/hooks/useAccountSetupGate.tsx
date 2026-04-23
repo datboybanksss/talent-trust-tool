@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { resolveAccountState } from "@/lib/accountState";
 
 /**
  * Resolves an authenticated user's "first-load setup" requirements before any
@@ -20,7 +21,6 @@ import { useAuth } from "@/hooks/useAuth";
  */
 
 const AGENT_META_VALUES = new Set(["athlete_agent", "artist_manager"]);
-const CLIENT_META_VALUES = new Set(["athlete", "artist"]);
 
 interface GateState {
   loading: boolean;
@@ -48,61 +48,40 @@ export function useAccountSetupGate(): GateState {
       const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
       const metaClientType = typeof meta.client_type === "string" ? meta.client_type : null;
 
-      // Run the four checks in parallel — each one is cheap.
-      const [
-        adminRes,
-        agencyRes,
-        activeStaffRes,
-        pendingStaffRes,
-        profileRes,
-      ] = await Promise.all([
-        supabase.rpc("has_role", { _user_id: user.id, _role: "admin" }),
-        supabase
-          .from("agent_manager_profiles")
-          .select("id")
-          .eq("user_id", user.id)
-          .maybeSingle(),
-        supabase
-          .from("portal_staff_access")
-          .select("id")
-          .eq("staff_user_id", user.id)
-          .eq("status", "active")
-          .not("confidentiality_accepted_at", "is", null)
-          .limit(1),
-        supabase
-          .from("portal_staff_access")
-          .select("invitation_token, agent_id")
-          .eq("staff_user_id", user.id)
-          .is("confidentiality_accepted_at", null)
-          .order("created_at", { ascending: false })
-          .limit(1),
-        supabase
-          .from("profiles")
-          .select("client_type")
-          .eq("user_id", user.id)
-          .maybeSingle(),
-      ]);
-
+      // Resolve canonical state first.
+      let resolved = await resolveAccountState(user);
       if (cancelled) return;
 
-      const isAdmin = !!adminRes.data;
-      const hasAgency = !!agencyRes.data;
-      const isActiveStaff = (activeStaffRes.data?.length ?? 0) > 0;
-      const pendingStaff = pendingStaffRes.data?.[0] ?? null;
-      const clientType = profileRes.data?.client_type ?? null;
-
-      // ── Step 1: Pending staff confidentiality wins over everything except admin.
-      if (!isAdmin && !hasAgency && !isActiveStaff && pendingStaff) {
+      // Pending staff → activation route (resolver already enforces precedence).
+      if (resolved.state === "pending_staff" && resolved.pendingStaffToken) {
         resolvedForUserId.current = user.id;
         setState({
           loading: false,
-          redirectTo: `/staff-activate/${pendingStaff.invitation_token}`,
+          redirectTo: `/staff-activate/${resolved.pendingStaffToken}`,
         });
         return;
       }
 
-      // ── Step 2: Agent self-heal. Metadata says "agent" but no agency row exists.
-      if (!hasAgency && metaClientType && AGENT_META_VALUES.has(metaClientType)) {
+      // Agent self-heal: metadata claims agent role but no agency row exists.
+      // Run BEFORE concluding the account is incomplete so legacy users with
+      // the right metadata never see /welcome.
+      const needsSelfHeal =
+        (resolved.state === "incomplete_existing" ||
+          resolved.state === "incomplete_new" ||
+          resolved.state === "agent") &&
+        metaClientType &&
+        AGENT_META_VALUES.has(metaClientType);
+
+      if (needsSelfHeal) {
+        // Re-check the row in case the resolver picked it up via metadata fallback.
+        const { data: existingAgency } = await supabase
+          .from("agent_manager_profiles")
+          .select("id")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        if (cancelled) return;
+
+        if (!existingAgency) {
         const role =
           metaClientType === "artist_manager" ? "artist_manager" : "athlete_agent";
         const company =
@@ -124,31 +103,25 @@ export function useAccountSetupGate(): GateState {
         });
         if (cancelled) return;
         if (error) {
-          // Don't loop forever — treat as resolved and let the user reach
-          // the dashboard; they can still complete details from /myagency.
           console.error("[useAccountSetupGate] self-heal failed:", error);
+          } else {
+            // Re-resolve so downstream consumers see the agent state.
+            resolved = await resolveAccountState(user);
+            if (cancelled) return;
         }
-        resolvedForUserId.current = user.id;
-        setState({ loading: false, redirectTo: null });
-        return;
+        }
       }
 
-      // ── Step 3: No role at all → /welcome.
-      const hasAnyRole =
-        isAdmin ||
-        hasAgency ||
-        isActiveStaff ||
-        clientType === "athlete" ||
-        clientType === "artist" ||
-        (metaClientType && CLIENT_META_VALUES.has(metaClientType));
-
-      if (!hasAnyRole) {
+      // Incomplete in either flavour → /welcome.
+      if (
+        resolved.state === "incomplete_new" ||
+        resolved.state === "incomplete_existing"
+      ) {
         resolvedForUserId.current = user.id;
         setState({ loading: false, redirectTo: "/welcome" });
         return;
       }
 
-      // ── Step 4: All good.
       resolvedForUserId.current = user.id;
       setState({ loading: false, redirectTo: null });
     })().catch((err) => {
