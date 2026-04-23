@@ -2,10 +2,22 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { resolveAccountState, type AccountState } from "@/lib/accountState";
 
 export type UserRole = "athlete" | "artist" | "agent" | "admin" | "staff" | "user" | null;
 
 const ROLE_RESOLUTION_TIMEOUT_MS = 5000;
+
+function stateToRole(state: AccountState): UserRole {
+  switch (state) {
+    case "admin": return "admin";
+    case "agent": return "agent";
+    case "staff": return "staff";
+    case "athlete": return "athlete";
+    case "artist": return "artist";
+    default: return "user";
+  }
+}
 
 export function useUserRole() {
   const { user } = useAuth();
@@ -67,67 +79,9 @@ export function useUserRole() {
     };
 
     const determine = async () => {
-      // Check admin first
-      const { data: isAdmin } = await supabase.rpc("has_role", {
-        _user_id: currentUserId,
-        _role: "admin",
-      });
+      const resolved = await resolveAccountState(user);
       if (cancelled) return;
-      if (isAdmin) {
-        commit("admin");
-        return;
-      }
-
-      // Check agent/manager profile
-      const { data: agentProfile } = await supabase
-        .from("agent_manager_profiles")
-        .select("id")
-        .eq("user_id", currentUserId)
-        .maybeSingle();
-      if (cancelled) return;
-      if (agentProfile) {
-        commit("agent");
-        return;
-      }
-
-      // Check active staff membership (precedence: admin > agent > staff > client)
-      const { data: staffRows } = await supabase
-        .from("portal_staff_access")
-        .select("id")
-        .eq("staff_user_id", currentUserId)
-        .eq("status", "active")
-        .not("confidentiality_accepted_at", "is", null)
-        .limit(1);
-      if (cancelled) return;
-      if (staffRows && staffRows.length > 0) {
-        commit("staff");
-        return;
-      }
-
-      // Check client_type from profiles
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("client_type")
-        .eq("user_id", currentUserId)
-        .maybeSingle();
-      if (cancelled) return;
-
-      if (profile?.client_type === "athlete") {
-        commit("athlete");
-      } else if (profile?.client_type === "artist") {
-        commit("artist");
-      } else {
-        const meta = user.user_metadata;
-        if (meta?.client_type === "athlete_agent" || meta?.client_type === "artist_manager") {
-          commit("agent");
-        } else if (meta?.client_type === "athlete") {
-          commit("athlete");
-        } else if (meta?.client_type === "artist") {
-          commit("artist");
-        } else {
-          commit("user");
-        }
-      }
+      commit(stateToRole(resolved.state));
     };
 
     determine().catch((err) => {
