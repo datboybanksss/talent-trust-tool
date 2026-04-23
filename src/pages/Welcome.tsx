@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Trophy, Music2, Briefcase, Loader2 } from "lucide-react";
+import { Trophy, Music2, Briefcase, Loader2, AlertTriangle } from "lucide-react";
 
 type Choice = "athlete" | "artist" | "agent_manager" | null;
 
@@ -22,10 +22,33 @@ const Welcome = () => {
     "athlete_agent",
   );
   const [submitting, setSubmitting] = useState(false);
+  const [isRecovery, setIsRecovery] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/auth", { replace: true });
   }, [authLoading, user, navigate]);
+
+  // Detect if this is an existing account that landed here because their
+  // role was lost / never set (recovery mode). Heuristic: profile row exists
+  // and was created more than 10 minutes ago. Brand-new signups will have a
+  // very recent profile row (created by handle_new_user trigger).
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("created_at")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (cancelled || !data?.created_at) return;
+      const ageMs = Date.now() - new Date(data.created_at).getTime();
+      if (ageMs > 10 * 60 * 1000) setIsRecovery(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   const handleSubmit = async () => {
     if (!user || !choice) return;
@@ -81,9 +104,25 @@ const Welcome = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-forest-dark via-forest to-forest-light flex items-center justify-center p-4">
       <div className="w-full max-w-3xl">
+        {isRecovery && (
+          <div className="mb-6 rounded-lg border border-gold/40 bg-gold/10 p-4 flex gap-3">
+            <AlertTriangle className="w-5 h-5 text-gold flex-shrink-0 mt-0.5" />
+            <div className="text-sm">
+              <div className="font-semibold text-foreground mb-1">
+                Looks like your account isn&apos;t fully set up yet
+              </div>
+              <div className="text-muted-foreground">
+                We couldn&apos;t find a role on your profile — this usually means
+                setup was interrupted last time. Pick what describes you below to
+                finish setting up. Your existing account, email, and any data are
+                safe.
+              </div>
+            </div>
+          </div>
+        )}
         <div className="text-center mb-8">
           <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
-            Welcome — let&apos;s set up your account
+            {isRecovery ? "Finish setting up your account" : "Welcome — let\u2019s set up your account"}
           </h1>
           <p className="text-muted-foreground">
             Choose what describes you best. You can&apos;t change this later from this screen.
