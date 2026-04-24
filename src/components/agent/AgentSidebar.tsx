@@ -181,6 +181,16 @@ const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, set
                   {!collapsed && <span>Resend All Pending</span>}
                 </SidebarMenuButton>
               </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        )}
+
+        {/* Session */}
+        <SidebarGroup>
+          <SidebarGroupLabel>Session</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton onClick={handleSignOut} className="hover:bg-destructive/10">
                   <LogOut className="mr-2 h-4 w-4 text-destructive" />
@@ -190,7 +200,6 @@ const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, set
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        )}
 
         {/* Compliance */}
         <SidebarGroup>
