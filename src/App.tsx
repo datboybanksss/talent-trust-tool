@@ -49,6 +49,7 @@ import MyAgency from "./pages/MyAgency";
 import AgentAccount from "./pages/AgentAccount";
 import Welcome from "./pages/Welcome";
 import RevokedStaff from "./pages/RevokedStaff";
+import { TourProvider } from "@/components/tour/TourProvider";
 
 const queryClient = new QueryClient();
 
@@ -59,6 +60,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <TourProvider>
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/pricing" element={<Pricing />} />
@@ -106,6 +108,7 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </TourProvider>
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>

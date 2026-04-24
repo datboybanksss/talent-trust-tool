@@ -9,6 +9,8 @@ interface Profile {
   client_type: ClientType;
   avatar_url: string | null;
   phone: string | null;
+  tour_completed_at: string | null;
+  tour_dismissed_at: string | null;
 }
 
 export const useProfile = () => {
@@ -20,7 +22,7 @@ export const useProfile = () => {
     if (!user) return;
     const { data, error } = await supabase
       .from("profiles")
-      .select("display_name, client_type, avatar_url, phone")
+      .select("display_name, client_type, avatar_url, phone, tour_completed_at, tour_dismissed_at")
       .eq("user_id", user.id)
       .maybeSingle();
 

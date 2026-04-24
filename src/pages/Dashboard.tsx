@@ -31,6 +31,7 @@ import {
   Shield
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { TOUR_TARGETS } from "@/components/tour/tourTargets";
 
 const Dashboard = () => {
   // Staff users should never see the client portal — bounce them to the agent
@@ -126,7 +127,7 @@ const Dashboard = () => {
           </div>
 
           {/* Financial Overview */}
-          <div className="mb-8">
+          <div className="mb-8" data-tour={TOUR_TARGETS.CLIENT_DASHBOARD_OVERVIEW}>
             <FinancialOverview />
           </div>
 
