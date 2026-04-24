@@ -1103,6 +1103,8 @@ export type Database = {
           id: string
           is_demo: boolean
           phone: string | null
+          tour_completed_at: string | null
+          tour_dismissed_at: string | null
           updated_at: string
           user_id: string
         }
@@ -1115,6 +1117,8 @@ export type Database = {
           id?: string
           is_demo?: boolean
           phone?: string | null
+          tour_completed_at?: string | null
+          tour_dismissed_at?: string | null
           updated_at?: string
           user_id: string
         }
@@ -1127,6 +1131,8 @@ export type Database = {
           id?: string
           is_demo?: boolean
           phone?: string | null
+          tour_completed_at?: string | null
+          tour_dismissed_at?: string | null
           updated_at?: string
           user_id?: string
         }
