@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useStaffAccess } from "@/hooks/useStaffAccess";
+import { useToast } from "@/hooks/use-toast";
 import {
   Sidebar,
   SidebarContent,
@@ -29,6 +30,7 @@ import {
   Crown,
   Building2,
   UserCircle2,
+  LogOut,
 } from "lucide-react";
 
 interface AgentSidebarProps {
@@ -56,6 +58,18 @@ const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, set
   const { user } = useAuth();
   const navigate = useNavigate();
   const staff = useStaffAccess();
+  const { signOut } = useAuth();
+  const { toast } = useToast();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      if (isMobile) toggleSidebar();
+      navigate("/");
+    } catch (e: any) {
+      toast({ title: "Sign out failed", description: e?.message ?? "Please try again.", variant: "destructive" });
+    }
+  };
 
   const visibleNavItems = mainNavItems.filter((item) => {
     if (!staff.isStaff) return true;
@@ -165,6 +179,12 @@ const AgentSidebar = ({ onNewClient, onBulkImport, agentProfile, activeView, set
                 <SidebarMenuButton disabled className="hover:bg-muted/50 opacity-50">
                   <Mail className="mr-2 h-4 w-4 text-primary" />
                   {!collapsed && <span>Resend All Pending</span>}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={handleSignOut} className="hover:bg-destructive/10">
+                  <LogOut className="mr-2 h-4 w-4 text-destructive" />
+                  {!collapsed && <span className="text-destructive">Sign Out</span>}
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
