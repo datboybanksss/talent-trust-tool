@@ -23,7 +23,8 @@ export type AccountState =
   | "artist"
   | "incomplete_new"
   | "incomplete_existing"
-  | "query_error";
+  | "query_error"
+  | "revoked_staff";
 
 export interface AccountStateResult {
   state: AccountState;
@@ -59,6 +60,7 @@ export async function resolveAccountState(
     activeStaffRes,
     pendingStaffRes,
     profileRes,
+    revokedStaffRes,
   ] = await Promise.all([
     supabase.rpc("has_role", { _user_id: user.id, _role: "admin" }),
     supabase
@@ -85,6 +87,13 @@ export async function resolveAccountState(
       .select("client_type, created_at")
       .eq("user_id", user.id)
       .maybeSingle(),
+    supabase
+      .from("portal_staff_access")
+      .select("id")
+      .eq("staff_user_id", user.id)
+      .neq("status", "active")
+      .not("confidentiality_accepted_at", "is", null)
+      .limit(1),
   ]);
 
   const queryErrors = [
@@ -93,6 +102,7 @@ export async function resolveAccountState(
     activeStaffRes.error,
     pendingStaffRes.error,
     profileRes.error,
+    revokedStaffRes.error,
   ].filter(Boolean) as { message: string; code?: string }[];
 
   if (queryErrors.length > 0) {
@@ -104,6 +114,7 @@ export async function resolveAccountState(
   const hasAgency = !!agencyRes.data;
   const isActiveStaff = (activeStaffRes.data?.length ?? 0) > 0;
   const pendingStaff = pendingStaffRes.data?.[0] ?? null;
+  const isRevokedStaff = (revokedStaffRes.data?.length ?? 0) > 0;
   const profile = profileRes.data ?? null;
   const clientType = profile?.client_type ?? null;
 
@@ -118,6 +129,9 @@ export async function resolveAccountState(
   if (isAdmin) return { state: "admin", pendingStaffToken: null };
   if (hasAgency) return { state: "agent", pendingStaffToken: null };
   if (isActiveStaff) return { state: "staff", pendingStaffToken: null };
+  if (!isAdmin && !hasAgency && !isActiveStaff && isRevokedStaff) {
+    return { state: "revoked_staff", pendingStaffToken: null };
+  }
   if (clientType === "athlete") return { state: "athlete", pendingStaffToken: null };
   if (clientType === "artist") return { state: "artist", pendingStaffToken: null };
 

@@ -48,6 +48,7 @@ import FinancialIntegrations from "./pages/FinancialIntegrations";
 import MyAgency from "./pages/MyAgency";
 import AgentAccount from "./pages/AgentAccount";
 import Welcome from "./pages/Welcome";
+import RevokedStaff from "./pages/RevokedStaff";
 
 const queryClient = new QueryClient();
 
@@ -101,6 +102,7 @@ const App = () => (
             <Route path="/dashboard/estate-calculator" element={<ProtectedRoute><EstateCalculator /></ProtectedRoute>} />
             <Route path="/dashboard/guardian" element={<ProtectedRoute><GuardianManagement /></ProtectedRoute>} />
             <Route path="/dashboard/integrations" element={<ProtectedRoute><FinancialIntegrations /></ProtectedRoute>} />
+            <Route path="/revoked" element={<RevokedStaff />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

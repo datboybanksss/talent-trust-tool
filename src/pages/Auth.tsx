@@ -66,6 +66,10 @@ const Auth = () => {
       navigate("/welcome", { replace: true });
       return;
     }
+    if (account.state === "revoked_staff") {
+      navigate("/revoked", { replace: true });
+      return;
+    }
     const dash = dashboardForState(account.state);
     if (dash) navigate(dash, { replace: true });
   }, [user, account.loading, account.state, account.pendingStaffToken, navigate]);

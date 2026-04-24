@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { resolveAccountState, type AccountState } from "@/lib/accountState";
 
-export type UserRole = "athlete" | "artist" | "agent" | "admin" | "staff" | "user" | null;
+export type UserRole = "athlete" | "artist" | "agent" | "admin" | "staff" | "revoked_staff" | "user" | null;
 
 const ROLE_RESOLUTION_TIMEOUT_MS = 5000;
 
@@ -15,6 +15,7 @@ function stateToRole(state: AccountState): UserRole {
     case "staff": return "staff";
     case "athlete": return "athlete";
     case "artist": return "artist";
+    case "revoked_staff": return "revoked_staff";
     default: return "user";
   }
 }
@@ -129,6 +130,7 @@ export function useUserRole() {
       case "agent": return "/agent-dashboard";
       // Staff route to /agent-dashboard (see KNOWN_LIMITATIONS.md).
       case "staff": return "/agent-dashboard";
+      case "revoked_staff": return "/revoked";
       default: return "/dashboard";
     }
   })();
