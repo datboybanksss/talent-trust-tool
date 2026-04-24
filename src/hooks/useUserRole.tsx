@@ -24,6 +24,7 @@ export function useUserRole() {
   const [role, setRole] = useState<UserRole>(null);
   const [resolvedForUserId, setResolvedForUserId] = useState<string | null>(null);
   const [timedOut, setTimedOut] = useState(false);
+  const [errored, setErrored] = useState(false);
   // Tracks whether we have EVER successfully resolved a role for the current
   // user.id. Used to differentiate first-load timeout (sign user out) from a
   // mid-session re-resolution timeout (warn + keep cached role).
@@ -35,6 +36,7 @@ export function useUserRole() {
       setRole(null);
       setResolvedForUserId(null);
       setTimedOut(false);
+      setErrored(false);
       hasEverResolvedRef.current = false;
       lastUserIdRef.current = null;
       return;
@@ -50,6 +52,7 @@ export function useUserRole() {
       setRole(null);
       setResolvedForUserId(null);
       setTimedOut(false);
+      setErrored(false);
       lastUserIdRef.current = currentUserId;
     }
 
@@ -80,7 +83,13 @@ export function useUserRole() {
 
     const determine = async () => {
       const resolved = await resolveAccountState(user);
-      if (cancelled) return;
+      if (cancelled || lastUserIdRef.current !== currentUserId) return;
+      if (resolved.state === "query_error") {
+        hasEverResolvedRef.current = true; // prevent timeout from signing out
+        setErrored(true);
+        setResolvedForUserId(currentUserId);
+        return;
+      }
       commit(stateToRole(resolved.state));
     };
 
@@ -114,7 +123,7 @@ export function useUserRole() {
 
   // Nullable while loading so consumers cannot read a stale default route.
   const dashboardPath: string | null = (() => {
-    if (loading) return null;
+    if (loading || errored) return null;
     switch (role) {
       case "admin": return "/admin";
       case "agent": return "/agent-dashboard";
@@ -124,5 +133,5 @@ export function useUserRole() {
     }
   })();
 
-  return { role, loading, dashboardPath, timedOut };
+  return { role, loading, dashboardPath, timedOut, errored };
 }

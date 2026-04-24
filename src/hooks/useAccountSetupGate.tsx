@@ -25,16 +25,19 @@ const AGENT_META_VALUES = new Set(["athlete_agent", "artist_manager"]);
 interface GateState {
   loading: boolean;
   redirectTo: string | null;
+  errored: boolean;
+  errorMessage: string | null;
+  errorCode: string | null;
 }
 
 export function useAccountSetupGate(): GateState {
   const { user } = useAuth();
-  const [state, setState] = useState<GateState>({ loading: true, redirectTo: null });
+  const [state, setState] = useState<GateState>({ loading: true, redirectTo: null, errored: false, errorMessage: null, errorCode: null });
   const resolvedForUserId = useRef<string | null>(null);
 
   useEffect(() => {
     if (!user || !user.email_confirmed_at) {
-      setState({ loading: false, redirectTo: null });
+      setState({ loading: false, redirectTo: null, errored: false, errorMessage: null, errorCode: null });
       resolvedForUserId.current = null;
       return;
     }
@@ -52,12 +55,21 @@ export function useAccountSetupGate(): GateState {
       let resolved = await resolveAccountState(user);
       if (cancelled) return;
 
+      if (resolved.state === "query_error") {
+        resolvedForUserId.current = user.id;
+        setState({ loading: false, redirectTo: null, errored: true, errorMessage: resolved.errorMessage ?? "Failed to load account data.", errorCode: resolved.errorCode ?? null });
+        return;
+      }
+
       // Pending staff → activation route (resolver already enforces precedence).
       if (resolved.state === "pending_staff" && resolved.pendingStaffToken) {
         resolvedForUserId.current = user.id;
         setState({
           loading: false,
           redirectTo: `/staff-activate/${resolved.pendingStaffToken}`,
+          errored: false,
+          errorMessage: null,
+          errorCode: null,
         });
         return;
       }
@@ -108,6 +120,11 @@ export function useAccountSetupGate(): GateState {
             // Re-resolve so downstream consumers see the agent state.
             resolved = await resolveAccountState(user);
             if (cancelled) return;
+            if (resolved.state === "query_error") {
+              resolvedForUserId.current = user.id;
+              setState({ loading: false, redirectTo: null, errored: true, errorMessage: resolved.errorMessage ?? "Failed to load account data.", errorCode: resolved.errorCode ?? null });
+              return;
+            }
         }
         }
       }
@@ -118,16 +135,16 @@ export function useAccountSetupGate(): GateState {
         resolved.state === "incomplete_existing"
       ) {
         resolvedForUserId.current = user.id;
-        setState({ loading: false, redirectTo: "/welcome" });
+        setState({ loading: false, redirectTo: "/welcome", errored: false, errorMessage: null, errorCode: null });
         return;
       }
 
       resolvedForUserId.current = user.id;
-      setState({ loading: false, redirectTo: null });
+      setState({ loading: false, redirectTo: null, errored: false, errorMessage: null, errorCode: null });
     })().catch((err) => {
       if (!cancelled) {
         console.error("[useAccountSetupGate] unexpected error:", err);
-        setState({ loading: false, redirectTo: null });
+        setState({ loading: false, redirectTo: null, errored: false, errorMessage: null, errorCode: null });
       }
     });
 

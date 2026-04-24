@@ -22,12 +22,17 @@ export type AccountState =
   | "athlete"
   | "artist"
   | "incomplete_new"
-  | "incomplete_existing";
+  | "incomplete_existing"
+  | "query_error";
 
 export interface AccountStateResult {
   state: AccountState;
   /** Set when state === "pending_staff" — the activation token to redirect to. */
   pendingStaffToken: string | null;
+  /** Set when state === "query_error" — first failing query's message. */
+  errorMessage?: string;
+  /** Set when state === "query_error" — first failing query's code. */
+  errorCode?: string;
 }
 
 const AGENT_META_VALUES = new Set(["athlete_agent", "artist_manager"]);
@@ -81,6 +86,19 @@ export async function resolveAccountState(
       .eq("user_id", user.id)
       .maybeSingle(),
   ]);
+
+  const queryErrors = [
+    adminRes.error,
+    agencyRes.error,
+    activeStaffRes.error,
+    pendingStaffRes.error,
+    profileRes.error,
+  ].filter(Boolean) as { message: string; code?: string }[];
+
+  if (queryErrors.length > 0) {
+    const first = queryErrors[0];
+    return { state: "query_error", pendingStaffToken: null, errorMessage: first.message, errorCode: first.code };
+  }
 
   const isAdmin = !!adminRes.data;
   const hasAgency = !!agencyRes.data;

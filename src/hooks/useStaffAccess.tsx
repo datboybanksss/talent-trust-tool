@@ -22,6 +22,7 @@ export interface StaffAccessState {
   sections: string[];
   roleLabel: string | null;
   loading: boolean;
+  errored: boolean;
 }
 
 const initial: StaffAccessState = {
@@ -32,6 +33,7 @@ const initial: StaffAccessState = {
   sections: [...ALL_SECTIONS],
   roleLabel: null,
   loading: true,
+  errored: false,
 };
 
 export function useStaffAccess(): StaffAccessState {
@@ -46,14 +48,33 @@ export function useStaffAccess(): StaffAccessState {
       setState({ ...initial, loading: false });
       return null;
     }
-    const { data: rows } = await supabase
-      .from("portal_staff_access")
-      .select("agent_id, role_label, sections, status, confidentiality_accepted_at")
-      .eq("staff_user_id", user.id)
-      .eq("status", "active")
-      .not("confidentiality_accepted_at", "is", null)
-      .order("updated_at", { ascending: false })
-      .limit(1);
+
+    const runQuery = () =>
+      supabase
+        .from("portal_staff_access")
+        .select("agent_id, role_label, sections, status, confidentiality_accepted_at")
+        .eq("staff_user_id", user.id)
+        .eq("status", "active")
+        .not("confidentiality_accepted_at", "is", null)
+        .order("updated_at", { ascending: false })
+        .limit(1);
+
+    let { data: rows, error } = await runQuery();
+
+    if (error) {
+      console.error("[useStaffAccess] portal_staff_access query failed, retrying in 1s", {
+        userId: user.id, code: error.code, message: error.message,
+      });
+      await new Promise<void>((r) => setTimeout(r, 1000));
+      ({ data: rows, error } = await runQuery());
+      if (error) {
+        console.error("[useStaffAccess] portal_staff_access retry failed", {
+          userId: user.id, code: error.code, message: error.message,
+        });
+        setState({ ...initial, errored: true, loading: false });
+        return null;
+      }
+    }
 
     const row = rows?.[0];
     if (!row) {
@@ -64,6 +85,7 @@ export function useStaffAccess(): StaffAccessState {
         agencyOwnerName: null,
         sections: [...ALL_SECTIONS],
         roleLabel: null,
+        errored: false,
         loading: false,
       });
       return null;
@@ -89,6 +111,7 @@ export function useStaffAccess(): StaffAccessState {
       agencyOwnerName: ownerProfile?.display_name ?? "your agent",
       sections: (row.sections as string[]) ?? [],
       roleLabel: row.role_label ?? "Staff",
+      errored: false,
       loading: false,
     });
     return row;

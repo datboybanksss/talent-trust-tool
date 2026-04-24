@@ -4,6 +4,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { useStaffAccess } from "@/hooks/useStaffAccess";
 import EmailVerificationGate from "@/components/auth/EmailVerificationGate";
 import { useAccountSetupGate } from "@/hooks/useAccountSetupGate";
+import { Button } from "@/components/ui/button";
 
 interface AgentRouteProps {
   children: React.ReactNode;
@@ -21,8 +22,8 @@ interface AgentRouteProps {
  * themselves, not as that agency's staff.
  */
 const AgentRoute = ({ children }: AgentRouteProps) => {
-  const { user, loading: authLoading } = useAuth();
-  const { role, loading: roleLoading } = useUserRole();
+  const { user, loading: authLoading, signOut } = useAuth();
+  const { role, loading: roleLoading, errored: roleErrored } = useUserRole();
   const staff = useStaffAccess();
   const location = useLocation();
   const gate = useAccountSetupGate();
@@ -41,6 +42,24 @@ const AgentRoute = ({ children }: AgentRouteProps) => {
 
   if (!user.email_confirmed_at) {
     return <EmailVerificationGate />;
+  }
+
+  if (gate.errored || staff.errored || roleErrored) {
+    const message = gate.errored
+      ? (gate.errorMessage ?? "Failed to load account data.")
+      : "Failed to load account data.";
+    const code = gate.errored ? gate.errorCode : null;
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 p-6 text-center">
+        <p className="font-medium text-destructive">We couldn't load your account.</p>
+        <p className="text-sm text-muted-foreground">{message}</p>
+        {code && <p className="text-xs text-muted-foreground font-mono">Code: {code}</p>}
+        <div className="flex gap-2">
+          <Button onClick={() => window.location.reload()}>Retry</Button>
+          <Button variant="outline" onClick={signOut}>Sign Out</Button>
+        </div>
+      </div>
+    );
   }
 
   // Setup gate (pending staff → /staff-activate, no role → /welcome) takes
